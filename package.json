@@ -1,9 +1,0 @@
-{
-  "name": "oussocash-vercel",
-  "version": "1.0.0",
-  "description": "OussoCash landing + webhook proxy",
-  "private": true,
-  "engines": {
-    "node": ">=18.x"
-  }
-}
