@@ -1,0 +1,475 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>OussoCash — وكالة 1xBet المعتمدة</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;600;700;900&family=Reem+Kufi:wght@500;700&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --bg:#0a0e0a;
+    --bg2:#101610;
+    --gold:#d4af37;
+    --gold-bright:#f0cf5a;
+    --green:#1faa59;
+    --green-dark:#0d7a3d;
+    --cream:#f5f0e1;
+    --muted:#8a9282;
+    --card:#141a14;
+    --border:rgba(212,175,55,.18);
+  }
+  *{margin:0;padding:0;box-sizing:border-box}
+  html{scroll-behavior:smooth}
+  body{
+    font-family:'Cairo',sans-serif;
+    background:var(--bg);
+    color:var(--cream);
+    overflow-x:hidden;
+    min-height:100vh;
+    position:relative;
+  }
+  /* atmospheric background */
+  body::before{
+    content:"";
+    position:fixed;inset:0;
+    background:
+      radial-gradient(ellipse 80% 50% at 50% -10%, rgba(212,175,55,.10), transparent 60%),
+      radial-gradient(ellipse 60% 40% at 80% 100%, rgba(31,170,89,.08), transparent 60%),
+      radial-gradient(ellipse 60% 40% at 20% 90%, rgba(212,175,55,.05), transparent 60%);
+    pointer-events:none;z-index:0;
+  }
+  body::after{
+    content:"";
+    position:fixed;inset:0;
+    background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='80' height='80'%3E%3Cpath d='M40 0L48 32L80 40L48 48L40 80L32 48L0 40L32 32Z' fill='%23d4af37' opacity='0.02'/%3E%3C/svg%3E");
+    pointer-events:none;z-index:0;opacity:.6;
+  }
+  .wrap{position:relative;z-index:1;max-width:520px;margin:0 auto;padding:0 20px 60px}
+
+  /* loader */
+  #loader{
+    position:fixed;inset:0;background:var(--bg);z-index:100;
+    display:flex;align-items:center;justify-content:center;flex-direction:column;gap:20px;
+    transition:opacity .5s ease;
+  }
+  .spinner{
+    width:54px;height:54px;border:3px solid rgba(212,175,55,.2);
+    border-top-color:var(--gold);border-radius:50%;
+    animation:spin 1s linear infinite;
+  }
+  @keyframes spin{to{transform:rotate(360deg)}}
+  .loader-text{font-family:'Reem Kufi';color:var(--gold);font-size:18px;letter-spacing:1px}
+
+  /* header */
+  .topbar{
+    text-align:center;padding:32px 0 18px;
+    animation:fadeDown .8s ease both;
+  }
+  .brand{
+    font-family:'Reem Kufi';font-weight:700;font-size:34px;
+    background:linear-gradient(135deg,var(--gold-bright),var(--gold) 60%,#9a7d28);
+    -webkit-background-clip:text;background-clip:text;-webkit-text-fill-color:transparent;
+    letter-spacing:.5px;
+  }
+  .brand-sub{
+    color:var(--muted);font-size:13px;margin-top:4px;font-weight:600;
+    display:flex;align-items:center;justify-content:center;gap:8px;
+  }
+  .verified-dot{
+    display:inline-block;width:7px;height:7px;border-radius:50%;
+    background:var(--green);box-shadow:0 0 8px var(--green);
+  }
+
+  /* invite badge */
+  .invite-badge{
+    margin:8px auto 0;max-width:fit-content;
+    background:linear-gradient(135deg,rgba(31,170,89,.15),rgba(212,175,55,.1));
+    border:1px solid rgba(31,170,89,.35);
+    border-radius:100px;padding:8px 18px;
+    font-size:13px;font-weight:700;color:var(--green);
+    display:flex;align-items:center;gap:8px;
+    animation:fadeDown .9s .1s ease both;
+  }
+  .gift-ico{font-size:16px}
+
+  /* hero card with image */
+  .hero{
+    margin-top:22px;border-radius:24px;overflow:hidden;
+    border:1px solid var(--border);
+    background:var(--card);
+    box-shadow:0 20px 60px rgba(0,0,0,.5),0 0 0 1px rgba(212,175,55,.05);
+    animation:fadeUp .9s .15s ease both;
+    position:relative;
+  }
+  .hero-img-wrap{position:relative;aspect-ratio:1/1;overflow:hidden}
+  .hero-img{width:100%;height:100%;object-fit:cover;display:block}
+  .hero-img-wrap::after{
+    content:"";position:absolute;inset:0;
+    background:linear-gradient(to top,var(--card) 2%,transparent 35%);
+  }
+  .hero-tag{
+    position:absolute;top:14px;right:14px;z-index:2;
+    background:rgba(10,14,10,.8);backdrop-filter:blur(8px);
+    border:1px solid var(--border);border-radius:100px;
+    padding:6px 14px;font-size:12px;font-weight:700;color:var(--gold);
+  }
+
+  /* reward strip */
+  .rewards{
+    display:grid;grid-template-columns:1fr 1fr 1fr;gap:1px;
+    background:var(--border);margin-top:-1px;
+  }
+  .reward{
+    background:var(--card);padding:16px 8px;text-align:center;
+  }
+  .reward-num{
+    font-family:'Reem Kufi';font-size:22px;font-weight:700;color:var(--gold-bright);
+  }
+  .reward-lbl{font-size:11px;color:var(--muted);margin-top:3px;font-weight:600}
+
+  /* buttons */
+  .actions{margin-top:24px;display:flex;flex-direction:column;gap:14px}
+  .btn{
+    display:flex;align-items:center;justify-content:center;gap:12px;
+    padding:18px;border-radius:16px;font-family:'Cairo';font-weight:700;font-size:17px;
+    text-decoration:none;border:none;cursor:pointer;
+    transition:transform .15s ease,box-shadow .25s ease,filter .2s ease;
+    position:relative;overflow:hidden;
+  }
+  .btn:active{transform:scale(.97)}
+  .btn-wa{
+    background:linear-gradient(135deg,#25d366,#1faa59);
+    color:#04210f;
+    box-shadow:0 8px 24px rgba(31,170,89,.4);
+    animation:fadeUp .9s .25s ease both, pulse 2.5s 1.5s ease-in-out infinite;
+  }
+  .btn-wa:hover{filter:brightness(1.08);box-shadow:0 12px 32px rgba(31,170,89,.55)}
+  .btn-channel{
+    background:rgba(20,26,20,.9);
+    color:var(--cream);
+    border:1px solid var(--border);
+    animation:fadeUp .9s .35s ease both;
+  }
+  .btn-channel:hover{border-color:var(--gold);background:rgba(212,175,55,.06)}
+  .btn ico{font-size:22px;line-height:1}
+  @keyframes pulse{0%,100%{box-shadow:0 8px 24px rgba(31,170,89,.4)}50%{box-shadow:0 8px 36px rgba(31,170,89,.7)}}
+
+  /* agency section */
+  .agency{
+    margin-top:34px;border-radius:24px;overflow:hidden;
+    border:1px solid var(--border);background:var(--card);
+    animation:fadeUp .9s .45s ease both;
+  }
+  .agency-img{width:100%;display:block;aspect-ratio:1/1;object-fit:cover}
+  .agency-body{padding:22px}
+  .agency-title{
+    font-family:'Reem Kufi';font-size:20px;color:var(--gold);margin-bottom:14px;
+    display:flex;align-items:center;gap:10px;
+  }
+  .feat{display:flex;align-items:flex-start;gap:12px;margin-bottom:13px;font-size:14.5px;line-height:1.5}
+  .feat:last-child{margin-bottom:0}
+  .feat-ico{
+    flex-shrink:0;width:24px;height:24px;border-radius:7px;
+    background:linear-gradient(135deg,var(--gold),#9a7d28);
+    display:flex;align-items:center;justify-content:center;
+    font-size:13px;color:#0a0e0a;font-weight:900;margin-top:1px;
+  }
+  .feat b{color:var(--cream)}
+  .feat span{color:var(--muted)}
+
+  /* how steps */
+  .steps{margin-top:30px;animation:fadeUp .9s .55s ease both}
+  .steps-title{
+    font-family:'Reem Kufi';font-size:18px;color:var(--gold);
+    text-align:center;margin-bottom:18px;
+  }
+  .step{
+    display:flex;gap:14px;align-items:center;
+    background:var(--card);border:1px solid var(--border);
+    border-radius:14px;padding:14px 16px;margin-bottom:10px;
+  }
+  .step-n{
+    flex-shrink:0;width:34px;height:34px;border-radius:10px;
+    background:linear-gradient(135deg,var(--green),var(--green-dark));
+    display:flex;align-items:center;justify-content:center;
+    font-family:'Reem Kufi';font-weight:700;font-size:16px;color:#fff;
+  }
+  .step-t{font-size:14.5px;font-weight:600}
+  .step-t span{display:block;color:var(--muted);font-size:12.5px;font-weight:400;margin-top:2px}
+
+  /* sticky CTA */
+  .sticky{
+    position:fixed;bottom:0;left:0;right:0;z-index:50;
+    padding:14px 20px;
+    background:linear-gradient(to top,var(--bg) 70%,transparent);
+    display:flex;justify-content:center;
+    transform:translateY(120%);transition:transform .4s ease;
+  }
+  .sticky.show{transform:translateY(0)}
+  .sticky .btn{max-width:480px;width:100%;margin:0}
+
+  /* footer */
+  .foot{text-align:center;margin-top:34px;color:var(--muted);font-size:12px;line-height:1.8}
+  .foot b{color:var(--gold)}
+
+  @keyframes fadeUp{from{opacity:0;transform:translateY(24px)}to{opacity:1;transform:translateY(0)}}
+  @keyframes fadeDown{from{opacity:0;transform:translateY(-16px)}to{opacity:1;transform:translateY(0)}}
+
+  .lang-switch{
+    position:absolute;top:18px;left:18px;z-index:3;
+    background:var(--card);border:1px solid var(--border);
+    border-radius:100px;padding:6px 14px;font-size:13px;font-weight:700;
+    color:var(--gold);cursor:pointer;font-family:'Cairo';
+  }
+</style>
+</head>
+<body>
+
+<div id="loader">
+  <div class="spinner"></div>
+  <div class="loader-text">OussoCash</div>
+</div>
+
+<button class="lang-switch" id="langSwitch" onclick="toggleLang()">FR</button>
+
+<div class="wrap" id="content" style="display:none">
+
+  <div class="topbar">
+    <div class="brand">OussoCash</div>
+    <div class="brand-sub">
+      <span class="verified-dot"></span>
+      <span id="subtitle">وكالة 1xBet المعتمدة في موريتانيا</span>
+    </div>
+  </div>
+
+  <div class="invite-badge" id="inviteBadge" style="display:none">
+    <span class="gift-ico">&#127873;</span>
+    <span id="inviteText">دعوة من صديق — 100 UM ترحيب</span>
+  </div>
+
+  <!-- HERO with referral image -->
+  <div class="hero">
+    <div class="hero-img-wrap">
+      <span class="hero-tag" id="heroTag">برنامج الإحالة</span>
+      <img src="images/referral.jpg" alt="OussoCash" class="hero-img" loading="eager">
+    </div>
+    <div class="rewards">
+      <div class="reward">
+        <div class="reward-num">100</div>
+        <div class="reward-lbl" id="r1">UM ترحيب</div>
+      </div>
+      <div class="reward">
+        <div class="reward-num">20</div>
+        <div class="reward-lbl" id="r2">UM لكل إحالة</div>
+      </div>
+      <div class="reward">
+        <div class="reward-num">25%</div>
+        <div class="reward-lbl" id="r3">أرباح إضافية</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ACTIONS -->
+  <div class="actions">
+    <a class="btn btn-wa" id="btnWa" href="#" onclick="openWhatsApp();return false;">
+      <ico>&#128241;</ico>
+      <span id="btnWaText">ابدأ الآن على واتساب</span>
+    </a>
+    <a class="btn btn-channel" id="btnCh" href="#" onclick="openChannel();return false;">
+      <ico>&#128226;</ico>
+      <span id="btnChText">انضم لقناتنا الرسمية</span>
+    </a>
+  </div>
+
+  <!-- AGENCY -->
+  <div class="agency">
+    <img src="images/agency.jpg" alt="OussoCash Agency" class="agency-img" loading="lazy">
+    <div class="agency-body">
+      <div class="agency-title">
+        <span>&#127942;</span>
+        <span id="agencyTitle">وكالة معتمدة منذ 2022</span>
+      </div>
+      <div class="feat">
+        <div class="feat-ico">&#10003;</div>
+        <div><b id="f1a">سحب فوري</b> <span id="f1b">عبر Bankily و Masrvi و Sedad بدون رسوم</span></div>
+      </div>
+      <div class="feat">
+        <div class="feat-ico">&#10003;</div>
+        <div><b id="f2a">دعم متواصل</b> <span id="f2b">فريق دعم على مدار الساعة</span></div>
+      </div>
+      <div class="feat">
+        <div class="feat-ico">&#10003;</div>
+        <div><b id="f3a">آلاف العملاء</b> <span id="f3b">يثقون بوكالة OussoCash</span></div>
+      </div>
+      <div class="feat">
+        <div class="feat-ico">&#10003;</div>
+        <div><b id="f4a">شفافية كاملة</b> <span id="f4b">أرباحك محفوظة وواضحة دائماً</span></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- HOW -->
+  <div class="steps">
+    <div class="steps-title" id="stepsTitle">كيف تبدأ في 4 خطوات</div>
+    <div class="step">
+      <div class="step-n">1</div>
+      <div class="step-t" id="s1">سجّل في 1xBet<span id="s1b">ببروموكود OUSSO</span></div>
+    </div>
+    <div class="step">
+      <div class="step-n">2</div>
+      <div class="step-t" id="s2">ادفع 200 UM<span id="s2b">أول إيداع لك</span></div>
+    </div>
+    <div class="step">
+      <div class="step-n">3</div>
+      <div class="step-t" id="s3">أرسل ID الحساب<span id="s3b">للبوت على واتساب</span></div>
+    </div>
+    <div class="step">
+      <div class="step-n">4</div>
+      <div class="step-t" id="s4">استلم 100 UM<span id="s4b">مكافأة ترحيب فورية</span></div>
+    </div>
+  </div>
+
+  <div class="foot">
+    <b>OussoCash</b> &mdash; <span id="footText">وكالة 1xBet المعتمدة في موريتانيا</span><br>
+    &copy; 2026
+  </div>
+
+</div>
+
+<!-- sticky bottom CTA -->
+<div class="sticky" id="sticky">
+  <a class="btn btn-wa" href="#" onclick="openWhatsApp();return false;">
+    <ico>&#128241;</ico>
+    <span id="stickyText">ابدأ الآن على واتساب</span>
+  </a>
+</div>
+
+<script>
+// ─── Config ───
+const WHATSAPP_BOT = "22249002902";
+const CHANNEL_URL = "https://whatsapp.com/channel/0029Vb7TGP52phHUrKJ13u1p";
+
+let currentLang = "ar";
+
+// ─── i18n ───
+const TXT = {
+  ar:{
+    subtitle:"وكالة 1xBet المعتمدة في موريتانيا",
+    inviteText:"دعوة من صديق — 100 UM ترحيب",
+    heroTag:"برنامج الإحالة",
+    r1:"UM ترحيب", r2:"UM لكل إحالة", r3:"أرباح إضافية",
+    btnWaText:"ابدأ الآن على واتساب",
+    btnChText:"انضم لقناتنا الرسمية",
+    stickyText:"ابدأ الآن على واتساب",
+    agencyTitle:"وكالة معتمدة منذ 2022",
+    f1a:"سحب فوري",f1b:"عبر Bankily و Masrvi و Sedad بدون رسوم",
+    f2a:"دعم متواصل",f2b:"فريق دعم على مدار الساعة",
+    f3a:"آلاف العملاء",f3b:"يثقون بوكالة OussoCash",
+    f4a:"شفافية كاملة",f4b:"أرباحك محفوظة وواضحة دائماً",
+    stepsTitle:"كيف تبدأ في 4 خطوات",
+    s1:"سجّل في 1xBet",s1b:"ببروموكود OUSSO",
+    s2:"ادفع 200 UM",s2b:"أول إيداع لك",
+    s3:"أرسل ID الحساب",s3b:"للبوت على واتساب",
+    s4:"استلم 100 UM",s4b:"مكافأة ترحيب فورية",
+    footText:"وكالة 1xBet المعتمدة في موريتانيا",
+    langBtn:"FR"
+  },
+  fr:{
+    subtitle:"Agence 1xBet officielle en Mauritanie",
+    inviteText:"Invitation d'un ami — 100 UM bonus",
+    heroTag:"Programme d'invitation",
+    r1:"UM bonus", r2:"UM par invitation", r3:"gains en plus",
+    btnWaText:"Commencer sur WhatsApp",
+    btnChText:"Rejoindre notre chaîne",
+    stickyText:"Commencer sur WhatsApp",
+    agencyTitle:"Agence certifiée depuis 2022",
+    f1a:"Retrait instantané",f1b:"via Bankily, Masrvi, Sedad sans frais",
+    f2a:"Support continu",f2b:"équipe disponible 24/7",
+    f3a:"Des milliers de clients",f3b:"font confiance à OussoCash",
+    f4a:"Transparence totale",f4b:"vos gains toujours clairs",
+    stepsTitle:"Commencez en 4 étapes",
+    s1:"Inscrivez-vous sur 1xBet",s1b:"avec le code OUSSO",
+    s2:"Déposez 200 UM",s2b:"votre premier dépôt",
+    s3:"Envoyez l'ID du compte",s3b:"au bot WhatsApp",
+    s4:"Recevez 100 UM",s4b:"bonus de bienvenue",
+    footText:"Agence 1xBet officielle en Mauritanie",
+    langBtn:"ع"
+  }
+};
+
+function applyLang(){
+  const x = TXT[currentLang];
+  document.documentElement.lang = currentLang;
+  document.documentElement.dir = currentLang === "ar" ? "rtl" : "ltr";
+  for(const k in x){
+    const el = document.getElementById(k);
+    if(el) el.textContent = x[k];
+  }
+  document.getElementById("langSwitch").textContent = x.langBtn;
+}
+
+function toggleLang(){
+  currentLang = currentLang === "ar" ? "fr" : "ar";
+  applyLang();
+}
+
+// ─── referral code from URL /r/CODE ───
+function getCode(){
+  const m = location.pathname.match(/\/r\/([A-Za-z0-9]{2,10})/);
+  if(m) return m[1].toUpperCase();
+  const q = new URLSearchParams(location.search).get("r");
+  return q ? q.toUpperCase() : null;
+}
+
+function openWhatsApp(){
+  const code = getCode();
+  let text;
+  if(code){
+    text = currentLang === "ar" ? ("ابدأ " + code) : ("Commencer " + code);
+  }else{
+    text = currentLang === "ar" ? "ابدأ" : "Commencer";
+  }
+  location.href = "https://wa.me/" + WHATSAPP_BOT + "?text=" + encodeURIComponent(text);
+}
+
+function openChannel(){
+  location.href = CHANNEL_URL;
+}
+
+// ─── init ───
+window.addEventListener("DOMContentLoaded",()=>{
+  const bl = (navigator.language||"ar").slice(0,2).toLowerCase();
+  if(bl === "fr") currentLang = "fr";
+  applyLang();
+
+  const code = getCode();
+  if(code){
+    document.getElementById("inviteBadge").style.display = "flex";
+  }
+
+  setTimeout(()=>{
+    const l = document.getElementById("loader");
+    l.style.opacity = "0";
+    setTimeout(()=>l.style.display="none",500);
+    document.getElementById("content").style.display = "block";
+  },600);
+
+  // sticky CTA on scroll
+  let ticking=false;
+  window.addEventListener("scroll",()=>{
+    if(!ticking){
+      requestAnimationFrame(()=>{
+        const sticky = document.getElementById("sticky");
+        if(window.scrollY > 380) sticky.classList.add("show");
+        else sticky.classList.remove("show");
+        ticking=false;
+      });
+      ticking=true;
+    }
+  });
+});
+</script>
+</body>
+</html>
