@@ -1,0 +1,148 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<title>OussoCash — وكالة 1xBet المعتمدة في موريتانيا</title>
+<meta name="description" content="OussoCash - وكالة 1xBet الرسمية المعتمدة في موريتانيا منذ 2022">
+<meta name="theme-color" content="#0F172A">
+<link rel="icon" href="/logos/mascot_sm.png">
+<link rel="apple-touch-icon" href="/logos/mascot_sm.png">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;600;700;800;900&family=Tajawal:wght@500;700;800&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="/styles.css">
+</head>
+<body>
+
+<div id="splash" style="background-image:url('/logos/mascot.jpg')">
+  <div class="splash-in">
+    <img src="/logos/mascot.jpg" class="splash-logo" alt="OussoCash">
+    <h1>OussoCash</h1>
+    <div class="stag" id="s-splash_tag"></div>
+    <div class="splash-bar"><i></i></div>
+  </div>
+</div>
+
+<header class="topbar">
+  <div class="logo">
+    <img src="/logos/mascot_sm.png" alt="OussoCash">
+    <b>Ousso<span>Cash</span></b>
+  </div>
+  <button class="lang-btn" id="langBtn" onclick="App.toggleLang()">FR</button>
+</header>
+
+<div class="wrap">
+
+  <div id="view-home">
+    <div class="banner mt"><img id="bannerWelcome" src="/images/welcome_ar.jpg" alt="OussoCash"></div>
+
+    <div class="hero-txt">
+      <h1 id="t-hero_title"></h1>
+      <p id="t-hero_desc"></p>
+    </div>
+
+    <div class="btns">
+      <button class="btn btn-primary" onclick="App.openRegister()" id="t-btn_register"></button>
+      <button class="btn btn-outline" onclick="App.scrollTo('sec-steps')" id="t-btn_how"></button>
+      <button class="btn btn-ghost" onclick="App.openAccount()" id="t-btn_account"></button>
+    </div>
+
+    <div class="section">
+      <div class="section-title" id="t-trust_title"></div>
+      <div class="trust" style="margin-top:18px">
+        <div class="trust-card"><div class="ti"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M12 2l8 4v6c0 5-3.5 8-8 10-4.5-2-8-5-8-10V6z"/></svg></div><b id="t-trust1"></b><span id="t-trust1d"></span></div>
+        <div class="trust-card"><div class="ti"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M12 1v22M17 5H9.5a3.5 3.5 0 000 7h5a3.5 3.5 0 010 7H6"/></svg></div><b id="t-trust2"></b><span id="t-trust2d"></span></div>
+        <div class="trust-card"><div class="ti"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><rect x="4" y="10" width="16" height="11" rx="2"/><path d="M8 10V7a4 4 0 018 0v3"/></svg></div><b id="t-trust3"></b><span id="t-trust3d"></span></div>
+        <div class="trust-card"><div class="ti"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M3 18v-6a9 9 0 0118 0v6M21 19a2 2 0 01-2 2h-1a2 2 0 01-2-2v-3a2 2 0 012-2h3zM3 19a2 2 0 002 2h1a2 2 0 002-2v-3a2 2 0 00-2-2H3z"/></svg></div><b id="t-trust4"></b><span id="t-trust4d"></span></div>
+      </div>
+    </div>
+
+    <div class="section">
+      <div class="section-title" id="t-rewards_title"></div>
+      <div class="section-intro" id="t-rewards_intro"></div>
+      <div class="banner"><img id="bannerReferral" src="/images/referral_ar.jpg" alt="Referral"></div>
+      <div class="rewards">
+        <div class="rw-card"><div class="n">100</div><div class="t" id="t-rw_welcome"></div><div class="d" id="t-rw_welcome_d"></div></div>
+        <div class="rw-card"><div class="n">20</div><div class="t" id="t-rw_ref"></div><div class="d" id="t-rw_ref_d"></div></div>
+        <div class="rw-card"><div class="n">25%</div><div class="t" id="t-rw_pct"></div><div class="d" id="t-rw_pct_d"></div></div>
+      </div>
+    </div>
+
+    <div class="section" id="sec-steps">
+      <div class="section-title" id="t-steps_title"></div>
+      <div style="margin-top:18px">
+        <div class="step"><div class="sn">1</div><div class="st" id="t-step1"><span id="t-step1d"></span></div></div>
+        <div class="step"><div class="sn">2</div><div class="st" id="t-step2"><span id="t-step2d"></span></div></div>
+        <div class="step"><div class="sn">3</div><div class="st" id="t-step3"><span id="t-step3d"></span></div></div>
+        <div class="step"><div class="sn">4</div><div class="st" id="t-step4"><span id="t-step4d"></span></div></div>
+      </div>
+    </div>
+
+    <div class="section">
+      <div class="section-title" id="t-videos_title"></div>
+      <div style="margin-top:18px">
+        <div class="video-card" onclick="App.openVideo('register')">
+          <div class="play"><svg viewBox="0 0 24 24" fill="currentColor"><path d="M8 5v14l11-7z"/></svg></div>
+          <div class="vt" id="t-vid_register"><span id="t-vid_register_d"></span></div>
+        </div>
+        <div class="video-card" onclick="App.openVideo('agency')">
+          <div class="play"><svg viewBox="0 0 24 24" fill="currentColor"><path d="M8 5v14l11-7z"/></svg></div>
+          <div class="vt" id="t-vid_agency"><span id="t-vid_agency_d"></span></div>
+        </div>
+      </div>
+    </div>
+
+    <div class="section">
+      <div class="section-title" id="t-agency_title"></div>
+      <div class="banner mt"><img id="bannerAgency" src="/images/agency_ar.jpg" alt="Agency"></div>
+      <div class="agency-verify">
+        <h3 id="t-agency_verify_title"></h3>
+        <div class="av-desc" id="t-agency_verify_desc"></div>
+        <div class="av-step"><div class="avn">1</div><p id="t-agency_v1"></p></div>
+        <div class="av-step"><div class="avn">2</div><p id="t-agency_v2"></p></div>
+        <div class="av-step"><div class="avn">3</div><p id="t-agency_v3"></p></div>
+        <div class="av-step"><div class="avn">4</div><p id="t-agency_v4"></p></div>
+        <div class="av-step"><div class="avn">5</div><p id="t-agency_v5"></p></div>
+        <button class="btn btn-dark" onclick="App.openRegLink()" id="t-agency_link_btn"></button>
+        <div class="av-note" id="t-agency_note"></div>
+      </div>
+    </div>
+
+    <div class="section">
+      <div class="section-title" id="t-withdraw_title"></div>
+      <div class="section-intro" id="t-withdraw_sub"></div>
+      <div class="methods">
+        <div class="method"><img src="/logos/bankily.jpg" alt="Bankily"><div class="mn">Bankily</div></div>
+        <div class="method"><img src="/logos/masrvi.jpg" alt="Masrvi"><div class="mn">Masrvi</div></div>
+        <div class="method"><img src="/logos/sedad.jpg" alt="Sedad"><div class="mn">Sedad</div></div>
+      </div>
+    </div>
+
+    <div class="section">
+      <div class="support-box">
+        <h3 id="t-support_title"></h3>
+        <p id="t-support_desc"></p>
+        <button class="btn btn-wa" onclick="App.openSupportChat()" style="margin-bottom:10px">
+          <svg viewBox="0 0 24 24" fill="currentColor"><path d="M12 2a10 10 0 00-8.5 15.3L2 22l4.8-1.5A10 10 0 1012 2zm0 18a8 8 0 01-4.1-1.1l-.3-.2-3 .9.9-2.9-.2-.3A8 8 0 1112 20zm4.4-6c-.2-.1-1.4-.7-1.6-.8-.2-.1-.4-.1-.5.1l-.7.9c-.1.2-.3.2-.5.1a6.5 6.5 0 01-3.2-2.8c-.2-.4.2-.4.6-1.2.1-.1 0-.3 0-.4l-.8-1.9c-.2-.5-.4-.4-.5-.4h-.5a1 1 0 00-.7.3c-.7.7-.9 1.7-.5 2.8a11 11 0 004.6 4.5c1.7.7 2.4.6 3.2.5.5 0 1.4-.6 1.6-1.1.2-.6.2-1 .1-1.1z"/></svg>
+          <span id="t-btn_chat"></span>
+        </button>
+        <button class="btn btn-dark" onclick="App.openChannel()" id="t-btn_channel"></button>
+      </div>
+    </div>
+
+    <div class="foot"><b>OussoCash</b><br><span id="t-brand_sub"></span><br>&copy; 2026</div>
+  </div>
+
+  <div id="view-account" class="hidden"></div>
+
+</div>
+
+<div class="modal" id="modal"><div class="modal-box" id="modalBox"></div></div>
+<div class="modal" id="videoModal"><div class="modal-box video"><iframe id="vFrame" src="" allow="autoplay;fullscreen" allowfullscreen></iframe></div></div>
+<div class="toast" id="toast"></div>
+
+<script src="/texts.js"></script>
+<script src="/app.js"></script>
+</body>
+</html>

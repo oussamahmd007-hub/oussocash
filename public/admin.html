@@ -1,0 +1,249 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>OussoCash — لوحة الإدارة</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;600;700;800;900&family=Tajawal:wght@500;700;800&display=swap" rel="stylesheet">
+<style>
+:root{--blue-900:#0F172A;--blue-700:#1D4ED8;--blue-600:#2563EB;--sky:#e8f1fd;--white:#fff;--ink:#0d2137;--muted:#5a7184;--line:#e3edf9;--green:#16a34a;--red:#dc2626}
+*{margin:0;padding:0;box-sizing:border-box}
+body{font-family:'Cairo',sans-serif;background:#f4f9ff;color:var(--ink)}
+.login-wrap{min-height:100vh;display:flex;align-items:center;justify-content:center;padding:20px;background:linear-gradient(160deg,var(--blue-700),var(--blue-900))}
+.login-card{background:#fff;border-radius:22px;padding:34px 26px;width:100%;max-width:380px;box-shadow:0 20px 60px rgba(0,0,0,.3)}
+.login-card h1{font-family:'Tajawal';font-size:24px;color:var(--blue-900);text-align:center;margin-bottom:6px}
+.login-card p{text-align:center;color:var(--muted);font-size:14px;margin-bottom:24px}
+input,select{width:100%;padding:14px;border:1.5px solid var(--line);border-radius:12px;font-family:'Cairo';font-size:15px;background:#fbfdff}
+input:focus{outline:none;border-color:var(--blue-600)}
+.btn{width:100%;padding:15px;border:none;border-radius:12px;font-family:'Cairo';font-weight:800;font-size:16px;cursor:pointer;background:linear-gradient(135deg,var(--blue-600),var(--blue-700));color:#fff;transition:filter .2s}
+.btn:hover{filter:brightness(1.08)}
+.btn-sm{padding:8px 16px;font-size:13px;border-radius:9px;width:auto}
+.btn-green{background:var(--green)}.btn-red{background:var(--red)}.btn-ghost{background:var(--sky);color:var(--blue-700)}
+
+.dash{display:none;max-width:1100px;margin:0 auto;padding:20px}
+.dash-head{display:flex;justify-content:space-between;align-items:center;margin-bottom:22px;flex-wrap:wrap;gap:12px}
+.dash-head h1{font-family:'Tajawal';font-size:24px;color:var(--blue-900);display:flex;align-items:center;gap:10px}
+.dash-head .x{background:linear-gradient(135deg,var(--blue-700),var(--blue-900));color:#fff;font-weight:900;padding:3px 8px;border-radius:8px;font-size:16px}
+.tabs{display:flex;gap:8px;margin-bottom:20px;flex-wrap:wrap}
+.tab{padding:10px 18px;border-radius:11px;background:#fff;border:1px solid var(--line);font-family:'Cairo';font-weight:700;font-size:14px;cursor:pointer;color:var(--muted)}
+.tab.active{background:var(--blue-600);color:#fff;border-color:var(--blue-600)}
+.cards{display:grid;grid-template-columns:repeat(auto-fit,minmax(160px,1fr));gap:14px;margin-bottom:24px}
+.stat{background:#fff;border:1px solid var(--line);border-radius:16px;padding:20px;box-shadow:0 6px 18px rgba(15,23,42,.05)}
+.stat .l{font-size:13px;color:var(--muted);font-weight:600}
+.stat .v{font-family:'Tajawal';font-size:28px;font-weight:800;color:var(--blue-700);margin-top:6px}
+.panel{background:#fff;border:1px solid var(--line);border-radius:16px;padding:20px;box-shadow:0 6px 18px rgba(15,23,42,.05);display:none}
+.panel.active{display:block}
+.panel h2{font-family:'Tajawal';font-size:19px;color:var(--blue-900);margin-bottom:16px}
+table{width:100%;border-collapse:collapse;font-size:13.5px}
+th,td{text-align:right;padding:11px 10px;border-bottom:1px solid var(--line)}
+th{color:var(--muted);font-weight:700;font-size:12px}
+.tbl-wrap{overflow-x:auto}
+.badge{display:inline-block;padding:3px 10px;border-radius:100px;font-size:11px;font-weight:800}
+.b-v{background:#dcfce7;color:#15803d}.b-p{background:#fef3c7;color:#b45309}.b-n{background:#e0e7ff;color:#4338ca}
+.upload-zone{border:2px dashed var(--blue-600);border-radius:14px;padding:30px;text-align:center;cursor:pointer;background:var(--sky);margin-bottom:16px}
+.upload-zone:hover{background:#dbeafe}
+.row-actions{display:flex;gap:6px}
+.field-row{display:flex;gap:10px;align-items:end;margin-bottom:14px;flex-wrap:wrap}
+.field-row > div{flex:1;min-width:160px}
+.field-row label{display:block;font-size:13px;font-weight:700;margin-bottom:6px}
+.msg{padding:12px 16px;border-radius:10px;margin-bottom:14px;font-weight:700;font-size:14px;display:none}
+.msg.ok{background:#dcfce7;color:#15803d;display:block}
+.msg.err{background:#fef2f2;color:#dc2626;display:block}
+.spinner{width:20px;height:20px;border:2px solid rgba(255,255,255,.4);border-top-color:#fff;border-radius:50%;animation:sp .8s linear infinite;display:inline-block}
+@keyframes sp{to{transform:rotate(360deg)}}
+.err-login{color:var(--red);font-size:13px;text-align:center;margin-top:12px;font-weight:700;display:none}
+</style>
+</head>
+<body>
+
+<!-- LOGIN -->
+<div class="login-wrap" id="loginView">
+  <div class="login-card">
+    <img src="/logos/mascot_sm.png" style="width:64px;height:64px;border-radius:16px;margin:0 auto 12px;display:block">
+    <h1>OussoCash</h1>
+    <p>لوحة الإدارة</p>
+    <input id="pwd" type="password" placeholder="كلمة مرور الأدمن" onkeydown="if(event.key==='Enter')Admin.login()">
+    <div style="height:14px"></div>
+    <button class="btn" onclick="Admin.login()" id="loginBtn">دخول</button>
+    <div class="err-login" id="loginErr">كلمة المرور غير صحيحة</div>
+  </div>
+</div>
+
+<!-- DASHBOARD -->
+<div class="dash" id="dashView">
+  <div class="dash-head">
+    <h1><img src="/logos/mascot_sm.png" style="width:34px;height:34px;border-radius:9px;vertical-align:middle;margin-left:6px">لوحة OussoCash</h1>
+    <button class="btn btn-sm btn-ghost" onclick="Admin.logout()">خروج</button>
+  </div>
+
+  <div class="cards" id="statCards"></div>
+
+  <div class="tabs">
+    <div class="tab active" onclick="Admin.tab('csv',this)">رفع CSV</div>
+    <div class="tab" onclick="Admin.tab('users',this)">المستخدمون</div>
+    <div class="tab" onclick="Admin.tab('withdrawals',this)">السحوبات</div>
+    <div class="tab" onclick="Admin.tab('settings',this)">الإعدادات</div>
+  </div>
+
+  <!-- CSV -->
+  <div class="panel active" id="panel-csv">
+    <h2>رفع ملف التحقق (CSV من 1xBet)</h2>
+    <div class="msg" id="csvMsg"></div>
+    <div class="upload-zone" onclick="document.getElementById('csvFile').click()">
+      <div style="font-weight:800;color:var(--blue-700);font-size:16px">اضغط لاختيار ملف CSV</div>
+      <div style="color:var(--muted);font-size:13px;margin-top:6px">ملف تقرير اللاعبين من 1xBet</div>
+    </div>
+    <input type="file" id="csvFile" accept=".csv" style="display:none" onchange="Admin.uploadCsv(this)">
+    <div id="csvResult"></div>
+  </div>
+
+  <!-- USERS -->
+  <div class="panel" id="panel-users">
+    <h2>المستخدمون</h2>
+    <div class="tbl-wrap"><table id="usersTable"><thead><tr><th>الرقم</th><th>الحالة</th><th>الرصيد</th><th>Game ID</th><th>كود الإحالة</th></tr></thead><tbody></tbody></table></div>
+  </div>
+
+  <!-- WITHDRAWALS -->
+  <div class="panel" id="panel-withdrawals">
+    <h2>طلبات السحب المعلّقة</h2>
+    <div class="msg" id="wdMsg"></div>
+    <div class="tbl-wrap"><table id="wdTable"><thead><tr><th>الرقم</th><th>المبلغ</th><th>الطريقة</th><th>رقم الحساب</th><th>إجراء</th></tr></thead><tbody></tbody></table></div>
+  </div>
+
+  <!-- SETTINGS -->
+  <div class="panel" id="panel-settings">
+    <h2>الإعدادات</h2>
+    <div class="msg" id="setMsg"></div>
+    <div class="field-row">
+      <div><label>رقم واتساب الدعم</label><input id="setWa" type="text"></div>
+      <button class="btn btn-sm" onclick="Admin.saveSetting('support_whatsapp','setWa')">حفظ</button>
+    </div>
+    <div class="field-row">
+      <div><label>رابط القناة</label><input id="setCh" type="text"></div>
+      <button class="btn btn-sm" onclick="Admin.saveSetting('channel_url','setCh')">حفظ</button>
+    </div>
+    <hr style="margin:20px 0;border:none;border-top:1px solid var(--line)">
+    <h2>حظر Game ID</h2>
+    <div class="field-row">
+      <div><label>Game ID</label><input id="banId" type="text" placeholder="123456789"></div>
+      <button class="btn btn-sm btn-red" onclick="Admin.banId()">حظر</button>
+    </div>
+  </div>
+</div>
+
+<script>
+const Admin = {
+  pwd: '',
+  async api(action, extra={}) {
+    const r = await fetch('/api/admin', {
+      method:'POST', headers:{'Content-Type':'application/json'},
+      body: JSON.stringify({ password: this.pwd, action, ...extra })
+    });
+    return r.json();
+  },
+  async login() {
+    this.pwd = document.getElementById('pwd').value;
+    const btn = document.getElementById('loginBtn');
+    btn.disabled = true; btn.innerHTML = '<span class="spinner"></span>';
+    const r = await this.api('dashboard');
+    btn.disabled = false; btn.textContent = 'دخول';
+    if (r.error === 'unauthorized') { document.getElementById('loginErr').style.display='block'; return; }
+    sessionStorage.setItem('ousso_admin_pwd', this.pwd);
+    document.getElementById('loginView').style.display='none';
+    document.getElementById('dashView').style.display='block';
+    this.renderStats(r);
+    this.tab('csv', document.querySelector('.tab'));
+  },
+  logout(){ sessionStorage.removeItem('ousso_admin_pwd'); location.reload(); },
+  renderStats(r){
+    document.getElementById('statCards').innerHTML = `
+      <div class="stat"><div class="l">إجمالي المستخدمين</div><div class="v">${r.total_users||0}</div></div>
+      <div class="stat"><div class="l">المفعّلون</div><div class="v">${r.verified||0}</div></div>
+      <div class="stat"><div class="l">سحوبات معلّقة</div><div class="v">${r.pending_wd||0}</div></div>
+      <div class="stat"><div class="l">قيمة السحوبات</div><div class="v">${r.pending_wd_amount||0} UM</div></div>
+      <div class="stat"><div class="l">إجمالي العمولات</div><div class="v">${r.total_commissions||0} UM</div></div>
+    `;
+  },
+  async tab(name, el){
+    document.querySelectorAll('.tab').forEach(t=>t.classList.remove('active'));
+    el.classList.add('active');
+    document.querySelectorAll('.panel').forEach(p=>p.classList.remove('active'));
+    document.getElementById('panel-'+name).classList.add('active');
+    if(name==='users') this.loadUsers();
+    if(name==='withdrawals') this.loadWithdrawals();
+    if(name==='settings') this.loadSettings();
+  },
+  async loadUsers(){
+    const r = await this.api('users');
+    const tb = document.querySelector('#usersTable tbody');
+    tb.innerHTML = (r.users||[]).map(u=>{
+      const badge = u.verified?'<span class="badge b-v">مفعّل</span>':(u.pending_gid?'<span class="badge b-p">قيد التحقق</span>':'<span class="badge b-n">جديد</span>');
+      return `<tr><td>+${u.phone}</td><td>${badge}</td><td>${u.balance_um} UM</td><td>${u.game_id||'-'}</td><td>${u.ref_code}</td></tr>`;
+    }).join('') || '<tr><td colspan=5 style="text-align:center;color:#999">لا يوجد</td></tr>';
+  },
+  async loadWithdrawals(){
+    const r = await this.api('withdrawals');
+    const tb = document.querySelector('#wdTable tbody');
+    tb.innerHTML = (r.withdrawals||[]).map(w=>`
+      <tr><td>+${w.phone}</td><td><b>${w.amount_um} UM</b></td><td>${w.method}</td><td>${w.account_number}</td>
+      <td><div class="row-actions">
+        <button class="btn btn-sm btn-green" onclick="Admin.processWd(${w.id},true)">قبول</button>
+        <button class="btn btn-sm btn-red" onclick="Admin.processWd(${w.id},false)">رفض</button>
+      </div></td></tr>`).join('') || '<tr><td colspan=5 style="text-align:center;color:#999">لا يوجد طلبات</td></tr>';
+  },
+  async processWd(id, approve){
+    await this.api('process_wd',{id,approve});
+    const m=document.getElementById('wdMsg'); m.className='msg ok'; m.textContent = approve?'تم قبول السحب':'تم رفض السحب وإرجاع الرصيد';
+    this.loadWithdrawals();
+    setTimeout(()=>m.className='msg',2500);
+  },
+  async loadSettings(){
+    const r = await this.api('get_settings');
+    document.getElementById('setWa').value = r.settings?.support_whatsapp||'';
+    document.getElementById('setCh').value = r.settings?.channel_url||'';
+  },
+  async saveSetting(key, inputId){
+    const value = document.getElementById(inputId).value.trim();
+    await this.api('set_setting',{key,value});
+    const m=document.getElementById('setMsg'); m.className='msg ok'; m.textContent='تم الحفظ';
+    setTimeout(()=>m.className='msg',2500);
+  },
+  async banId(){
+    const gid = document.getElementById('banId').value.trim();
+    if(!gid) return;
+    await this.api('ban_id',{game_id:gid});
+    const m=document.getElementById('setMsg'); m.className='msg ok'; m.textContent='تم حظر '+gid;
+    document.getElementById('banId').value='';
+    setTimeout(()=>m.className='msg',2500);
+  },
+  async uploadCsv(input){
+    const file = input.files[0]; if(!file) return;
+    const m=document.getElementById('csvMsg'); m.className='msg ok'; m.textContent='جاري المعالجة...';
+    const text = await file.text();
+    const r = await this.api('process_csv',{csv:text, filename:file.name});
+    if(r.error){ m.className='msg err'; m.textContent='خطأ: '+(r.message||r.error); return; }
+    const s = r.stats;
+    m.className='msg ok'; m.textContent='تمت المعالجة بنجاح';
+    document.getElementById('csvResult').innerHTML = `
+      <div class="cards" style="margin-top:16px">
+        <div class="stat"><div class="l">تم التفعيل</div><div class="v" style="color:var(--green)">${s.ok}</div></div>
+        <div class="stat"><div class="l">بروموكود مختلف</div><div class="v">${s.no_sub}</div></div>
+        <div class="stat"><div class="l">إيداع غير كافٍ</div><div class="v">${s.no_dep}</div></div>
+        <div class="stat"><div class="l">غير موجود</div><div class="v">${s.not_found}</div></div>
+        <div class="stat"><div class="l">مستخدم مسبقاً</div><div class="v">${s.taken}</div></div>
+        <div class="stat"><div class="l">الإجمالي المعالج</div><div class="v">${s.total}</div></div>
+      </div>`;
+    input.value='';
+  },
+  init(){
+    const saved = sessionStorage.getItem('ousso_admin_pwd');
+    if(saved){ this.pwd=saved; this.api('dashboard').then(r=>{
+      if(!r.error){ document.getElementById('loginView').style.display='none'; document.getElementById('dashView').style.display='block'; this.renderStats(r); this.tab('csv',document.querySelector('.tab')); }
+    }); }
+  }
+};
+Admin.init();
+</script>
+</body>
+</html>
