@@ -1,6 +1,0 @@
-{
-  "cleanUrls": true,
-  "rewrites": [
-    { "source": "/r/:code", "destination": "/index.html" }
-  ]
-}
