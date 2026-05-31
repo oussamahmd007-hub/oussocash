@@ -24,10 +24,8 @@ module.exports = async (req, res) => {
     if (!METHODS.includes(method)) return json(res, 400, { error: 'bad_method' });
     if (account.length < 6) return json(res, 400, { error: 'bad_account' });
 
-    // Appareil de confiance obligatoire pour les retraits protégés
-    const fp = hashFingerprint(body.fingerprint);
-    const dev = await sbGet('devices', `game_id=eq.${gid}&fingerprint=eq.${fp}&select=trusted`);
-    if (!dev || !dev.trusted) return json(res, 403, { error: 'device_untrusted' });
+    // النموذج المفتوح: الدخول من أي جهاز، والسحب مرتبط بحساب 1xBet المعتمد
+    const fp = body.fingerprint ? hashFingerprint(body.fingerprint) : null;
 
     if (acc.balance_um < MIN_WITHDRAW) {
       return json(res, 400, { error: 'insufficient', balance: acc.balance_um, min: MIN_WITHDRAW });
