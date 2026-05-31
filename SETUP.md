@@ -43,7 +43,9 @@ oussocash/
 | `XBET_CASHDESKID` | من مدير 1xBet |
 | `ONESIGNAL_APP_ID` | `2bc2dce1-ddee-42f3-a013-504c9989bc37` |
 | `ONESIGNAL_API_KEY` | مفتاح OneSignal REST (يبدأ بـ os_v2_app_…) |
-| `FOOTBALL_API_KEY` | مفتاح football-data.org (للرياضة) |
+| `FOOTBALL_API_KEY` | مفتاح football-data.org (لقسم الرياضة) |
+| `TELEGRAM_BOT_TOKEN` | (اختياري) توكن بوت تيليجرام لاستقبال الاقتراحات |
+| `TELEGRAM_CHAT_ID` | (اختياري) معرّف قناة/مجموعة الإدارة على تيليجرام |
 
 > ⚠️ **مهم:** أنشئ مفتاح football-data.org جديداً إن سبق أن شاركته، وضعه هنا فقط.
 
