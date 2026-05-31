@@ -69,18 +69,23 @@ const App = {
 
   // ── views ──
   show(view){
-    ['landing','verify','present','dash','ref'].forEach(v=>{
-      document.getElementById('view-'+v).classList.toggle('hidden', v!==view);
+    ['landing','verify','present','dash','ref','contest','sport','support'].forEach(v=>{
+      const el=document.getElementById('view-'+v); if(el) el.classList.toggle('hidden', v!==view);
     });
     this.current = view;
     document.getElementById('scroll').scrollTop = 0;
-    const loggedIn = ['dash','ref'].includes(view);
+    const loggedIn = ['dash','ref','contest','sport','support'].includes(view);
     document.getElementById('bottomnav').classList.toggle('hidden', !this.account || !loggedIn);
     if (this.account){
       document.querySelectorAll('.nav-item').forEach(n=>n.classList.toggle('on', n.dataset.nav===view));
     }
   },
-  nav(v){ if (v==='dash'||v==='ref') this.show(v); },
+  nav(v){
+    if (v==='dash'||v==='ref') this.show(v);
+    else if(v==='contest'){ this.show('contest'); this.loadContest(); }
+    else if(v==='sport'){ this.show('sport'); this.sportView(this._sportView||'today'); }
+    else if(v==='support'){ this.show('support'); this.initChat(); }
+  },
 
   openVerify(){ document.getElementById('verifyErr').textContent=''; document.getElementById('gidInput').value=''; this.show('verify'); setTimeout(()=>document.getElementById('gidInput').focus(),300); },
 
@@ -108,8 +113,9 @@ const App = {
 
     const btn=document.getElementById('verifyBtn'); btn.style.opacity='.6'; btn.disabled=true;
     // start honest sequence (real API runs in parallel)
+    const fp=await this.fingerprint();
     const seqPromise = this.runSequence();
-    const r = await this.api('verify',{ game_id: gid });
+    const r = await this.api('verify',{ game_id: gid, fingerprint: fp });
     await seqPromise; // ensure minimum visible stages complete with real call
 
     btn.style.opacity='1'; btn.disabled=false;
@@ -117,9 +123,11 @@ const App = {
     if (r.status==='invalid'){ this.endSequence(false); err.textContent=this.t('verify_invalid'); return; }
     if (r.status==='banned'){ this.endSequence(false); err.textContent=this.t('verify_banned'); return; }
     if (r.status==='not_found'){ this.endSequence(false); err.textContent=this.t('verify_notfound'); return; }
+    if (r.status==='id_taken'){ this.endSequence(false); err.textContent=this.t('err_id_taken'); return; }
+    if (r.status==='device_has_account'){ this.endSequence(false); err.textContent=this.t('err_device_has'); return; }
 
     if (r.status==='existing'){
-      // account exists → login (register endpoint attaches device)
+      // account exists on this device → login
       await this.endSequence(true);
       return this.login(gid);
     }
@@ -256,6 +264,8 @@ const App = {
 
     if(r.status==='banned'){ this.closeSheet(); this.toast(T.verify_banned); return; }
     if(r.status==='not_found'){ this.closeSheet(); this.toast(T.verify_notfound); return; }
+    if(r.status==='id_taken'){ this.closeSheet(); this.toast(T.err_id_taken); this.show('verify'); return; }
+    if(r.status==='device_has_account'){ this.closeSheet(); this.toast(T.err_device_has); return; }
     if(!r.ok){ this.closeSheet(); this.toast('Error'); return; }
 
     Store.s=r.session; this.account=r.account; this.stats=null;
@@ -305,7 +315,7 @@ const App = {
     const fp=await this.fingerprint();
     const r=await this.api('me',{ session:Store.s, fingerprint:fp });
     if(r.error==='no_session'||r.error==='banned'){ this.logout(); return; }
-    if(r.ok){ this.account=r.account; this.stats=r.stats; this._deviceTrusted=r.device_trusted;
+    if(r.ok){ this.account=r.account; this.stats=r.stats; this._deviceTrusted=r.device_trusted; this.contest=r.contest;
       (r.notifications||[]).forEach(n=>this.toast(n.body||n.title)); }
     this.show('dash'); this.renderDash();
   },
@@ -325,7 +335,17 @@ const App = {
     const cls={active:'st-active',pending:'st-pending',deposit_incomplete:'st-deposit',banned:'st-deposit'};
     const st=a.status||'pending';
     document.getElementById('statStatus').innerHTML=`<span class="status-pill ${cls[st]}"><span class="d"></span>${T[map[st]]}</span>`;
-    document.getElementById('depositWarn').classList.toggle('hidden', st!=='deposit_incomplete');
+
+    // deposit-incomplete: show exact needed amount + deadline
+    const dw=document.getElementById('depositWarn');
+    if(st==='deposit_incomplete'){
+      dw.classList.remove('hidden');
+      const need=a.deposit_needed||0;
+      dw.querySelector('span').innerHTML=`${T.deposit_needed_msg} <b style="color:var(--accent)">${need} UM</b><br>${T.deposit_deadline_msg}`;
+    } else dw.classList.add('hidden');
+
+    // contest banner on dashboard
+    this.renderContestBanner();
 
     // timeline
     const acts=[
@@ -341,6 +361,21 @@ const App = {
     this.renderRef();
   },
 
+  renderContestBanner(){
+    let el=document.getElementById('contestBanner');
+    if(!this.contest){ if(el) el.remove(); return; }
+    const T=window.TEXTS[this.lang];
+    if(!el){
+      el=document.createElement('div'); el.id='contestBanner'; el.className='contest-banner';
+      el.onclick=()=>this.nav('contest');
+      const dw=document.getElementById('depositWarn');
+      dw.parentNode.insertBefore(el, dw.nextSibling);
+    }
+    el.innerHTML=`<div class="cb-ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M8 21h8M12 17v4M7 4h10v4a5 5 0 01-10 0z"/></svg></div>
+      <div class="cb-txt"><b>${T.contest_banner}</b><span>${this.contest.prize_um} UM · ${this.contest.my_refs||0} ${T.contest_refs_label}</span></div>
+      <svg class="cb-arrow" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 18l6-6-6-6"/></svg>`;
+  },
+
   // ═══ REFERRAL ═══
   renderRef(){
     if(!this.account) return;
@@ -351,10 +386,10 @@ const App = {
     document.getElementById('refStatEarned').textContent=(s.earned||0)+' UM';
     // mirror nav labels
     const T=window.TEXTS[this.lang];
-    document.getElementById('t-ref_title2').textContent=T.ref_title;
-    document.getElementById('t-support_title2').textContent=T.support_title.replace(/مركز |Centre de /,'');
-    document.getElementById('t-dash_refs2').textContent=T.dash_refs;
-    document.getElementById('t-dash_earned2').textContent=T.dash_earned;
+    const setTxt=(id,txt)=>{ const el=document.getElementById(id); if(el) el.textContent=txt; };
+    setTxt('t-ref_title2', T.ref_title);
+    setTxt('t-dash_refs2', T.dash_refs);
+    setTxt('t-dash_earned2', T.dash_earned);
   },
   copyRef(){
     const link=`${location.origin}/r/${this.account.ref_code}`;
@@ -440,7 +475,7 @@ const App = {
     });
   },
 
-  logout(){ Store.s=null; this.account=null; this.stats=null; this.show('landing'); document.getElementById('bottomnav').classList.add('hidden'); },
+  logout(){ Store.s=null; this.account=null; this.stats=null; this._chatInit=false; document.getElementById('chatMsgs')&&(document.getElementById('chatMsgs').innerHTML=''); this.show('landing'); document.getElementById('bottomnav').classList.add('hidden'); },
 
   // ═══ AGENCY ═══
   openRegLink(){ window.open(REG_LINK,'_blank'); },
@@ -456,13 +491,182 @@ const App = {
     `);
   },
 
-  // ── icon helpers ──
+  // ═══ CONTEST ═══
+  async loadContest(){
+    const T=window.TEXTS[this.lang];
+    const body=document.getElementById('contestBody');
+    body.innerHTML=`<div class="card" style="text-align:center;color:var(--txt-3);padding:40px 20px">…</div>`;
+    const r=await this.api('contest',{ session:Store.s });
+    if(!r.contest){
+      body.innerHTML=`<div class="card" style="text-align:center;padding:40px 22px">
+        <div class="contest-empty-ic">${this.iTrophy()}</div>
+        <p style="color:var(--txt-2);font-size:14px;margin-top:14px">${T.contest_none}</p></div>`;
+      return;
+    }
+    const c=r.contest, lb=r.leaderboard||[], me=r.me||{};
+    const title=this.lang==='fr'&&c.title_fr?c.title_fr:c.title;
+    const ends=this.countdown(c.ends_at);
+    const medal=['①','②','③'];
+    body.innerHTML=`
+      <div class="contest-hero">
+        <div class="contest-trophy">${this.iTrophy()}</div>
+        <div class="contest-prize-val">${c.prize_um.toLocaleString()} <small>UM</small></div>
+        <div class="contest-prize-lbl">${title}</div>
+        <div class="contest-meta">
+          <div><span>${T.contest_ends}</span><b>${ends}</b></div>
+          <div><span>${T.contest_required}</span><b>${c.required_refs}</b></div>
+        </div>
+      </div>
+      <div class="contest-me">
+        <div><span>${T.contest_your_rank}</span><b>${me.rank?'#'+me.rank:'—'}</b></div>
+        <div><span>${T.contest_your_refs}</span><b>${me.refs||0}</b></div>
+      </div>
+      <button class="btn btn-primary" style="margin-top:14px" onclick="App.nav('ref')">${T.contest_join}</button>
+      <div class="section-h" id="">${T.contest_leaderboard}</div>
+      <div class="card" style="padding:8px 16px">
+        ${lb.length?lb.map(x=>`
+          <div class="lb-row ${me.rank===x.rank?'lb-me':''}">
+            <div class="lb-rank ${x.rank<=3?'lb-top':''}">${x.rank<=3?medal[x.rank-1]:x.rank}</div>
+            <div class="lb-name">${this.esc(x.name)}</div>
+            <div class="lb-refs">${x.refs} <small>${T.contest_refs_label}</small></div>
+          </div>`).join(''):`<div style="text-align:center;color:var(--txt-3);padding:24px;font-size:13px">—</div>`}
+      </div>`;
+  },
+  countdown(iso){
+    const T=window.TEXTS[this.lang];
+    const ms=new Date(iso)-new Date();
+    if(ms<=0) return '—';
+    const d=Math.floor(ms/864e5), h=Math.floor((ms%864e5)/36e5);
+    return d>0?`${d} ${T.contest_days} ${h} ${T.contest_hours}`:`${h} ${T.contest_hours}`;
+  },
+
+  // ═══ SPORT ═══
+  async sportView(v){
+    this._sportView=v;
+    document.querySelectorAll('.sport-tab').forEach(t=>t.classList.toggle('on', t.dataset.sv===v));
+    const body=document.getElementById('sportBody');
+    const T=window.TEXTS[this.lang];
+    body.innerHTML=`<div class="sport-loading">${this.spinner()}</div>`;
+    const r=await this.api('sport',{ view:v, lang:this.lang });
+    if(r.error){ body.innerHTML=`<div class="sport-empty">${T.sport_unavailable}</div>`; return; }
+
+    if(v==='standings'){ this.renderStandings(r.standings); return; }
+
+    let html='';
+    // predictions block (today/tomorrow)
+    if(r.predictions && r.predictions.length){
+      html+=`<div class="section-h" style="padding:0;margin:4px 0 2px">${T.sport_predictions}</div>
+        <p class="sport-pred-sub">${T.sport_pred_sub}</p>`;
+      html+=r.predictions.map(p=>this.predCard(p)).join('');
+      html+=`<div class="sport-disclaimer">${T.sport_disclaimer}</div>`;
+    }
+    // matches list
+    if(r.matches && r.matches.length){
+      html+=`<div class="section-h" style="padding:0;margin:18px 0 6px">${v==='live'?T.sport_live:v==='yesterday'?T.sport_yesterday:v==='tomorrow'?T.sport_tomorrow:T.sport_today}</div>`;
+      html+=r.matches.map(m=>this.matchCard(m)).join('');
+    } else if(!r.predictions || !r.predictions.length){
+      html+=`<div class="sport-empty">${T.sport_no_matches}</div>`;
+    }
+    body.innerHTML=html;
+  },
+  predCard(p){
+    const T=window.TEXTS[this.lang];
+    const pickTxt=p.pick==='draw'?T.sport_pick_draw:(p.pick===p.home?T.sport_pick_home:T.sport_pick_away);
+    const pickName=p.pick==='draw'?T.sport_pick_draw:p.pick;
+    const conf=p.confidence||50;
+    const cc=conf>=65?'high':conf>=52?'mid':'low';
+    return `<div class="pred-card">
+      <div class="pred-comp">${this.esc(p.comp)}</div>
+      <div class="pred-teams">
+        <div class="pred-team"><img src="${p.home_crest||''}" onerror="this.style.visibility='hidden'"><span>${this.esc(p.home)}</span>${p.home_pos?`<em>#${p.home_pos}</em>`:''}</div>
+        <div class="pred-vs">${T.sport_vs}</div>
+        <div class="pred-team"><img src="${p.away_crest||''}" onerror="this.style.visibility='hidden'"><span>${this.esc(p.away)}</span>${p.away_pos?`<em>#${p.away_pos}</em>`:''}</div>
+      </div>
+      <div class="pred-foot">
+        <div class="pred-pick"><span>${T.sport_pick}</span><b>${this.esc(pickName)}</b></div>
+        <div class="pred-conf ${cc}"><div class="conf-bar"><i style="width:${conf}%"></i></div><span>${conf}%</span></div>
+      </div>
+    </div>`;
+  },
+  matchCard(m){
+    const T=window.TEXTS[this.lang];
+    const live=['LIVE','IN_PLAY','PAUSED'].includes(m.status);
+    const done=m.status==='FINISHED';
+    const time=new Date(m.utcDate).toLocaleTimeString(this.lang==='fr'?'fr':'ar',{hour:'2-digit',minute:'2-digit'});
+    const score=(m.score_home!=null)?`${m.score_home} - ${m.score_away}`:time;
+    return `<div class="match-card">
+      <div class="match-comp"><img src="${m.comp_emblem||''}" onerror="this.style.display='none'"><span>${this.esc(m.comp)}</span>
+        ${live?`<span class="live-dot">${T.sport_live}</span>`:done?`<span class="done-tag">${T.sport_finished}</span>`:''}</div>
+      <div class="match-row">
+        <div class="match-team"><img src="${m.home_crest||''}" onerror="this.style.visibility='hidden'"><span>${this.esc(m.home)}</span></div>
+        <div class="match-score ${live?'live':''}">${score}</div>
+        <div class="match-team away"><span>${this.esc(m.away)}</span><img src="${m.away_crest||''}" onerror="this.style.visibility='hidden'"></div>
+      </div>
+    </div>`;
+  },
+  renderStandings(s){
+    const body=document.getElementById('sportBody');
+    if(!s||!s.table){ body.innerHTML=`<div class="sport-empty">—</div>`; return; }
+    body.innerHTML=`<div class="section-h" style="padding:0;margin:4px 0 8px">${this.esc(s.name)}</div>
+      <div class="card" style="padding:6px 14px">
+      ${s.table.map(r=>`<div class="std-row">
+        <div class="std-pos ${r.position<=4?'top':r.position>=18?'rel':''}">${r.position}</div>
+        <img class="std-crest" src="${r.crest||''}" onerror="this.style.visibility='hidden'">
+        <div class="std-name">${this.esc(r.team)}</div>
+        <div class="std-pl">${r.played}</div>
+        <div class="std-pts">${r.points}</div>
+      </div>`).join('')}
+      </div>`;
+  },
+
+  // ═══ SMART SUPPORT CHAT ═══
+  initChat(){
+    if(this._chatInit) return;
+    this._chatInit=true;
+    const T=window.TEXTS[this.lang];
+    document.getElementById('chatInput').placeholder=T.support_placeholder;
+    this.addMsg('bot', T.support_greeting);
+  },
+  addMsg(who, text, suggestHuman){
+    const box=document.getElementById('chatMsgs');
+    const div=document.createElement('div');
+    div.className='chat-msg '+(who==='me'?'me':'bot');
+    div.innerHTML=`<div class="bubble">${this.esc(text).replace(/\n/g,'<br>')}</div>`;
+    box.appendChild(div);
+    if(suggestHuman){
+      const T=window.TEXTS[this.lang];
+      const b=document.createElement('button');
+      b.className='chat-human-btn'; b.textContent=T.support_human;
+      b.onclick=()=>this.openSupport();
+      box.appendChild(b);
+    }
+    box.scrollTop=box.scrollHeight;
+  },
+  async sendChat(){
+    const inp=document.getElementById('chatInput');
+    const text=inp.value.trim();
+    if(!text) return;
+    inp.value='';
+    this.addMsg('me', text);
+    // typing indicator
+    const box=document.getElementById('chatMsgs');
+    const typing=document.createElement('div');
+    typing.className='chat-msg bot'; typing.id='typingInd';
+    typing.innerHTML=`<div class="bubble typing"><span></span><span></span><span></span></div>`;
+    box.appendChild(typing); box.scrollTop=box.scrollHeight;
+
+    const r=await this.api('support',{ text, lang:this.lang, session:Store.s });
+    document.getElementById('typingInd')?.remove();
+    this.addMsg('bot', r.reply||'…', r.suggest_human);
+  },
   iShield(){ return `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 2l8 4v6c0 5-3.5 8-8 10-4.5-2-8-5-8-10V6z"/><path d="M9 12l2 2 4-4"/></svg>`; },
   iDevice(){ return `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="5" y="2" width="14" height="20" rx="3"/><path d="M11 18h2"/></svg>`; },
   iLock(){ return `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="4" y="10" width="16" height="11" rx="2"/><path d="M8 10V7a4 4 0 018 0v3"/></svg>`; },
   iCash(){ return `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 1v22M17 5H9.5a3.5 3.5 0 000 7h5a3.5 3.5 0 010 7H6"/></svg>`; },
   iSearch(){ return `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="7"/><path d="M21 21l-4-4"/></svg>`; },
+  iTrophy(){ return `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M8 21h8M12 17v4M7 4h10v4a5 5 0 01-10 0z"/><path d="M17 5h3v2a3 3 0 01-3 3M7 5H4v2a3 3 0 003 3"/></svg>`; },
   esc(s){ return String(s||'').replace(/[<>&"]/g,c=>({'<':'&lt;','>':'&gt;','&':'&amp;','"':'&quot;'}[c])); },
+  spinner(){ return `<div class="spin"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M12 2a10 10 0 0110 10" stroke-linecap="round"/></svg></div>`; },
 
   // ═══ BOOT ═══
   async boot(){

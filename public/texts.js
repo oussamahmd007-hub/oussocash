@@ -149,6 +149,61 @@ window.TEXTS = {
     // common
     close: 'إغلاق', back: 'رجوع', cancel: 'إلغاء', logout: 'خروج', home: 'الرئيسية',
     secured_by: 'هوية مرتبطة بحساب 1xBet المُتحقَّق منه',
+
+    // Pending / review state
+    pending_title: 'حسابك قيد المراجعة',
+    pending_desc: 'تم تسجيل معرّفك بنجاح. سيتم تفعيل حسابك بعد التحقق من إيداعك وربطه ببروموكود OUSSO، عادة خلال وقت قصير.',
+    pending_step1: 'تم استلام معرّفك',
+    pending_step2: 'التحقق من الإيداع والبروموكود',
+    pending_step3: 'تفعيل الحساب واستلام المكافآت',
+    deposit_needed_msg: 'إيداعك الحالي غير كافٍ. ينقصك المبلغ التالي لتفعيل حسابك:',
+    deposit_deadline_msg: 'أكمل الإيداع خلال 3 أيام وإلا سيتم حظر المعرّف وستحتاج لإنشاء حساب جديد.',
+
+    // Security messages
+    err_id_taken: 'هذا المعرّف مُستخدم بالفعل في حساب آخر ولا يمكن تكراره.',
+    err_device_has: 'لديك حساب مسجّل على هذا الجهاز بالفعل. لا يمكن تسجيل معرّف آخر.',
+
+    // Contest
+    contest_nav: 'المسابقة',
+    contest_title: 'مسابقة الإحالات',
+    contest_prize: 'الجائزة',
+    contest_ends: 'تنتهي خلال',
+    contest_required: 'الإحالات المطلوبة للتأهل',
+    contest_your_rank: 'ترتيبك',
+    contest_your_refs: 'إحالاتك في المسابقة',
+    contest_leaderboard: 'المتصدّرون',
+    contest_none: 'لا توجد مسابقة نشطة حالياً. تابعنا لتصلك المسابقة القادمة.',
+    contest_join: 'ادعُ أصدقاءك الآن',
+    contest_rank: 'المركز',
+    contest_refs_label: 'إحالة',
+    contest_days: 'يوم', contest_hours: 'ساعة',
+    contest_banner: 'مسابقة جارية — شارك واربح',
+
+    // Sport
+    sport_nav: 'الرياضة',
+    sport_title: 'المباريات والتوقعات',
+    sport_live: 'مباشر', sport_today: 'اليوم', sport_tomorrow: 'غداً', sport_yesterday: 'أمس',
+    sport_predictions: 'أفضل 5 توقعات',
+    sport_pred_sub: 'توقعات مبنية على ترتيب الفرق وبياناتهم الحقيقية',
+    sport_confidence: 'نسبة الثقة',
+    sport_pick: 'التوقع',
+    sport_pick_home: 'فوز المضيف', sport_pick_away: 'فوز الضيف', sport_pick_draw: 'تعادل',
+    sport_standings: 'الترتيب',
+    sport_no_matches: 'لا توجد مباريات في هذا اليوم.',
+    sport_finished: 'انتهت', sport_vs: 'ضد',
+    sport_pos: 'المركز',
+    sport_disclaimer: 'التوقعات تحليلية لأغراض إعلامية، النتائج غير مضمونة.',
+    sport_unavailable: 'قسم الرياضة غير متاح حالياً، حاول لاحقاً.',
+
+    // Smart support
+    support_nav: 'الدعم',
+    support_chat_title: 'الدعم الذكي',
+    support_chat_sub: 'مساعد OussoCash — يجيب فوراً على أسئلتك',
+    support_placeholder: 'اكتب سؤالك هنا...',
+    support_send: 'إرسال',
+    support_human: 'تواصل مع الدعم المباشر',
+    support_greeting: 'أهلاً بك في دعم OussoCash 👋 كيف يمكنني مساعدتك؟ اسأل عن التحقق، الإحالات، السحب، أو الوكالة.',
+    support_typing: 'يكتب...',
   },
 
   fr: {
@@ -284,5 +339,60 @@ window.TEXTS = {
 
     close: 'Fermer', back: 'Retour', cancel: 'Annuler', logout: 'Déconnexion', home: 'Accueil',
     secured_by: 'Identité liée au compte 1xBet vérifié',
+
+    // Pending / review state
+    pending_title: 'Compte en cours de révision',
+    pending_desc: 'Votre ID a été enregistré. Votre compte sera activé après vérification de votre dépôt et du code OUSSO, généralement sous peu.',
+    pending_step1: 'ID reçu',
+    pending_step2: 'Vérification du dépôt et du code',
+    pending_step3: 'Activation et récompenses',
+    deposit_needed_msg: 'Votre dépôt actuel est insuffisant. Il vous manque ce montant pour activer votre compte :',
+    deposit_deadline_msg: 'Complétez le dépôt sous 3 jours, sinon l\'ID sera bloqué et vous devrez créer un nouveau compte.',
+
+    // Security messages
+    err_id_taken: 'Cet ID est déjà utilisé par un autre compte et ne peut pas être dupliqué.',
+    err_device_has: 'Vous avez déjà un compte sur cet appareil. Impossible d\'enregistrer un autre ID.',
+
+    // Contest
+    contest_nav: 'Concours',
+    contest_title: 'Concours de parrainage',
+    contest_prize: 'Prix',
+    contest_ends: 'Se termine dans',
+    contest_required: 'Parrainages requis pour se qualifier',
+    contest_your_rank: 'Votre rang',
+    contest_your_refs: 'Vos parrainages',
+    contest_leaderboard: 'Classement',
+    contest_none: 'Aucun concours actif. Restez connecté pour le prochain.',
+    contest_join: 'Invitez vos amis',
+    contest_rank: 'Rang',
+    contest_refs_label: 'parrain.',
+    contest_days: 'j', contest_hours: 'h',
+    contest_banner: 'Concours en cours — partagez et gagnez',
+
+    // Sport
+    sport_nav: 'Sport',
+    sport_title: 'Matchs et pronostics',
+    sport_live: 'En direct', sport_today: 'Aujourd\'hui', sport_tomorrow: 'Demain', sport_yesterday: 'Hier',
+    sport_predictions: 'Top 5 pronostics',
+    sport_pred_sub: 'Pronostics basés sur le classement et les données réelles',
+    sport_confidence: 'Confiance',
+    sport_pick: 'Pronostic',
+    sport_pick_home: 'Victoire domicile', sport_pick_away: 'Victoire extérieur', sport_pick_draw: 'Match nul',
+    sport_standings: 'Classement',
+    sport_no_matches: 'Aucun match ce jour.',
+    sport_finished: 'Terminé', sport_vs: 'contre',
+    sport_pos: 'Position',
+    sport_disclaimer: 'Pronostics analytiques à titre informatif, résultats non garantis.',
+    sport_unavailable: 'Section sport indisponible, réessayez plus tard.',
+
+    // Smart support
+    support_nav: 'Support',
+    support_chat_title: 'Support intelligent',
+    support_chat_sub: 'Assistant OussoCash — réponses instantanées',
+    support_placeholder: 'Écrivez votre question...',
+    support_send: 'Envoyer',
+    support_human: 'Contacter le support direct',
+    support_greeting: 'Bienvenue au support OussoCash 👋 Comment puis-je vous aider ? Vérification, parrainage, retrait ou agence.',
+    support_typing: 'écrit...',
   },
 };

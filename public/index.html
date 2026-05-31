@@ -5,7 +5,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, viewport-fit=cover, user-scalable=no">
 <title>OussoCash — وكالة 1xBet المعتمدة</title>
 <meta name="description" content="OussoCash — منصة آمنة لمستخدمي 1xBet · تحقق سريع وسحب محمي">
-<meta name="theme-color" content="#0a0e1a">
+<meta name="theme-color" content="#070c18">
 <link rel="icon" href="/logos/mascot_sm.png">
 <link rel="apple-touch-icon" href="/logos/mascot_sm.png">
 <meta name="apple-mobile-web-app-capable" content="yes">
@@ -146,10 +146,13 @@
     <div id="view-dash" class="view hidden pad">
       <div class="dash-head">
         <div class="dash-avatar" id="dashAvatar">O</div>
-        <div>
+        <div style="flex:1">
           <div class="dash-name" id="dashName"></div>
           <div class="dash-sub"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><path d="M12 2l8 4v6c0 5-3.5 8-8 10-4.5-2-8-5-8-10V6z"/><path d="M9 12l2 2 4-4"/></svg><span id="t-present_verified"></span></div>
         </div>
+        <button class="dash-logout" onclick="App.logout()" aria-label="logout">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 21H5a2 2 0 01-2-2V5a2 2 0 012-2h4M16 17l5-5-5-5M21 12H9"/></svg>
+        </button>
       </div>
 
       <div class="balance-card">
@@ -207,6 +210,46 @@
       </div>
     </div>
 
+    <!-- ── CONTEST ── -->
+    <div id="view-contest" class="view hidden pad">
+      <div style="padding:22px 4px 0">
+        <h2 style="font-size:23px;font-weight:800;letter-spacing:-.4px" id="t-contest_title"></h2>
+      </div>
+      <div id="contestBody"></div>
+    </div>
+
+    <!-- ── SPORT ── -->
+    <div id="view-sport" class="view hidden pad">
+      <div style="padding:22px 4px 12px">
+        <h2 style="font-size:23px;font-weight:800;letter-spacing:-.4px" id="t-sport_title"></h2>
+      </div>
+      <div class="sport-tabs" id="sportTabs">
+        <button class="sport-tab on" data-sv="today" onclick="App.sportView('today')" id="t-sport_today"></button>
+        <button class="sport-tab" data-sv="live" onclick="App.sportView('live')" id="t-sport_live"></button>
+        <button class="sport-tab" data-sv="tomorrow" onclick="App.sportView('tomorrow')" id="t-sport_tomorrow"></button>
+        <button class="sport-tab" data-sv="yesterday" onclick="App.sportView('yesterday')" id="t-sport_yesterday"></button>
+        <button class="sport-tab" data-sv="standings" onclick="App.sportView('standings')" id="t-sport_standings"></button>
+      </div>
+      <div id="sportBody"></div>
+    </div>
+
+    <!-- ── SUPPORT CHAT ── -->
+    <div id="view-support" class="view hidden">
+      <div class="chat-wrap">
+        <div class="chat-head">
+          <div class="chat-bot-ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 2a9 9 0 00-9 9v4a3 3 0 003 3h1v-7H5a7 7 0 0114 0h-2v7h1a3 3 0 003-3v-4a9 9 0 00-9-9z"/></svg></div>
+          <div><div class="chat-title" id="t-support_chat_title"></div><div class="chat-sub" id="t-support_chat_sub"></div></div>
+        </div>
+        <div class="chat-msgs" id="chatMsgs"></div>
+        <div class="chat-input-bar">
+          <input id="chatInput" placeholder="" onkeydown="if(event.key==='Enter')App.sendChat()">
+          <button class="chat-send" onclick="App.sendChat()" aria-label="send">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M22 2L11 13M22 2l-7 20-4-9-9-4 20-7z"/></svg>
+          </button>
+        </div>
+      </div>
+    </div>
+
   </div><!-- /scroll -->
 
   <!-- bottom nav (only when logged in) -->
@@ -215,17 +258,21 @@
       <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="8" height="8" rx="2"/><rect x="13" y="3" width="8" height="8" rx="2"/><rect x="3" y="13" width="8" height="8" rx="2"/><rect x="13" y="13" width="8" height="8" rx="2"/></svg>
       <span id="t-home"></span>
     </button>
+    <button class="nav-item" data-nav="sport" onclick="App.nav('sport')">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><path d="M12 2a14 14 0 000 20M12 2a14 14 0 010 20M2 12h20"/></svg>
+      <span id="t-sport_nav"></span>
+    </button>
     <button class="nav-item" data-nav="ref" onclick="App.nav('ref')">
       <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="9" cy="7" r="3"/><path d="M3 21v-2a5 5 0 015-5h2"/><path d="M16 11l2 2 4-4"/></svg>
       <span id="t-ref_title2"></span>
     </button>
-    <button class="nav-item" data-nav="support" onclick="App.openSupport()">
-      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 2a10 10 0 00-8 16l-1 4 4-1a10 10 0 109-19z"/></svg>
-      <span id="t-support_title2"></span>
+    <button class="nav-item" data-nav="contest" onclick="App.nav('contest')">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M8 21h8M12 17v4M7 4h10v4a5 5 0 01-10 0z"/><path d="M17 5h3v2a3 3 0 01-3 3M7 5H4v2a3 3 0 003 3"/></svg>
+      <span id="t-contest_nav"></span>
     </button>
-    <button class="nav-item" data-nav="logout" onclick="App.logout()">
-      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 21H5a2 2 0 01-2-2V5a2 2 0 012-2h4M16 17l5-5-5-5M21 12H9"/></svg>
-      <span id="t-logout"></span>
+    <button class="nav-item" data-nav="support" onclick="App.nav('support')">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15a2 2 0 01-2 2H7l-4 4V5a2 2 0 012-2h14a2 2 0 012 2z"/></svg>
+      <span id="t-support_nav"></span>
     </button>
   </nav>
 </div>

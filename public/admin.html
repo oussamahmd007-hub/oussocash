@@ -1,0 +1,120 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+<title>OussoCash — لوحة الإدارة</title>
+<meta name="robots" content="noindex,nofollow">
+<link rel="icon" href="/logos/mascot_sm.png">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=Cairo:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="/admin.css">
+</head>
+<body>
+
+<!-- LOGIN -->
+<div id="login" class="login-screen">
+  <div class="login-card">
+    <img src="/logos/mascot_sm.png" class="login-logo" alt="">
+    <div class="login-brand">Ousso<span>Cash</span></div>
+    <div class="login-sub">لوحة الإدارة</div>
+    <input type="password" id="pwd" placeholder="كلمة المرور" onkeydown="if(event.key==='Enter')Admin.login()">
+    <button class="btn btn-primary" onclick="Admin.login()">دخول</button>
+    <div class="login-err" id="loginErr"></div>
+  </div>
+</div>
+
+<!-- APP -->
+<div id="app" class="admin-app hidden">
+  <header class="admin-top">
+    <div class="admin-logo"><img src="/logos/mascot_sm.png" alt=""><b>Ousso<span>Cash</span></b><em>Admin</em></div>
+    <button class="logout-btn" onclick="Admin.logout()">خروج</button>
+  </header>
+
+  <div class="admin-body">
+    <!-- DASHBOARD -->
+    <section id="tab-dashboard" class="tab">
+      <div class="stat-cards" id="dashCards"></div>
+      <div class="quick-actions">
+        <button onclick="Admin.go('upload')"><span class="qa-ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M12 16V4M7 9l5-5 5 5M5 20h14"/></svg></span> رفع تقرير CSV</button>
+        <button onclick="Admin.go('search')"><span class="qa-ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><circle cx="11" cy="11" r="7"/><path d="M21 21l-4-4"/></svg></span> بحث عن مستخدم</button>
+        <button onclick="Admin.go('broadcast')"><span class="qa-ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M3 11l18-5v12L3 14v-3zM11.6 16.8a3 3 0 01-5.8-1.6"/></svg></span> رسالة جماعية</button>
+        <button onclick="Admin.go('contests')"><span class="qa-ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M8 21h8M12 17v4M7 4h10v4a5 5 0 01-10 0z"/><path d="M17 5h3v2a3 3 0 01-3 3M7 5H4v2a3 3 0 003 3"/></svg></span> مسابقة جديدة</button>
+      </div>
+    </section>
+
+    <!-- UPLOAD CSV -->
+    <section id="tab-upload" class="tab hidden">
+      <h2>رفع تقرير 1xBet (CSV)</h2>
+      <p class="tab-sub">القبول النهائي للمعرّفات يتم عبر هذا التقرير. يتم التحقق من بروموكود OUSSO ومجموع الإيداعات تلقائياً.</p>
+      <div class="dropzone" id="dropzone" onclick="document.getElementById('csvFile').click()">
+        <div class="dz-ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><path d="M12 16V4M7 9l5-5 5 5"/><path d="M5 16v3a1 1 0 001 1h12a1 1 0 001-1v-3"/></svg></div>
+        <div class="dz-txt">اضغط لاختيار ملف CSV أو اسحبه هنا</div>
+        <div class="dz-file" id="dzFile"></div>
+      </div>
+      <input type="file" id="csvFile" accept=".csv" hidden onchange="Admin.fileChosen(event)">
+      <button class="btn btn-primary" id="uploadBtn" onclick="Admin.processCsv()" disabled>معالجة التقرير</button>
+      <div id="csvResult"></div>
+    </section>
+
+    <!-- SEARCH USER -->
+    <section id="tab-search" class="tab hidden">
+      <h2>بحث عن مستخدم</h2>
+      <div class="search-bar">
+        <input id="searchId" inputmode="numeric" placeholder="أدخل معرّف 1xBet" onkeydown="if(event.key==='Enter')Admin.searchUser()">
+        <button class="btn btn-primary" onclick="Admin.searchUser()">بحث</button>
+      </div>
+      <div id="searchResult"></div>
+    </section>
+
+    <!-- WITHDRAWALS -->
+    <section id="tab-withdrawals" class="tab hidden">
+      <h2>طلبات السحب</h2>
+      <div id="wdList"></div>
+    </section>
+
+    <!-- BROADCAST -->
+    <section id="tab-broadcast" class="tab hidden">
+      <h2>رسالة جماعية</h2>
+      <p class="tab-sub">تُرسل إشعاراً لكل المستخدمين (داخل التطبيق + إشعار OneSignal).</p>
+      <input id="bcTitle" placeholder="العنوان" maxlength="80">
+      <textarea id="bcBody" placeholder="نص الرسالة..." maxlength="300" rows="4"></textarea>
+      <button class="btn btn-primary" onclick="Admin.broadcast()">إرسال للجميع</button>
+      <div id="bcResult"></div>
+    </section>
+
+    <!-- CONTESTS -->
+    <section id="tab-contests" class="tab hidden">
+      <h2>المسابقات</h2>
+      <div class="contest-form card">
+        <h3>مسابقة جديدة</h3>
+        <input id="ctTitle" placeholder="عنوان المسابقة (عربي)" maxlength="100">
+        <input id="ctTitleFr" placeholder="Titre (français)" maxlength="100">
+        <div class="form-row">
+          <div><label>مبلغ الجائزة (UM)</label><input id="ctPrize" type="number" inputmode="numeric" placeholder="5000"></div>
+          <div><label>الإحالات المطلوبة</label><input id="ctRequired" type="number" inputmode="numeric" placeholder="5"></div>
+        </div>
+        <label>تاريخ الانتهاء</label>
+        <input id="ctEnds" type="datetime-local">
+        <button class="btn btn-primary" onclick="Admin.createContest()">إنشاء المسابقة</button>
+      </div>
+      <h3 style="margin-top:24px">المسابقات الحالية</h3>
+      <div id="contestList"></div>
+    </section>
+  </div>
+
+  <!-- BOTTOM NAV -->
+  <nav class="admin-nav">
+    <button class="anav on" data-tab="dashboard" onclick="Admin.go('dashboard')"><span><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9"><rect x="3" y="3" width="8" height="8" rx="2"/><rect x="13" y="3" width="8" height="8" rx="2"/><rect x="3" y="13" width="8" height="8" rx="2"/><rect x="13" y="13" width="8" height="8" rx="2"/></svg></span>الرئيسية</button>
+    <button class="anav" data-tab="upload" onclick="Admin.go('upload')"><span><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9"><path d="M12 16V4M7 9l5-5 5 5M5 20h14"/></svg></span>التقارير</button>
+    <button class="anav" data-tab="search" onclick="Admin.go('search')"><span><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9"><circle cx="11" cy="11" r="7"/><path d="M21 21l-4-4"/></svg></span>بحث</button>
+    <button class="anav" data-tab="withdrawals" onclick="Admin.go('withdrawals')"><span><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9"><rect x="2" y="5" width="20" height="14" rx="2"/><path d="M2 10h20"/></svg></span>السحوبات</button>
+    <button class="anav" data-tab="contests" onclick="Admin.go('contests')"><span><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9"><path d="M8 21h8M12 17v4M7 4h10v4a5 5 0 01-10 0z"/><path d="M17 5h3v2a3 3 0 01-3 3M7 5H4v2a3 3 0 003 3"/></svg></span>مسابقات</button>
+  </nav>
+</div>
+
+<div id="toast"></div>
+<script src="/admin.js"></script>
+</body>
+</html>
