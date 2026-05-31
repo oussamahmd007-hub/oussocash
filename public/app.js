@@ -108,33 +108,33 @@ const App = {
     const raw = document.getElementById('gidInput').value;
     const gid = raw.replace(/[\s\-_]/g,'');
     const err = document.getElementById('verifyErr');
-    err.textContent='';
-    if (!/^\d{6,13}$/.test(gid)){ err.textContent=this.t('verify_invalid'); return; }
+    err.textContent=''; err.classList.remove('show');
+    if (!/^\d{6,13}$/.test(gid)){ this.showVerifyErr(this.t('verify_invalid')); return; }
 
     const btn=document.getElementById('verifyBtn'); btn.style.opacity='.6'; btn.disabled=true;
-    // start honest sequence (real API runs in parallel)
     const fp=await this.fingerprint();
     const seqPromise = this.runSequence();
     const r = await this.api('verify',{ game_id: gid, fingerprint: fp });
-    await seqPromise; // ensure minimum visible stages complete with real call
-
+    await seqPromise;
     btn.style.opacity='1'; btn.disabled=false;
 
-    if (r.status==='invalid'){ this.endSequence(false); err.textContent=this.t('verify_invalid'); return; }
-    if (r.status==='banned'){ this.endSequence(false); err.textContent=this.t('verify_banned'); return; }
-    if (r.status==='not_found'){ this.endSequence(false); err.textContent=this.t('verify_notfound'); return; }
-    if (r.status==='id_taken'){ this.endSequence(false); err.textContent=this.t('err_id_taken'); return; }
-    if (r.status==='device_has_account'){ this.endSequence(false); err.textContent=this.t('err_device_has'); return; }
+    if (r.status==='invalid'){ this.endSequence(false); this.showVerifyErr(this.t('verify_invalid')); return; }
+    if (r.status==='banned'){ this.endSequence(false); this.showVerifyErr(this.t('verify_banned')); return; }
+    if (r.status==='not_found'){ this.endSequence(false); this.showVerifyErr(this.t('verify_notfound')); return; }
 
     if (r.status==='existing'){
-      // account exists on this device → login
+      // حساب موجود → دخول مباشر من أي جهاز
       await this.endSequence(true);
       return this.login(gid);
     }
-    // found new
+    // معرّف جديد موجود في 1xBet → عرض الإجراءات
     this._verifyData = { game_id: gid, name: r.name, currency: r.currency };
     await this.endSequence(true);
     this.renderPresent();
+  },
+  showVerifyErr(msg){
+    const err=document.getElementById('verifyErr');
+    err.textContent=msg; err.classList.add('show');
   },
 
   // honest multi-stage sequence — advances while real call is in flight
@@ -263,9 +263,7 @@ const App = {
     const r=await reqP;
 
     if(r.status==='banned'){ this.closeSheet(); this.toast(T.verify_banned); return; }
-    if(r.status==='not_found'){ this.closeSheet(); this.toast(T.verify_notfound); return; }
-    if(r.status==='id_taken'){ this.closeSheet(); this.toast(T.err_id_taken); this.show('verify'); return; }
-    if(r.status==='device_has_account'){ this.closeSheet(); this.toast(T.err_device_has); return; }
+    if(r.status==='not_found'){ this.closeSheet(); this.showVerifyErr(T.verify_notfound); this.show('verify'); return; }
     if(!r.ok){ this.closeSheet(); this.toast('Error'); return; }
 
     Store.s=r.session; this.account=r.account; this.stats=null;
@@ -282,7 +280,6 @@ const App = {
     if(!r.ok){ this.toast('Error'); return; }
     Store.s=r.session; this.account=r.account;
     await this.initOneSignal(gid);
-    if(r.device==='new'){ this.showNewDevice(); return; }
     this.toast(this.t('welcome_back'));
     this.loadAndShowDash();
   },
@@ -379,7 +376,7 @@ const App = {
   // ═══ REFERRAL ═══
   renderRef(){
     if(!this.account) return;
-    const link=`${location.origin}/r/${this.account.ref_code}`;
+    const link=`${location.origin}/?ref=${this.account.ref_code}`;
     document.getElementById('refLink').textContent=link;
     const s=this.stats||{activated:0,earned:0};
     document.getElementById('refStatRefs').textContent=s.activated||0;
@@ -392,21 +389,26 @@ const App = {
     setTxt('t-dash_earned2', T.dash_earned);
   },
   copyRef(){
-    const link=`${location.origin}/r/${this.account.ref_code}`;
+    const link=`${location.origin}/?ref=${this.account.ref_code}`;
     navigator.clipboard?.writeText(link).then(()=>this.toast(this.t('ref_copied')))
       .catch(()=>{ const t=document.createElement('textarea'); t.value=link; document.body.appendChild(t); t.select(); document.execCommand('copy'); t.remove(); this.toast(this.t('ref_copied')); });
   },
   async shareRef(){
-    const link=`${location.origin}/r/${this.account.ref_code}`;
+    const link=`${location.origin}/?ref=${this.account.ref_code}`;
     const text=`${this.t('ref_share_msg')} ${link}`;
     if(navigator.share){ try{ await navigator.share({title:'OussoCash',text,url:link}); return; }catch{} }
     window.open(`https://wa.me/?text=${encodeURIComponent(text)}`,'_blank');
   },
   getRefFromUrl(){
+    // 1) من المسار /r/CODE
     const m=location.pathname.match(/^\/r\/([A-Za-z0-9]{4,8})/);
-    if(m) return m[1].toUpperCase();
-    const p=new URLSearchParams(location.search).get('ref');
-    return p?p.toUpperCase():'';
+    let code = m ? m[1].toUpperCase() : '';
+    // 2) من ?ref=CODE
+    if(!code){ const p=new URLSearchParams(location.search).get('ref'); if(p) code=p.toUpperCase(); }
+    // 3) خزّنها لتبقى بعد التنقل
+    if(code){ try{ localStorage.setItem('oc_ref', code); }catch{} return code; }
+    // 4) المخزّنة سابقاً
+    try{ return localStorage.getItem('oc_ref')||''; }catch{ return ''; }
   },
 
   // ═══ WITHDRAW ═══
@@ -468,11 +470,73 @@ const App = {
     if(!OS_APP_ID || !window.OneSignalDeferred) return;
     window.OneSignalDeferred.push(async (OneSignal)=>{
       try{
-        if(!this._osInit){ await OneSignal.init({ appId:OS_APP_ID, allowLocalhostAsSecureOrigin:true }); this._osInit=true; }
+        if(!this._osInit){
+          await OneSignal.init({
+            appId:OS_APP_ID,
+            allowLocalhostAsSecureOrigin:true,
+            autoResubscribe:true,
+            notifyButton:{ enable:false },
+          });
+          this._osInit=true;
+        }
         await OneSignal.login(String(gid));
-        await OneSignal.Notifications.requestPermission().catch(()=>{});
+        // طلب الإذن بلطف بعد ثانيتين من الدخول (مرة واحدة)
+        const asked = (()=>{ try{ return localStorage.getItem('oc_notif_asked'); }catch{ return null; } })();
+        if(!asked){
+          setTimeout(async()=>{
+            try{ await OneSignal.Notifications.requestPermission(); }catch{}
+            try{ localStorage.setItem('oc_notif_asked','1'); }catch{}
+          }, 2500);
+        }
       }catch{}
     });
+  },
+
+  // ═══ PWA INSTALL ═══
+  renderLeagues(){
+    const box=document.getElementById('leaguesGrid');
+    if(!box) return;
+    const leagues=[
+      {n:'Premier League',c:'PL',img:'https://crests.football-data.org/PL.png'},
+      {n:'La Liga',c:'PD',img:'https://crests.football-data.org/PD.png'},
+      {n:'Serie A',c:'SA',img:'https://crests.football-data.org/SA.png'},
+      {n:'Bundesliga',c:'BL1',img:'https://crests.football-data.org/BL1.png'},
+      {n:'Ligue 1',c:'FL1',img:'https://crests.football-data.org/FL1.png'},
+      {n:'Champions League',c:'CL',img:'https://crests.football-data.org/CL.png'},
+    ];
+    box.innerHTML=leagues.map(l=>`<div class="league-chip"><img src="${l.img}" onerror="this.style.display='none'" alt=""><span>${l.n}</span></div>`).join('');
+  },
+  setupPWA(){
+    // تسجيل service worker للتثبيت
+    if('serviceWorker' in navigator){
+      navigator.serviceWorker.register('/sw.js').catch(()=>{});
+    }
+    // التقاط حدث التثبيت (Android/Chrome)
+    window.addEventListener('beforeinstallprompt',(e)=>{
+      e.preventDefault();
+      this._deferredPrompt=e;
+      document.getElementById('installBtn')?.classList.remove('hidden');
+    });
+    window.addEventListener('appinstalled',()=>{
+      document.getElementById('installBtn')?.classList.add('hidden');
+      this._deferredPrompt=null;
+      this.toast(this.lang==='fr'?'Application installée !':'تم تثبيت التطبيق!');
+    });
+    // iOS لا يدعم beforeinstallprompt → أظهر الزر يدوياً إن لم يكن مثبّتاً
+    const isStandalone = window.matchMedia('(display-mode: standalone)').matches || window.navigator.standalone;
+    const isIOS = /iphone|ipad|ipod/i.test(navigator.userAgent);
+    if(isIOS && !isStandalone){
+      document.getElementById('installBtn')?.classList.remove('hidden');
+      this._iosInstall=true;
+    }
+  },
+  async installApp(){
+    if(this._iosInstall){ this.toast(this.t('install_ios')); return; }
+    if(!this._deferredPrompt){ this.toast(this.t('install_ios')); return; }
+    this._deferredPrompt.prompt();
+    await this._deferredPrompt.userChoice.catch(()=>{});
+    this._deferredPrompt=null;
+    document.getElementById('installBtn')?.classList.add('hidden');
   },
 
   logout(){ Store.s=null; this.account=null; this.stats=null; this._chatInit=false; document.getElementById('chatMsgs')&&(document.getElementById('chatMsgs').innerHTML=''); this.show('landing'); document.getElementById('bottomnav').classList.add('hidden'); },
@@ -671,6 +735,8 @@ const App = {
   // ═══ BOOT ═══
   async boot(){
     this.lang=Store.lang; this.applyLang();
+    this.setupPWA();
+    this.renderLeagues();
     // load config
     try{ const c=await this.api('config'); SUPPORT_WA=c.support_whatsapp||SUPPORT_WA; CHANNEL=c.channel_url||CHANNEL; OS_APP_ID=c.onesignal_app_id||''; }catch{}
     // hide splash

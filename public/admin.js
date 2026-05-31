@@ -36,7 +36,28 @@ const Admin = {
     if(tab==='dashboard') this.loadDash();
     if(tab==='withdrawals') this.loadWithdrawals();
     if(tab==='contests') this.loadContests();
+    if(tab==='search') this.loadAccounts('all');
     window.scrollTo(0,0);
+  },
+
+  // ─── ACCOUNTS LIST (كل المعرّفات) ───
+  async loadAccounts(filter){
+    document.querySelectorAll('.acc-filter').forEach(b=>b.classList.toggle('on', b.dataset.f===filter));
+    const box=document.getElementById('accList');
+    box.innerHTML=`<div class="empty">…</div>`;
+    const r=await this.api('accounts',{ filter });
+    if(!r.accounts||!r.accounts.length){ box.innerHTML=`<div class="empty">لا توجد حسابات</div>`; return; }
+    box.innerHTML=`<div class="acc-count">${r.accounts.length} حساب</div>`+r.accounts.map(a=>`
+      <div class="acc-row" onclick="document.getElementById('searchId').value='${a.game_id}';Admin.searchUser()">
+        <div class="acc-main">
+          <div class="acc-name">${this.esc(a.name||'—')}</div>
+          <div class="acc-id">${a.game_id}</div>
+        </div>
+        <div class="acc-meta">
+          <span class="uc-status us-${a.status}">${this.statusTxt(a.status)}</span>
+          <span class="acc-bal">${(a.balance_um||0).toLocaleString()} UM</span>
+        </div>
+      </div>`).join('');
   },
 
   // ─── DASHBOARD ───

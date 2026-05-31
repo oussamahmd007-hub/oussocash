@@ -60,12 +60,19 @@
 
     <!-- SEARCH USER -->
     <section id="tab-search" class="tab hidden">
-      <h2>بحث عن مستخدم</h2>
+      <h2>الحسابات والمعرّفات</h2>
       <div class="search-bar">
-        <input id="searchId" inputmode="numeric" placeholder="أدخل معرّف 1xBet" onkeydown="if(event.key==='Enter')Admin.searchUser()">
+        <input id="searchId" inputmode="numeric" placeholder="ابحث بمعرّف 1xBet" onkeydown="if(event.key==='Enter')Admin.searchUser()">
         <button class="btn btn-primary" onclick="Admin.searchUser()">بحث</button>
       </div>
       <div id="searchResult"></div>
+      <div class="acc-filters" id="accFilters">
+        <button class="acc-filter on" data-f="all" onclick="Admin.loadAccounts('all')">الكل</button>
+        <button class="acc-filter" data-f="active" onclick="Admin.loadAccounts('active')">مُفعّل</button>
+        <button class="acc-filter" data-f="pending" onclick="Admin.loadAccounts('pending')">قيد المراجعة</button>
+        <button class="acc-filter" data-f="deposit_incomplete" onclick="Admin.loadAccounts('deposit_incomplete')">إيداع ناقص</button>
+      </div>
+      <div id="accList"></div>
     </section>
 
     <!-- WITHDRAWALS -->

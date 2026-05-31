@@ -204,6 +204,24 @@ window.TEXTS = {
     support_human: 'تواصل مع الدعم المباشر',
     support_greeting: 'أهلاً بك في دعم OussoCash 👋 كيف يمكنني مساعدتك؟ اسأل عن التحقق، الإحالات، السحب، أو الوكالة.',
     support_typing: 'يكتب...',
+    install_btn: 'تنزيل التطبيق',
+    install_banner_t: 'ثبّت تطبيق OussoCash',
+    install_banner_d: 'وصول أسرع + إشعارات فورية بأرباحك ومسابقاتك',
+    install_now: 'تثبيت',
+    install_ios: 'للتثبيت على iPhone: اضغط زر المشاركة ⬆ ثم «أضف إلى الشاشة الرئيسية».',
+
+    // Homepage explainer sections
+    home_ref_eyebrow: 'نظام الإحالات',
+    home_ref_title: 'اربح من دعوة أصدقائك',
+    home_ref_desc: 'شارك رابطك الخاص، وكل صديق يسجّل عبر وكالتنا ويودِع يصبح إحالة مُفعّلة تربح منها فوراً وباستمرار.',
+    home_ref_r1: 'مكافأة ترحيب',
+    home_ref_r2: 'لكل إحالة مُفعّلة',
+    home_ref_r3: 'من أرباح إحالاتك',
+    home_pred_eyebrow: 'التوقعات الرياضية',
+    home_pred_title: 'توقعات مبنية على بيانات حقيقية',
+    home_pred_desc: 'نحلّل ترتيب الفرق وأداءها في الدوريات الكبرى ونقدّم أفضل 5 توقعات يومياً بنسبة ثقة شفّافة — لمساعدتك، لا لإعطاء وعود.',
+    home_leagues_title: 'الدوريات المدعومة',
+    secured_by2: 'وكالة OussoCash معتمدة من 1xBet',
   },
 
   fr: {
@@ -394,5 +412,23 @@ window.TEXTS = {
     support_human: 'Contacter le support direct',
     support_greeting: 'Bienvenue au support OussoCash 👋 Comment puis-je vous aider ? Vérification, parrainage, retrait ou agence.',
     support_typing: 'écrit...',
+    install_btn: 'Installer',
+    install_banner_t: 'Installez OussoCash',
+    install_banner_d: 'Accès plus rapide + notifications de vos gains',
+    install_now: 'Installer',
+    install_ios: 'Sur iPhone : appuyez sur Partager ⬆ puis « Ajouter à l\'écran d\'accueil ».',
+
+    // Homepage explainer sections
+    home_ref_eyebrow: 'Parrainage',
+    home_ref_title: 'Gagnez en invitant vos amis',
+    home_ref_desc: 'Partagez votre lien : chaque ami qui s\'inscrit via notre agence et dépose devient un parrainage actif qui vous rapporte immédiatement.',
+    home_ref_r1: 'Bonus bienvenue',
+    home_ref_r2: 'Par parrainage actif',
+    home_ref_r3: 'Des gains de vos filleuls',
+    home_pred_eyebrow: 'Pronostics sportifs',
+    home_pred_title: 'Pronostics basés sur des données réelles',
+    home_pred_desc: 'Nous analysons le classement et la performance des équipes des grands championnats et proposons le top 5 quotidien avec un taux de confiance transparent.',
+    home_leagues_title: 'Championnats supportés',
+    secured_by2: 'Agence OussoCash certifiée par 1xBet',
   },
 };

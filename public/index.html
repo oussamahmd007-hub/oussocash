@@ -5,16 +5,19 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, viewport-fit=cover, user-scalable=no">
 <title>OussoCash — وكالة 1xBet المعتمدة</title>
 <meta name="description" content="OussoCash — منصة آمنة لمستخدمي 1xBet · تحقق سريع وسحب محمي">
-<meta name="theme-color" content="#070c18">
+<meta name="theme-color" content="#2563eb">
 <link rel="icon" href="/logos/mascot_sm.png">
 <link rel="apple-touch-icon" href="/logos/mascot_sm.png">
+<link rel="manifest" href="/manifest.webmanifest">
 <meta name="apple-mobile-web-app-capable" content="yes">
-<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="OussoCash">
+<meta name="apple-mobile-web-app-status-bar-style" content="default">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=Cairo:wght@400;500;600;700;800&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="/styles.css">
 <script src="https://cdn.onesignal.com/sdks/web/v16/OneSignalSDK.page.js" defer></script>
+<script>window.OneSignalDeferred = window.OneSignalDeferred || [];</script>
 </head>
 <body>
 
@@ -45,7 +48,13 @@
 <div class="app">
   <header class="topbar">
     <div class="tb-logo"><img src="/logos/mascot_sm.png" alt=""><b class="wordmark"><span>Ousso</span>Cash</b></div>
-    <button class="lang-btn" id="langBtn" onclick="App.toggleLang()">FR</button>
+    <div class="tb-actions">
+      <button class="install-btn hidden" id="installBtn" onclick="App.installApp()">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 3v12M8 11l4 4 4-4M5 21h14"/></svg>
+        <span id="t-install_btn"></span>
+      </button>
+      <button class="lang-btn" id="langBtn" onclick="App.toggleLang()">FR</button>
+    </div>
   </header>
 
   <div class="scroll" id="scroll">
@@ -109,6 +118,37 @@
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 2l8 4v6c0 5-3.5 8-8 10-4.5-2-8-5-8-10V6z"/><path d="M9 12l2 2 4-4"/></svg>
           <div><b id="t-agency_verify_t"></b><span id="t-agency_verify_d"></span></div>
         </div>
+      </div>
+
+      <!-- REFERRAL SYSTEM EXPLAINER -->
+      <div class="section-h" id="t-home_ref_eyebrow"></div>
+      <div class="card info-card">
+        <h3 class="info-h" id="t-home_ref_title"></h3>
+        <p class="info-p" id="t-home_ref_desc"></p>
+        <div class="info-rewards">
+          <div class="ir"><b>100</b><span id="t-home_ref_r1"></span></div>
+          <div class="ir"><b>20</b><span id="t-home_ref_r2"></span></div>
+          <div class="ir"><b>25%</b><span id="t-home_ref_r3"></span></div>
+        </div>
+      </div>
+
+      <!-- PREDICTIONS EXPLAINER -->
+      <div class="section-h" id="t-home_pred_eyebrow"></div>
+      <div class="card info-card">
+        <div class="info-icon">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M3 3v18h18"/><path d="M7 14l4-4 3 3 5-6"/></svg>
+        </div>
+        <h3 class="info-h" id="t-home_pred_title"></h3>
+        <p class="info-p" id="t-home_pred_desc"></p>
+      </div>
+
+      <!-- SUPPORTED LEAGUES -->
+      <div class="section-h" id="t-home_leagues_title"></div>
+      <div class="leagues-grid" id="leaguesGrid"></div>
+
+      <div class="trust-strip" style="margin-bottom:10px">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 2l8 4v6c0 5-3.5 8-8 10-4.5-2-8-5-8-10V6z"/></svg>
+        <span id="t-secured_by2"></span>
       </div>
     </div>
 
@@ -238,7 +278,10 @@
       <div class="chat-wrap">
         <div class="chat-head">
           <div class="chat-bot-ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 2a9 9 0 00-9 9v4a3 3 0 003 3h1v-7H5a7 7 0 0114 0h-2v7h1a3 3 0 003-3v-4a9 9 0 00-9-9z"/></svg></div>
-          <div><div class="chat-title" id="t-support_chat_title"></div><div class="chat-sub" id="t-support_chat_sub"></div></div>
+          <div style="flex:1"><div class="chat-title" id="t-support_chat_title"></div><div class="chat-sub" id="t-support_chat_sub"></div></div>
+          <button class="chat-wa-btn" onclick="App.openWhatsapp()" aria-label="whatsapp">
+            <svg viewBox="0 0 24 24" fill="currentColor"><path d="M12 2a10 10 0 00-8.5 15.3L2 22l4.8-1.4A10 10 0 1012 2zm0 18a8 8 0 01-4.1-1.1l-.3-.2-2.8.8.8-2.8-.2-.3A8 8 0 1112 20zm4.4-6c-.2-.1-1.4-.7-1.6-.8s-.4-.1-.5.1-.6.8-.8 1-.3.2-.5.1a6.5 6.5 0 01-1.9-1.2 7.3 7.3 0 01-1.4-1.7c-.1-.2 0-.4.1-.5l.4-.4.2-.4v-.4l-.8-1.8c-.2-.5-.4-.4-.5-.4h-.5a.9.9 0 00-.7.3 2.8 2.8 0 00-.9 2.1 4.9 4.9 0 001 2.6 11 11 0 004.3 3.8c1.5.6 1.8.5 2.2.5a2.6 2.6 0 001.7-1.2 2.1 2.1 0 00.1-1.2c0-.1-.2-.2-.4-.3z"/></svg>
+          </button>
         </div>
         <div class="chat-msgs" id="chatMsgs"></div>
         <div class="chat-input-bar">
