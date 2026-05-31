@@ -11,8 +11,9 @@ module.exports = async (req, res) => {
       support_whatsapp: map.support_whatsapp || '22249002902',
       channel_url: map.channel_url || '',
       onesignal_app_id: ONESIGNAL_APP_ID || '',
+      sport_enabled: !!process.env.FOOTBALL_API_KEY,
     });
   } catch {
-    return json(res, 200, { support_whatsapp: '22249002902', channel_url: '', onesignal_app_id: ONESIGNAL_APP_ID || '' });
+    return json(res, 200, { support_whatsapp: '22249002902', channel_url: '', onesignal_app_id: ONESIGNAL_APP_ID || '', sport_enabled: !!process.env.FOOTBALL_API_KEY });
   }
 };

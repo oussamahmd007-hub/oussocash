@@ -1,7 +1,8 @@
-// api/verify.js — Vérification du 1xBet ID (récupération réelle des données)
-// التحقق من 1xBet ID — يستخرج البيانات الفعلية من 1xBet
+// api/verify.js — التحقق الأول: من 1xBet API (مكافحة الحسابات الوهمية)
+// القاعدة: لا يُقبل ID إلا إن كان موجوداً فعلاً في 1xBet، وغير مستخدم، والجهاز لا يملك حساباً.
 const {
-  sbGet, isValidGameId, cleanGameId, xbetSearchPlayer, json, readBody,
+  sb, sbGet, isValidGameId, cleanGameId, xbetSearchPlayer,
+  hashFingerprint, json, readBody,
 } = require('../lib/core');
 
 module.exports = async (req, res) => {
@@ -9,25 +10,33 @@ module.exports = async (req, res) => {
   try {
     const body = await readBody(req);
     const gid = cleanGameId(body.game_id);
+    const fp = body.fingerprint ? hashFingerprint(body.fingerprint) : null;
 
     if (!isValidGameId(gid)) return json(res, 200, { status: 'invalid' });
 
-    // Bloqué ?
+    // ── أمان 1: هل يملك هذا الجهاز حساباً بالفعل؟ (جهاز واحد = حساب واحد) ──
+    if (fp) {
+      const owned = await sbGet('accounts', `owner_device=eq.${fp}&select=game_id,status`);
+      if (owned) {
+        return json(res, 200, { status: 'device_has_account', account_status: owned.status });
+      }
+    }
+
+    // ── أمان 2: محظور؟ ──
     const banned = await sbGet('banned_ids', `game_id=eq.${gid}&select=game_id`);
     if (banned) return json(res, 200, { status: 'banned' });
 
-    // Déjà rattaché à un compte existant → connexion
-    const existing = await sbGet('accounts', `game_id=eq.${gid}&select=status,name,has_pin:pin_hash`);
+    // ── أمان 3: هل الـ ID مستخدم في حساب آخر؟ (لا يتكرر أبداً) ──
+    const existing = await sbGet('accounts', `game_id=eq.${gid}&select=status,owner_device`);
     if (existing) {
-      return json(res, 200, {
-        status: 'existing',
-        account_status: existing.status,
-        name: existing.name,
-        has_pin: !!existing.has_pin,
-      });
+      // إن كان نفس الجهاز هو المالك → دخول، غير ذلك → مرفوض (مستخدم من آخر)
+      if (fp && existing.owner_device === fp) {
+        return json(res, 200, { status: 'existing', account_status: existing.status });
+      }
+      return json(res, 200, { status: 'id_taken' });
     }
 
-    // Récupération réelle depuis 1xBet
+    // ── التحقق الفعلي من 1xBet (استخراج الاسم والعملة) ──
     const r = await xbetSearchPlayer(gid);
     if (!r.found) return json(res, 200, { status: 'not_found' });
 
