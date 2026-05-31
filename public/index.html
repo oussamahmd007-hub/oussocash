@@ -67,11 +67,11 @@
         <p id="t-hero_sub"></p>
       </div>
       <div class="cta-stack">
-        <button class="btn btn-primary" onclick="App.openVerify()">
-          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" style="width:19px;height:19px"><path d="M12 2l8 4v6c0 5-3.5 8-8 10-4.5-2-8-5-8-10V6z"/><path d="M9 12l2 2 4-4"/></svg>
-          <span id="t-cta_verify"></span>
+        <button class="btn btn-primary" onclick="App.startRegister()">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" style="width:19px;height:19px"><path d="M16 21v-2a4 4 0 00-4-4H6a4 4 0 00-4 4v2M9 7a4 4 0 108 0 4 4 0 00-8 0M19 8v6M22 11h-6"/></svg>
+          <span id="t-cta_register"></span>
         </button>
-        <button class="btn btn-ghost" onclick="App.openVerify()" id="t-cta_have_account"></button>
+        <button class="btn btn-ghost" onclick="App.openLogin()" id="t-cta_have_account"></button>
       </div>
       <div class="features">
         <div class="feat"><div class="ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="4" y="10" width="16" height="11" rx="2"/><path d="M8 10V7a4 4 0 018 0v3"/></svg></div><b id="t-feat1_t"></b><span id="t-feat1_d"></span></div>
@@ -152,13 +152,39 @@
       </div>
     </div>
 
+    <!-- ── REGISTER STEPS (شرح طريقة التسجيل) ── -->
+    <div id="view-regsteps" class="view hidden pad">
+      <div style="padding:20px 4px 0">
+        <div class="id-shield" style="margin:0 auto 16px"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M16 21v-2a4 4 0 00-4-4H6a4 4 0 00-4 4v2M9 7a4 4 0 108 0 4 4 0 00-8 0M19 8v6M22 11h-6"/></svg></div>
+        <h2 style="font-size:22px;font-weight:800;text-align:center;letter-spacing:-.4px" id="t-rs_title"></h2>
+        <p style="color:var(--txt-2);font-size:14px;text-align:center;margin-top:8px" id="t-rs_sub"></p>
+      </div>
+      <div class="card" style="margin-top:18px">
+        <div class="rs-step"><span class="rs-num">1</span><div><b id="t-rs_s1_t"></b><span id="t-rs_s1_d"></span></div></div>
+        <div class="rs-step"><span class="rs-num">2</span><div><b id="t-rs_s2_t"></b><span id="t-rs_s2_d"></span></div></div>
+        <div class="rs-step"><span class="rs-num">3</span><div><b id="t-rs_s3_t"></b><span id="t-rs_s3_d"></span></div></div>
+        <div class="rs-step"><span class="rs-num">4</span><div><b id="t-rs_s4_t"></b><span id="t-rs_s4_d"></span></div></div>
+      </div>
+      <div class="rs-warn">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><path d="M12 8v4M12 16h.01"/></svg>
+        <span id="t-rs_warn"></span>
+      </div>
+      <button class="btn btn-primary" style="margin-top:16px" onclick="App.openRegLink()">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width:18px;height:18px"><path d="M15 3h6v6M10 14L21 3M18 13v6a2 2 0 01-2 2H5a2 2 0 01-2-2V8a2 2 0 012-2h6"/></svg>
+        <span id="t-rs_reg_btn"></span>
+      </button>
+      <button class="btn btn-ghost" style="margin-top:10px" onclick="App.openVideo()" id="t-rs_video_btn"></button>
+      <div class="rs-divider"><span id="t-rs_done"></span></div>
+      <button class="btn btn-secondary" onclick="App.openVerify('register')" id="t-rs_have_deposited"></button>
+    </div>
+
     <!-- ── VERIFY (ID ENTRY) ── -->
     <div id="view-verify" class="view hidden">
       <div class="center-wrap">
         <div class="id-head">
           <div class="id-shield"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M12 2l8 4v6c0 5-3.5 8-8 10-4.5-2-8-5-8-10V6z"/><path d="M9 12l2 2 4-4"/></svg></div>
-          <h2 id="t-verify_title"></h2>
-          <p id="t-verify_sub"></p>
+          <h2 id="verifyTitle"></h2>
+          <p id="verifySub"></p>
         </div>
         <div class="field">
           <input id="gidInput" inputmode="numeric" autocomplete="off" placeholder="" maxlength="13">
@@ -169,7 +195,6 @@
         </div>
         <div class="field-err" id="verifyErr"></div>
         <button class="btn btn-primary" id="verifyBtn" onclick="App.doVerify()"></button>
-        <button class="btn btn-ghost" style="margin-top:11px" onclick="App.openRegLink()" id="t-agency_reg_btn2"></button>
       </div>
     </div>
 
@@ -180,6 +205,29 @@
       </div>
       <div class="identity-card" id="identityCard"></div>
       <button class="btn btn-primary btn-block" style="margin-top:20px" onclick="App.openNotice()" id="t-present_continue"></button>
+    </div>
+
+    <!-- ── PENDING / UNDER REVIEW (يحجب الرئيسية) ── -->
+    <div id="view-pending" class="view hidden pad">
+      <div class="pending-wrap">
+        <div class="pending-anim">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 2"/></svg>
+        </div>
+        <h2 id="t-pending_title"></h2>
+        <p id="t-pending_desc"></p>
+        <div class="pending-steps">
+          <div class="pst done"><span class="pst-ic">✓</span><span id="t-pending_step1"></span></div>
+          <div class="pst active"><span class="pst-ic"></span><span id="t-pending_step2"></span></div>
+          <div class="pst"><span class="pst-ic"></span><span id="t-pending_step3"></span></div>
+        </div>
+        <div class="pending-id-box">
+          <span id="t-pending_your_id"></span>
+          <b id="pendingIdVal"></b>
+        </div>
+        <button class="btn btn-secondary" style="margin-top:18px" onclick="App.checkActivation()" id="t-pending_refresh"></button>
+        <button class="btn btn-ghost" style="margin-top:10px" onclick="App.openSupport()" id="t-pending_support"></button>
+        <button class="pending-logout" onclick="App.logout()" id="t-pending_logout"></button>
+      </div>
     </div>
 
     <!-- ── DASHBOARD ── -->
@@ -293,6 +341,44 @@
       </div>
     </div>
 
+    <!-- ── AGENCY (الوكالة المعتمدة) ── -->
+    <div id="view-agency" class="view hidden pad">
+      <div style="padding:22px 4px 12px">
+        <h2 style="font-size:23px;font-weight:800;letter-spacing:-.4px" id="t-agency_page_title"></h2>
+      </div>
+      <div class="agency-hero">
+        <div class="agency-hero-badge"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 2l8 4v6c0 5-3.5 8-8 10-4.5-2-8-5-8-10V6z"/><path d="M9 12l2 2 4-4"/></svg></div>
+        <h3 id="t-agency_page_h"></h3>
+        <p id="t-agency_page_sub"></p>
+      </div>
+      <div class="card" style="margin-top:14px">
+        <div class="agency-promo" onclick="App.copyPromo()" style="margin-bottom:0">
+          <div><div class="agency-promo-lbl" id="t-agency_promo2"></div><div class="agency-promo-code">OUSSO</div></div>
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="9" y="9" width="11" height="11" rx="2"/><path d="M5 15V5a2 2 0 012-2h10"/></svg>
+        </div>
+      </div>
+      <div class="agency-feat-list">
+        <div class="agency-feat"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20 6L9 17l-5-5"/></svg><span id="t-agency_f1"></span></div>
+        <div class="agency-feat"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20 6L9 17l-5-5"/></svg><span id="t-agency_f2"></span></div>
+        <div class="agency-feat"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20 6L9 17l-5-5"/></svg><span id="t-agency_f3"></span></div>
+        <div class="agency-feat"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20 6L9 17l-5-5"/></svg><span id="t-agency_f4"></span></div>
+      </div>
+      <button class="btn btn-primary" style="margin-top:16px" onclick="App.openRegLink()">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width:18px;height:18px"><path d="M15 3h6v6M10 14L21 3M18 13v6a2 2 0 01-2 2H5a2 2 0 01-2-2V8a2 2 0 012-2h6"/></svg>
+        <span id="t-agency_reg_btn3"></span>
+      </button>
+      <button class="btn btn-ghost" style="margin-top:10px" onclick="App.openVideo()" id="t-agency_video_btn2"></button>
+      <div class="agency-contact">
+        <span id="t-agency_support_label"></span>
+        <a id="agencyPhone" href="#" onclick="App.openWhatsapp();return false;"></a>
+        <small id="t-agency_support_note"></small>
+      </div>
+      <button class="btn btn-ghost" style="margin-top:14px" onclick="App.openFeedback()">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width:18px;height:18px"><path d="M12 2l2.4 7.4H22l-6 4.6 2.3 7.4-6.3-4.6L5.7 21 8 14 2 9.4h7.6z"/></svg>
+        <span id="t-fb_open"></span>
+      </button>
+    </div>
+
   </div><!-- /scroll -->
 
   <!-- bottom nav (only when logged in) -->
@@ -304,6 +390,10 @@
     <button class="nav-item" data-nav="sport" onclick="App.nav('sport')">
       <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><path d="M12 2a14 14 0 000 20M12 2a14 14 0 010 20M2 12h20"/></svg>
       <span id="t-sport_nav"></span>
+    </button>
+    <button class="nav-item" data-nav="agency" onclick="App.nav('agency')">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 2l8 4v6c0 5-3.5 8-8 10-4.5-2-8-5-8-10V6z"/><path d="M9 12l2 2 4-4"/></svg>
+      <span id="t-agency_nav"></span>
     </button>
     <button class="nav-item" data-nav="ref" onclick="App.nav('ref')">
       <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="9" cy="7" r="3"/><path d="M3 21v-2a5 5 0 015-5h2"/><path d="M16 11l2 2 4-4"/></svg>

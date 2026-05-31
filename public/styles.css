@@ -267,31 +267,31 @@ html[lang="ar"] .field input{text-align:right}
 
 /* ─── Identity / account presentation card ─── */
 .identity-card{
-  background:linear-gradient(150deg,#16213c,#0f1729);
-  border:1px solid var(--line-2);border-radius:24px;padding:24px;position:relative;overflow:hidden;
-  box-shadow:0 16px 50px rgba(0,0,0,.4);margin-top:8px}
+  background:linear-gradient(140deg,#2563eb,#1d4ed8 60%,#1e40af);
+  border:none;border-radius:24px;padding:24px;position:relative;overflow:hidden;
+  box-shadow:0 16px 44px rgba(37,99,235,.32);margin-top:8px}
 .identity-card::before{content:'';position:absolute;top:-50%;right:-20%;width:240px;height:240px;
-  background:radial-gradient(circle,rgba(61,130,247,.14),transparent 70%)}
+  background:radial-gradient(circle,rgba(255,255,255,.16),transparent 70%)}
 .id-avatar{width:60px;height:60px;border-radius:50%;
-  background:linear-gradient(135deg,var(--accent),var(--accent-2));
+  background:rgba(255,255,255,.18);
   display:grid;place-items:center;font-size:24px;font-weight:800;color:#ffffff;
-  box-shadow:0 0 0 4px rgba(61,130,247,.14)}
+  box-shadow:0 0 0 4px rgba(255,255,255,.12)}
 .id-top{display:flex;align-items:center;gap:14px;position:relative}
-.id-name{font-size:18px;font-weight:800;letter-spacing:-.3px}
+.id-name{font-size:18px;font-weight:800;letter-spacing:-.3px;color:#fff}
 .verified-badge{display:inline-flex;align-items:center;gap:5px;font-size:11.5px;font-weight:600;
-  color:var(--accent);margin-top:3px}
+  color:#cfe0ff;margin-top:3px}
 .verified-badge svg{width:14px;height:14px}
 .id-rows{margin-top:20px;display:flex;flex-direction:column;gap:1px;position:relative}
 .id-row{display:flex;justify-content:space-between;align-items:center;padding:13px 0;
-  border-bottom:1px solid var(--line)}
+  border-bottom:1px solid rgba(255,255,255,.14)}
 .id-row:last-child{border-bottom:none}
-.id-row .k{color:var(--txt-3);font-size:13px}
-.id-row .v{font-weight:700;font-size:14px}
+.id-row .k{color:rgba(255,255,255,.72);font-size:13px}
+.id-row .v{font-weight:700;font-size:14px;color:#fff}
 .id-row .v.mono{font-variant-numeric:tabular-nums;letter-spacing:.5px}
 .protect-banner{display:flex;align-items:center;gap:11px;margin-top:18px;padding:13px 15px;
-  background:var(--accent-soft);border:1px solid rgba(61,130,247,.2);border-radius:14px;position:relative}
-.protect-banner svg{width:20px;height:20px;color:var(--accent);flex-shrink:0}
-.protect-banner span{font-size:12.8px;font-weight:600;color:#cfe0ff}
+  background:rgba(255,255,255,.14);border:1px solid rgba(255,255,255,.2);border-radius:14px;position:relative}
+.protect-banner svg{width:20px;height:20px;color:#fff;flex-shrink:0}
+.protect-banner span{font-size:12.8px;font-weight:600;color:#fff}
 
 /* ─── Bottom sheet / modal ─── */
 .sheet-bg{position:fixed;inset:0;z-index:100;background:rgba(15,28,52,.32);backdrop-filter:blur(4px);
@@ -630,3 +630,86 @@ html[dir="rtl"] .chat-send svg{transform:scaleX(-1)}
   border-radius:14px;padding:13px 15px;box-shadow:var(--shadow-card)}
 .league-chip img{width:30px;height:30px;object-fit:contain;flex-shrink:0}
 .league-chip span{font-size:12.5px;font-weight:700;color:var(--txt)}
+
+/* ─── Register steps view ─── */
+.rs-step{display:flex;gap:13px;align-items:flex-start;padding:13px 0;border-bottom:1px solid var(--line)}
+.rs-step:last-child{border-bottom:none}
+.rs-num{flex-shrink:0;width:30px;height:30px;border-radius:10px;background:var(--accent);
+  color:#fff;font-weight:800;font-size:14px;display:grid;place-items:center}
+.rs-step b{display:block;font-size:14px;font-weight:700;margin-bottom:2px}
+.rs-step span{font-size:12.5px;color:var(--txt-3);line-height:1.5}
+.rs-warn{display:flex;gap:11px;align-items:center;margin-top:14px;padding:13px 15px;
+  background:rgba(226,59,78,.08);border:1px solid rgba(226,59,78,.25);border-radius:14px}
+.rs-warn svg{width:20px;height:20px;color:var(--danger);flex-shrink:0}
+.rs-warn span{font-size:12.5px;font-weight:600;color:var(--danger)}
+.rs-divider{text-align:center;margin:22px 0 14px;position:relative;color:var(--txt-3);font-size:13px;font-weight:600}
+.rs-divider::before,.rs-divider::after{content:'';position:absolute;top:50%;width:30%;height:1px;background:var(--line-2)}
+.rs-divider::before{right:0}.rs-divider::after{left:0}
+.btn-secondary{background:var(--surface);color:var(--accent);border:1.5px solid var(--accent);
+  display:flex;align-items:center;justify-content:center;gap:8px;height:54px;border-radius:16px;font-weight:700;font-size:15px;width:100%;transition:.2s var(--ease)}
+.btn-secondary:active{transform:scale(.98);background:var(--accent-soft)}
+
+/* ─── Pending / under review ─── */
+.pending-wrap{display:flex;flex-direction:column;align-items:center;text-align:center;padding:40px 12px 20px}
+.pending-anim{width:90px;height:90px;border-radius:50%;background:var(--accent-soft);
+  display:grid;place-items:center;color:var(--accent);margin-bottom:22px;position:relative}
+.pending-anim::before{content:'';position:absolute;inset:-6px;border-radius:50%;
+  border:3px solid var(--accent);border-top-color:transparent;animation:spin 1.4s linear infinite;opacity:.5}
+.pending-anim svg{width:42px;height:42px}
+.pending-wrap h2{font-size:21px;font-weight:800;letter-spacing:-.3px;margin-bottom:10px}
+.pending-wrap>p{color:var(--txt-2);font-size:14px;line-height:1.6;max-width:340px;margin-bottom:26px}
+.pending-steps{width:100%;max-width:340px;display:flex;flex-direction:column;gap:12px;margin-bottom:22px}
+.pst{display:flex;align-items:center;gap:12px;padding:13px 16px;border-radius:14px;
+  background:var(--surface);border:1px solid var(--line);font-size:13.5px;font-weight:600;color:var(--txt-3);text-align:start}
+.pst-ic{width:24px;height:24px;border-radius:50%;border:2px solid var(--line-2);display:grid;place-items:center;
+  font-size:13px;flex-shrink:0;color:var(--txt-3)}
+.pst.done{color:var(--txt);border-color:rgba(37,99,235,.2)}
+.pst.done .pst-ic{background:var(--accent);border-color:var(--accent);color:#fff}
+.pst.active{color:var(--txt);border-color:var(--accent);background:var(--accent-soft)}
+.pst.active .pst-ic{border-color:var(--accent);position:relative}
+.pst.active .pst-ic::after{content:'';width:9px;height:9px;border-radius:50%;background:var(--accent);animation:livePulse 1.4s infinite}
+.pending-id-box{width:100%;max-width:340px;background:var(--surface);border:1px solid var(--line);
+  border-radius:14px;padding:16px;display:flex;flex-direction:column;gap:5px}
+.pending-id-box span{font-size:11.5px;color:var(--txt-3)}
+.pending-id-box b{font-size:18px;font-weight:800;font-variant-numeric:tabular-nums;color:var(--accent)}
+.pending-logout{margin-top:20px;color:var(--txt-3);font-size:13px;font-weight:600;background:none;text-decoration:underline}
+
+/* ─── Withdraw to 1xBet ─── */
+.wd-target{display:flex;align-items:center;gap:14px;margin-top:16px;padding:16px;
+  background:var(--accent-soft);border:1px solid rgba(37,99,235,.2);border-radius:16px}
+.wd-target-ic{width:46px;height:46px;border-radius:13px;background:var(--accent);color:#fff;display:grid;place-items:center;flex-shrink:0}
+.wd-target-ic svg{width:24px;height:24px}
+.wd-target span{font-size:11.5px;color:var(--txt-3);display:block;margin-bottom:3px}
+.wd-target b{font-size:17px;font-weight:800;font-variant-numeric:tabular-nums;color:var(--accent)}
+
+/* ─── Agency page ─── */
+.agency-hero{background:linear-gradient(140deg,#2563eb,#1d4ed8);border-radius:24px;padding:28px 22px;
+  text-align:center;color:#fff;position:relative;overflow:hidden;box-shadow:0 16px 40px rgba(37,99,235,.3);margin-top:8px}
+.agency-hero::before{content:'';position:absolute;top:-40%;right:-15%;width:220px;height:220px;
+  background:radial-gradient(circle,rgba(255,255,255,.18),transparent 70%)}
+.agency-hero-badge{width:64px;height:64px;border-radius:20px;background:rgba(255,255,255,.18);
+  display:grid;place-items:center;margin:0 auto 16px;position:relative}
+.agency-hero-badge svg{width:32px;height:32px;color:#fff}
+.agency-hero h3{font-size:19px;font-weight:800;margin-bottom:8px;position:relative}
+.agency-hero p{font-size:13.5px;line-height:1.6;color:rgba(255,255,255,.9);position:relative}
+.agency-feat-list{margin-top:14px;display:flex;flex-direction:column;gap:10px}
+.agency-feat{display:flex;align-items:center;gap:12px;background:var(--surface);border:1px solid var(--line);
+  border-radius:14px;padding:14px 16px;box-shadow:var(--shadow-card)}
+.agency-feat svg{width:20px;height:20px;color:var(--accent);flex-shrink:0;
+  background:var(--accent-soft);border-radius:7px;padding:3px;box-sizing:content-box}
+.agency-feat span{font-size:13.5px;font-weight:700}
+.agency-contact{margin-top:22px;text-align:center;padding:22px;background:var(--surface);
+  border:1px solid var(--line);border-radius:18px}
+.agency-contact>span{display:block;font-size:12px;color:var(--txt-3);font-weight:600;margin-bottom:8px}
+.agency-contact a{display:block;font-size:24px;font-weight:800;color:var(--accent);letter-spacing:1px;
+  text-decoration:none;margin-bottom:8px;direction:ltr}
+.agency-contact small{font-size:12px;color:var(--txt-3)}
+
+/* ─── Feedback form ─── */
+.fb-label{display:block;font-size:12px;color:var(--txt-3);font-weight:600;margin:14px 0 7px}
+.fb-select{width:100%;height:50px;background:var(--surface);border:1.5px solid var(--line-2);border-radius:13px;
+  padding:0 14px;color:var(--txt);font-size:14px;font-family:inherit;outline:none}
+.fb-select:focus{border-color:var(--accent)}
+.fb-textarea{width:100%;background:var(--surface);border:1.5px solid var(--line-2);border-radius:13px;
+  padding:13px 15px;color:var(--txt);font-size:14px;font-family:inherit;outline:none;resize:vertical;margin-top:12px;line-height:1.6}
+.fb-textarea:focus{border-color:var(--accent)}

@@ -69,13 +69,15 @@ const App = {
 
   // ── views ──
   show(view){
-    ['landing','verify','present','dash','ref','contest','sport','support'].forEach(v=>{
+    ['landing','regsteps','verify','present','pending','dash','ref','contest','sport','support','agency'].forEach(v=>{
       const el=document.getElementById('view-'+v); if(el) el.classList.toggle('hidden', v!==view);
     });
     this.current = view;
     document.getElementById('scroll').scrollTop = 0;
-    const loggedIn = ['dash','ref','contest','sport','support'].includes(view);
-    document.getElementById('bottomnav').classList.toggle('hidden', !this.account || !loggedIn);
+    // القائمة السفلية تظهر فقط بعد التفعيل (داخل لوحة التحكم)
+    const loggedIn = ['dash','ref','contest','sport','support','agency'].includes(view);
+    const active = this.account && this.account.status==='active';
+    document.getElementById('bottomnav').classList.toggle('hidden', !active || !loggedIn);
     if (this.account){
       document.querySelectorAll('.nav-item').forEach(n=>n.classList.toggle('on', n.dataset.nav===view));
     }
@@ -85,9 +87,23 @@ const App = {
     else if(v==='contest'){ this.show('contest'); this.loadContest(); }
     else if(v==='sport'){ this.show('sport'); this.sportView(this._sportView||'today'); }
     else if(v==='support'){ this.show('support'); this.initChat(); }
+    else if(v==='agency'){ this.show('agency'); }
   },
 
-  openVerify(){ document.getElementById('verifyErr').textContent=''; document.getElementById('gidInput').value=''; this.show('verify'); setTimeout(()=>document.getElementById('gidInput').focus(),300); },
+  // ═══ نقطتا الدخول: تسجيل جديد / لدي حساب ═══
+  startRegister(){ this.show('regsteps'); },
+  openLogin(){ this._verifyMode='login'; this.openVerify('login'); },
+  openVerify(mode){
+    this._verifyMode = mode || this._verifyMode || 'register';
+    const T=window.TEXTS[this.lang];
+    document.getElementById('verifyTitle').textContent = this._verifyMode==='login'?T.verify_title_login:T.verify_title_reg;
+    document.getElementById('verifySub').textContent = this._verifyMode==='login'?T.verify_sub_login:T.verify_sub_reg;
+    document.getElementById('verifyBtn').textContent = this._verifyMode==='login'?T.cta_have_account:T.cta_verify||T.rs_have_deposited;
+    document.getElementById('verifyErr').textContent=''; document.getElementById('verifyErr').classList.remove('show');
+    document.getElementById('gidInput').value='';
+    this.show('verify');
+    setTimeout(()=>document.getElementById('gidInput').focus(),300);
+  },
 
   // ── toast ──
   toast(msg){
@@ -120,14 +136,29 @@ const App = {
 
     if (r.status==='invalid'){ this.endSequence(false); this.showVerifyErr(this.t('verify_invalid')); return; }
     if (r.status==='banned'){ this.endSequence(false); this.showVerifyErr(this.t('verify_banned')); return; }
-    if (r.status==='not_found'){ this.endSequence(false); this.showVerifyErr(this.t('verify_notfound')); return; }
+
+    const mode = this._verifyMode || 'register';
 
     if (r.status==='existing'){
-      // حساب موجود → دخول مباشر من أي جهاز
+      // حساب موجود في نظامنا
       await this.endSequence(true);
+      if (r.account_status==='active'){ return this.login(gid); }
+      // قيد المراجعة → الدخول لكن يبقى في شاشة الانتظار
       return this.login(gid);
     }
-    // معرّف جديد موجود في 1xBet → عرض الإجراءات
+
+    // معرّف غير موجود في نظامنا
+    if (mode==='login'){
+      // وضع "لدي حساب" يقبل فقط المعتمدين
+      this.endSequence(false);
+      this.showVerifyErr(r.status==='not_found' ? this.t('verify_notfound') : this.t('login_not_found'));
+      return;
+    }
+
+    // وضع التسجيل: المعرّف يجب أن يكون موجوداً في 1xBet
+    if (r.status==='not_found'){ this.endSequence(false); this.showVerifyErr(this.t('verify_notfound')); return; }
+
+    // معرّف جديد موجود في 1xBet → عرض بطاقة الهوية ثم بدء التسجيل (pending)
     this._verifyData = { game_id: gid, name: r.name, currency: r.currency };
     await this.endSequence(true);
     this.renderPresent();
@@ -314,7 +345,27 @@ const App = {
     if(r.error==='no_session'||r.error==='banned'){ this.logout(); return; }
     if(r.ok){ this.account=r.account; this.stats=r.stats; this._deviceTrusted=r.device_trusted; this.contest=r.contest;
       (r.notifications||[]).forEach(n=>this.toast(n.body||n.title)); }
+    // حجب لوحة التحكم حتى التفعيل
+    if(!this.account || this.account.status!=='active'){ this.showPending(); return; }
     this.show('dash'); this.renderDash();
+  },
+
+  // ═══ شاشة الانتظار (تحجب الرئيسية حتى التفعيل) ═══
+  showPending(){
+    const gid = this.account ? this.account.game_id : '';
+    const el=document.getElementById('pendingIdVal'); if(el) el.textContent=gid;
+    this.show('pending');
+  },
+  async checkActivation(){
+    const fp=await this.fingerprint();
+    const r=await this.api('me',{ session:Store.s, fingerprint:fp });
+    if(r.ok){ this.account=r.account; this.stats=r.stats; this.contest=r.contest; }
+    if(this.account && this.account.status==='active'){
+      this.toast(this.t('welcome_back'));
+      this.show('dash'); this.renderDash();
+    } else {
+      this.toast(this.t('pending_not_yet'));
+    }
   },
 
   renderDash(){
@@ -414,36 +465,32 @@ const App = {
   // ═══ WITHDRAW ═══
   openWithdraw(){
     const T=window.TEXTS[this.lang], a=this.account;
-    if(!this._deviceTrusted){ this.toast(T.wd_untrusted); this.showNewDevice(); return; }
     if((a.balance_um||0)<300){
       this.openSheet(`<h3>${T.wd_title}</h3><div class="warn-box" style="margin-top:8px"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 9v4M12 17h.01"/><circle cx="12" cy="12" r="10"/></svg><span>${T.wd_insufficient}</span></div><button class="btn btn-ghost" style="margin-top:16px" onclick="App.closeSheet();App.nav('ref')">${T.ref_share}</button>`);
       return;
     }
-    this._wdMethod=null;
-    const methods=[['Bankily','/logos/bankily.jpg'],['Masrvi','/logos/masrvi.jpg'],['Sedad','/logos/sedad.jpg']];
+    // السحب يذهب إلى حساب 1xBet المرتبط (لا تطبيقات بنكية)
     this.openSheet(`
       <h3>${T.wd_title}</h3>
       <div class="sub">${T.wd_balance}: <b style="color:var(--accent)">${(a.balance_um).toLocaleString()} UM</b></div>
-      <div class="method-grid">${methods.map(m=>`
-        <div class="method" data-m="${m[0]}" onclick="App.pickMethod('${m[0]}')">
-          <img src="${m[1]}" alt=""><b>${m[0]}</b><div class="radio"></div></div>`).join('')}</div>
-      <div class="field"><input id="wdAccount" inputmode="numeric" placeholder="${T.wd_account_ph}"></div>
-      <p class="field-note" style="margin-bottom:14px">${T.wd_note}</p>
+      <div class="wd-target">
+        <div class="wd-target-ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><path d="M12 7v10M8 9h6a2 2 0 010 4H8m0 0h6"/></svg></div>
+        <div><span>${T.wd_to_1xbet}</span><b>${a.game_id}</b></div>
+      </div>
+      <p class="field-note" style="margin:14px 0">${T.wd_note_1xbet}</p>
       <button class="btn btn-primary" id="wdBtn" onclick="App.submitWithdraw()">${T.wd_confirm}</button>
     `);
   },
   pickMethod(m){ this._wdMethod=m; document.querySelectorAll('.method').forEach(e=>e.classList.toggle('on',e.dataset.m===m)); },
   async submitWithdraw(){
     const T=window.TEXTS[this.lang];
-    const account=document.getElementById('wdAccount').value.trim();
-    if(!this._wdMethod){ this.toast(T.wd_choose); return; }
-    if(account.length<6){ this.toast(T.wd_account); return; }
     const fp=await this.fingerprint();
-    const r=await this.api('withdraw',{ session:Store.s, fingerprint:fp, method:this._wdMethod, account_number:account });
-    if(r.error==='pending_exists'){ this.toast(T.wd_pending); return; }
-    if(r.error==='device_untrusted'){ this.toast(T.wd_untrusted); this.closeSheet(); this.showNewDevice(); return; }
-    if(r.error==='insufficient'){ this.toast(T.wd_insufficient); return; }
-    if(!r.ok){ this.toast('Error'); return; }
+    const btn=document.getElementById('wdBtn'); if(btn){ btn.disabled=true; btn.style.opacity='.6'; }
+    // السحب يذهب إلى حساب 1xBet المرتبط
+    const r=await this.api('withdraw',{ session:Store.s, fingerprint:fp, method:'1xbet', account_number:this.account.game_id });
+    if(r.error==='pending_exists'){ this.toast(T.wd_pending); if(btn){btn.disabled=false;btn.style.opacity='1';} return; }
+    if(r.error==='insufficient'){ this.toast(T.wd_insufficient); if(btn){btn.disabled=false;btn.style.opacity='1';} return; }
+    if(!r.ok){ this.toast('Error'); if(btn){btn.disabled=false;btn.style.opacity='1';} return; }
     this.account.balance_um=0;
     this.closeSheet(); this.renderDash(); this.toast(T.wd_sent);
   },
@@ -540,6 +587,31 @@ const App = {
   },
 
   logout(){ Store.s=null; this.account=null; this.stats=null; this._chatInit=false; document.getElementById('chatMsgs')&&(document.getElementById('chatMsgs').innerHTML=''); this.show('landing'); document.getElementById('bottomnav').classList.add('hidden'); },
+
+  // ═══ FEEDBACK (ساهم في تطوير) ═══
+  openFeedback(){
+    const T=window.TEXTS[this.lang];
+    const kinds=[['feature',T.fb_kind_feature],['ui',T.fb_kind_ui],['sport',T.fb_kind_sport],['ref',T.fb_kind_ref],['bug',T.fb_kind_bug],['other',T.fb_kind_other]];
+    this.openSheet(`
+      <h3>${T.fb_title}</h3>
+      <div class="sub">${T.fb_sub}</div>
+      <label class="fb-label">${T.fb_kind}</label>
+      <select id="fbKind" class="fb-select">${kinds.map(k=>`<option value="${k[0]}">${k[1]}</option>`).join('')}</select>
+      <div class="field" style="margin-top:12px"><input id="fbTitle" placeholder="${T.fb_title_ph}" maxlength="120"></div>
+      <textarea id="fbBody" class="fb-textarea" placeholder="${T.fb_body_ph}" maxlength="1500" rows="4"></textarea>
+      <button class="btn btn-primary" style="margin-top:14px" onclick="App.sendFeedback()">${T.fb_send}</button>
+    `);
+  },
+  async sendFeedback(){
+    const T=window.TEXTS[this.lang];
+    const kind=document.getElementById('fbKind').value;
+    const title=document.getElementById('fbTitle').value.trim();
+    const bodyTxt=document.getElementById('fbBody').value.trim();
+    if(bodyTxt.length<5){ this.toast(T.fb_short); return; }
+    const r=await this.api('feedback',{ session:Store.s, kind, title, body:bodyTxt });
+    this.closeSheet();
+    this.toast(T.fb_thanks);
+  },
 
   // ═══ AGENCY ═══
   openRegLink(){ window.open(REG_LINK,'_blank'); },
@@ -739,15 +811,20 @@ const App = {
     this.renderLeagues();
     // load config
     try{ const c=await this.api('config'); SUPPORT_WA=c.support_whatsapp||SUPPORT_WA; CHANNEL=c.channel_url||CHANNEL; OS_APP_ID=c.onesignal_app_id||''; }catch{}
+    // عرض رقم الوكالة بشكل منسّق
+    const ph=document.getElementById('agencyPhone');
+    if(ph){ const n=SUPPORT_WA.replace(/^222/,''); ph.textContent='+222 '+n.replace(/(\d{2})(\d{2})(\d{2})(\d{2})/,'$1 $2 $3 $4'); }
     // hide splash
     setTimeout(()=>document.getElementById('splash').classList.add('gone'),1500);
-    // session restore
+    // session restore — تذكّر المستخدم في كل دخول
     if(Store.s){
       const fp=await this.fingerprint();
       const r=await this.api('me',{ session:Store.s, fingerprint:fp });
-      if(r.ok){ this.account=r.account; this.stats=r.stats; this._deviceTrusted=r.device_trusted;
+      if(r.ok){ this.account=r.account; this.stats=r.stats; this._deviceTrusted=r.device_trusted; this.contest=r.contest;
         await this.initOneSignal(this.account.game_id);
-        this.show('dash'); this.renderDash();
+        // حجب لوحة التحكم حتى التفعيل
+        if(this.account.status==='active'){ this.show('dash'); this.renderDash(); }
+        else { this.showPending(); }
         (r.notifications||[]).forEach(n=>setTimeout(()=>this.toast(n.body||n.title),2000));
         return;
       } else { Store.s=null; }
