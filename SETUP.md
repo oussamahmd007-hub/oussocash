@@ -1,98 +1,119 @@
-# OussoCash — دليل النشر · Guide de déploiement
+# OussoCash — دليل التشغيل الكامل
 
-منصة احترافية لمستخدمي 1xBet · هوية عبر 1xBet ID فقط · إحالات + إشعارات.
-Plateforme premium pour utilisateurs 1xBet · identité par ID 1xBet · parrainage + notifications.
-
----
-
-## 1) قاعدة البيانات · Base de données (Supabase)
-
-1. أنشئ مشروعاً على https://supabase.com
-2. افتح **SQL Editor** والصق محتوى `supabase_schema.sql` ثم نفّذه مرة واحدة.
-3. من **Settings → API** انسخ:
-   - `Project URL` → سيصبح `SUPABASE_URL`
-   - `service_role` key (السري) → سيصبح `SUPABASE_SERVICE_KEY`
-
-> RLS مفعّل على كل الجداول. لا وصول من المتصفح إطلاقاً — فقط الـ API عبر service_role.
+منصة وكالة 1xBet معتمدة: تحقق عبر API + تفعيل عبر CSV + إحالات + مسابقات + رياضة + دعم ذكي.
 
 ---
 
-## 2) متغيّرات البيئة · Variables d'environnement (Vercel)
+## 1) الملفات التي ترفعها على GitHub
 
-من **Vercel → Project → Settings → Environment Variables** أضف:
+ارفع **كل** مجلد `oussocash` كما هو:
 
-| المتغيّر | الوصف |
-|---|---|
-| `SUPABASE_URL` | رابط مشروع Supabase |
-| `SUPABASE_SERVICE_KEY` | مفتاح service_role السري |
-| `REFERRAL_SECRET` | نص عشوائي طويل (لتوليد أكواد الإحالة وتوقيع الجلسات) |
-| `SESSION_SECRET` | نص عشوائي طويل (اختياري — يستخدم REFERRAL_SECRET إن غاب) |
-| `ADMIN_PASSWORD` | كلمة مرور لوحة الإدارة |
-| `XBET_API_URL` | رابط API الخاص بـ 1xBet |
-| `XBET_HASH` | hash الكاشير |
-| `XBET_CASHIERPASS` | كلمة مرور الكاشير |
-| `XBET_CASHDESKID` | معرّف الكاشديسك |
-| `ONESIGNAL_APP_ID` | `2bc2dce1-ddee-42f3-a013-504c9989bc37` |
-| `ONESIGNAL_API_KEY` | REST API Key من OneSignal |
-
-> لتوليد نص عشوائي: `openssl rand -hex 32`
-
----
-
-## 3) الإشعارات · Notifications (OneSignal)
-
-- App ID الحالي: `2bc2dce1-ddee-42f3-a013-504c9989bc37`
-- من **OneSignal → Settings → Keys & IDs** انسخ **REST API Key** إلى `ONESIGNAL_API_KEY`.
-- ملف `public/OneSignalSDKWorker.js` **يجب** أن يبقى في جذر الموقع (هو كذلك بالفعل).
-- في إعداد OneSignal Web، اضبط Site URL على نطاق Vercel الخاص بك (مثال `https://oussocash.vercel.app`).
-- الاستهداف يتم عبر `external_id = game_id`، والواجهة تنفّذ `OneSignal.login(game_id)` تلقائياً بعد الدخول.
-
----
-
-## 4) النشر · Déploiement (Vercel)
-
-```bash
-npm i -g vercel      # إن لزم
-vercel               # أول نشر
-vercel --prod        # نشر الإنتاج
+```
+oussocash/
+├── api/            (verify, register, me, withdraw, device-auth, config,
+│                    contest, admin, support, sport)
+├── lib/            (core.js, support-kb.js)
+├── public/         (index.html, app.js, styles.css, texts.js,
+│                    admin.html, admin.css, admin.js,
+│                    OneSignalSDKWorker.js ← في الجذر،
+│                    logos/, images/)
+├── .gitignore
+├── package.json
+├── vercel.json
+├── supabase_schema.sql
+└── SETUP.md
 ```
 
-- `vercel.json` يحوّل `/r/:code` إلى الواجهة (روابط الإحالة تعمل مباشرة).
-- مجلد `api/` يصبح دوال serverless تلقائياً (Node 18+).
+❌ **لا ترفع أبداً:** ملف `.env` أو أي مفتاح سري. ملف `.gitignore` يمنع ذلك تلقائياً.
 
 ---
 
-## 5) روابط الإحالة · Liens de parrainage
+## 2) متغيّرات البيئة في Vercel (Settings → Environment Variables)
 
-- رابط كل مستخدم: `https://VOTRE-DOMAINE/r/CODE`
-- عند فتح الرابط، يُلتقط الكود تلقائياً ويُربط بالحساب عند التفعيل.
-- المكافآت: 100 UM ترحيب (للمُحال) · 20 UM لكل إحالة مُفعّلة · 25% من أرباح المُحالين.
+| المتغيّر | القيمة |
+|---|---|
+| `SUPABASE_URL` | رابط مشروع Supabase |
+| `SUPABASE_SERVICE_KEY` | مفتاح service_role |
+| `REFERRAL_SECRET` | نص عشوائي طويل (`openssl rand -hex 32`) |
+| `SESSION_SECRET` | نص عشوائي طويل آخر |
+| `ADMIN_PASSWORD` | كلمة مرور لوحة الإدارة |
+| `XBET_API_URL` | `https://partners.servcul.com/CashdeskBotAPI` |
+| `XBET_HASH` | من مدير 1xBet |
+| `XBET_CASHIERPASS` | من مدير 1xBet |
+| `XBET_CASHDESKID` | من مدير 1xBet |
+| `ONESIGNAL_APP_ID` | `2bc2dce1-ddee-42f3-a013-504c9989bc37` |
+| `ONESIGNAL_API_KEY` | مفتاح OneSignal REST (يبدأ بـ os_v2_app_…) |
+| `FOOTBALL_API_KEY` | مفتاح football-data.org (للرياضة) |
 
----
-
-## 6) لوحة الإدارة · Administration
-
-كل الطلبات إلى `POST /api/admin` مع `password` و `action`:
-
-- `dashboard` — إحصائيات عامة
-- `accounts` — قائمة الحسابات
-- `withdrawals` / `process_wd` — إدارة السحوبات
-- `devices` / `trust_device` — إدارة الأجهزة الموثوقة (تفعيل جهاز جديد)
-- `ban_id` — حظر معرّف
-- `cleanup_pending` — حذف الحسابات المعلّقة منتهية المدة (>24h بلا إيداع)
-- `process_csv` — رفع ملف 1xBet CSV ومعالجة التفعيل
-
-### قواعد معالجة CSV
-- المعرّف غير موجود في الملف → حذف الحساب
-- لا يحوي SubId فيه `OUSSO` → حظر + حذف
-- الإيداع < 200 UM → وضع `deposit_incomplete` (أو حظر+حذف إذا انتهت مهلة 3 أيام)
-- صالح → تفعيل + دفع مكافأة الترحيب (للمُحالين فقط) + عمولة الإحالة
+> ⚠️ **مهم:** أنشئ مفتاح football-data.org جديداً إن سبق أن شاركته، وضعه هنا فقط.
 
 ---
 
-## ملاحظات الأمان · Notes de sécurité
+## 3) الإجراءات بالترتيب
 
-- لا تُخزَّن كلمات مرور 1xBet أو بيانات بنكية أو معلومات استرجاع. الهوية = 1xBet ID المُتحقَّق منه فقط.
-- السحب مرتبط دائماً بنفس الهوية، ومحمي بنظام **الأجهزة الموثوقة**: أي جهاز جديد يحتاج تفعيلاً يدوياً عبر الدعم قبل السحب.
-- الجلسات موقّعة (HMAC) وتربط المعرّف ببصمة الجهاز.
-- استرجاع حساب 1xBet يتم حصراً عبر القنوات الرسمية لـ 1xBet.
+**أ. Supabase**
+1. أنشئ مشروعاً على supabase.com
+2. SQL Editor → الصق كامل `supabase_schema.sql` → Run
+3. Settings → API → انسخ `Project URL` و `service_role key`
+
+**ب. GitHub** — أنشئ repo (خاص أفضل) وارفع كل الملفات.
+
+**ج. Vercel** — New Project → اربط الـ repo → أضف كل المتغيّرات → Deploy.
+
+**د. OneSignal** — اضبط Site URL على نطاق Vercel، وتأكد أن
+`نطاقك/OneSignalSDKWorker.js` يعمل.
+
+**هـ. football-data.org** — سجّل مجاناً، خذ المفتاح، ضعه في `FOOTBALL_API_KEY`.
+
+---
+
+## 4) تسلسل تجربة المستخدم (Event Flow)
+
+1. **الدخول** → شاشة splash → الصفحة الرئيسية (هوية الوكالة + CTA "تحقّق من حسابك").
+2. **التحقق الأول (API):** يُدخل المستخدم معرّف 1xBet → النظام:
+   - يرفض إن كان الجهاز يملك حساباً (`device_has_account`)
+   - يرفض إن كان المعرّف مستخدماً من آخر (`id_taken`)
+   - يرفض إن كان محظوراً (`banned`)
+   - يرفض إن لم يوجد في 1xBet (`not_found`)
+   - يستخرج الاسم والعملة إن وُجد → ينشئ حساب **pending**.
+3. **الإيداع:** المستخدم يودِع ≥ 200 UM عبر بروموكود OUSSO.
+4. **التحقق الثاني (CSV):** الأدمن يرفع تقرير 1xBet من لوحة الإدارة →
+   - غير موجود في التقرير → حذف
+   - بدون OUSSO → حظر + حذف
+   - إيداع < 200 → "إيداع غير مكتمل" + المبلغ الناقص + مهلة 3 أيام
+   - صالح → **تفعيل** + مكافأة ترحيب + عمولة الإحالة.
+5. **بعد التفعيل:** رصيد، إحالات، سحب (عبر جهاز موثوق فقط)، مسابقات، رياضة، دعم.
+
+---
+
+## 5) قواعد الأمان المطبّقة
+
+- المعرّف فريد: لا يتكرر في حسابين (UNIQUE + معالجة السباق).
+- لا يُتحقق من معرّف مستخدمٍ من جهاز آخر.
+- جهاز واحد = حساب واحد (لا إضافة معرّف بعد امتلاك حساب).
+- القبول النهائي عبر CSV فقط (الـ API يؤكد الوجود فقط).
+- كل مستخدم يقرأ بياناته فقط (جلسة موقّعة HMAC).
+- السحب عبر الجهاز الموثوق فقط.
+- كل الأسرار في Vercel، لا شيء في GitHub.
+
+---
+
+## 6) لوحة الإدارة — `نطاقك/admin.html`
+
+- **الرئيسية:** إحصائيات (الحسابات، المفعّلة، المعلّقة، السحوبات).
+- **التقارير:** رفع CSV ومعالجته (تفعيل/حظر/حذف تلقائي).
+- **بحث:** عن أي معرّف → بياناته كاملة + حظر/توثيق جهاز.
+- **السحوبات:** قبول/رفض (الرفض يُرجع الرصيد).
+- **مسابقات:** إنشاء (جائزة + إحالات مطلوبة + مهلة) → يُشعر الجميع.
+- **رسالة جماعية:** broadcast لكل المستخدمين.
+
+---
+
+## 7) التحديث المستقبلي (تقسيم احترافي)
+
+- **الألوان:** عدّل متغيّرات CSS في أعلى `styles.css` فقط.
+- **النصوص:** كل النصوص في `public/texts.js` (عربي/فرنسي).
+- **الثوابت** (المكافآت، الحدود): في `lib/core.js`.
+- **كل API منفصل** في ملفه (`api/*.js`).
+- **الأدمن منفصل تماماً** عن تطبيق المستخدم.
+- **معرفة الدعم:** `lib/support-kb.js` (40 نية).
