@@ -41,8 +41,8 @@ function simplifyMatch(m) {
 
 // ── توقع مبني على بيانات حقيقية: ترتيب الفريقين + فارق النقاط + الأرضية ──
 //    شفّاف: نعرض نسبة ثقة محسوبة من فجوة الترتيب، لا وعود كاذبة
-async function buildPredictions(matches, standingsCache) {
-  const upcoming = matches.filter((m) => m.status === 'SCHEDULED' || m.status === 'TIMED').slice(0, 5);
+async function buildPredictions(matchList, standingsCache) {
+  const upcoming = (matchList || []).slice(0, 5);
   const preds = [];
   for (const m of upcoming) {
     const pos = standingsCache[m.comp] || {}; // standingsCache keyed by competition name
@@ -127,8 +127,19 @@ module.exports = async (req, res) => {
 
     let predictions = null;
     if (view === 'today' || view === 'tomorrow' || body.with_predictions) {
+      const pck = 'pred_upcoming';
+      let upcoming = getCache(pck, 30 * 60e3);
+      if (!upcoming) {
+        const from = ymd(now);
+        const to = ymd(new Date(+now + 7 * 864e5));
+        try {
+          const du = await fb(`/matches?competitions=${COMPETITIONS}&dateFrom=${from}&dateTo=${to}`);
+          upcoming = (du.matches || []).map(simplifyMatch).filter((m) => m.status === 'SCHEDULED' || m.status === 'TIMED');
+          setCache(pck, upcoming);
+        } catch { upcoming = []; }
+      }
       const st = await standings();
-      predictions = await buildPredictions(matches, st);
+      predictions = await buildPredictions(upcoming, st);
     }
 
     return json(res, 200, { view, matches, predictions, count: matches.length });

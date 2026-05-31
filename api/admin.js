@@ -160,6 +160,12 @@ module.exports = async (req, res) => {
       return json(res, 200, { ok: true, removed: stale.length });
     }
 
+    // ─── اقتراحات المستخدمين ───
+    if (action === 'feedback') {
+      const fb = await sb('feedback?select=*&order=created_at.desc&limit=100');
+      return json(res, 200, { feedback: fb });
+    }
+
     // ─── معالجة تقرير CSV (القبول النهائي للـ ID) ───
     if (action === 'process_csv') {
       return json(res, 200, await processCSV(body.csv || '', body.filename || 'report.csv'));
