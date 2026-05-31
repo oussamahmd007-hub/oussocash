@@ -1,457 +1,491 @@
-// public/app.js — منطق الواجهة الاحترافية
+// ═══════════════════════════════════════════════════════════════════
+//  OussoCash — Frontend (premium fintech app)
+//  واجهة احترافية · تحقق صادق · هوية عبر 1xBet ID
+// ═══════════════════════════════════════════════════════════════════
 const REG_LINK = 'https://reffpa.com/L?tag=d_3649166m_1599c_OUSSO&site=3649166&ad=1599&r=en/registration';
 const VIDEO_REGISTER = 'https://player.cloudinary.com/embed/?cloud_name=djkqimryk&public_id=lv_0_%D9%A2%D9%A0%D9%A2%D9%A6%D9%A0%D9%A4%D9%A1%D9%A0%D9%A1%D9%A4%D9%A1%D9%A1%D9%A3%D9%A2_ylopqt';
-const VIDEO_AGENCY = VIDEO_REGISTER;
 let SUPPORT_WA = '22249002902';
-let CHANNEL = 'https://whatsapp.com/channel/0029Vb7TGP52phHUrKJ13u1p';
+let CHANNEL    = 'https://whatsapp.com/channel/0029Vb7TGP52phHUrKJ13u1p';
+let OS_APP_ID  = '';
+
+const Store = {
+  get s()  { try { return localStorage.getItem('oc_session'); } catch { return null; } },
+  set s(v) { try { v ? localStorage.setItem('oc_session', v) : localStorage.removeItem('oc_session'); } catch {} },
+  get lang(){ try { return localStorage.getItem('oc_lang') || 'ar'; } catch { return 'ar'; } },
+  set lang(v){ try { localStorage.setItem('oc_lang', v); } catch {} },
+};
 
 const App = {
-  lang: 'ar',
-  user: null,
-  stats: null,
+  lang: 'ar', account: null, stats: null, current: 'landing',
+  _verifyData: null, _wdMethod: null, _pin: '', _pendingFp: null,
 
-  t(key) { return (window.TEXTS[this.lang] || {})[key] || key; },
+  t(k){ return (window.TEXTS[this.lang] || {})[k] ?? k; },
 
-  applyLang() {
+  // ── i18n ──
+  applyLang(){
     const T = window.TEXTS[this.lang];
     document.documentElement.lang = this.lang;
-    document.documentElement.dir = T.dir;
-    document.getElementById('langBtn').textContent = T.langBtn;
-    document.querySelectorAll('[id^="t-"]').forEach((el) => {
-      const key = el.id.slice(2);
-      if (T[key] !== undefined) {
-        const span = el.querySelector('span');
-        if (span) { el.childNodes[0].nodeValue = T[key]; }
-        else el.textContent = T[key];
-      }
+    document.documentElement.dir  = T.dir;
+    document.getElementById('langBtn').textContent = T.lang_btn;
+    document.querySelectorAll('[id^="t-"]').forEach(el=>{
+      const k = el.id.slice(2).replace(/2$/,''); // allow t-foo2 duplicates
+      if (T[k] !== undefined) el.textContent = T[k];
     });
-    document.querySelectorAll('[id^="s-"]').forEach((el) => {
-      const key = el.id.slice(2);
-      if (T[key] !== undefined) el.textContent = T[key];
+    document.querySelectorAll('[id^="s-"]').forEach(el=>{
+      const k = el.id.slice(2); if (T[k]!==undefined) el.textContent = T[k];
     });
-    document.getElementById('bannerWelcome').src = `/images/welcome_${this.lang}.jpg`;
-    document.getElementById('bannerReferral').src = `/images/referral_${this.lang}.jpg`;
-    document.getElementById('bannerAgency').src = `/images/agency_${this.lang}.jpg`;
+    document.getElementById('gidInput').placeholder = T.verify_ph;
+    document.getElementById('verifyBtn').textContent = T.verify_btn;
+    // reward labels
+    document.getElementById('rwLbl1').textContent = this.lang==='ar' ? 'مكافأة ترحيب' : 'Bienvenue';
+    document.getElementById('rwLbl2').textContent = this.lang==='ar' ? 'لكل إحالة' : 'Par parrain';
+    document.getElementById('rwLbl3').textContent = this.lang==='ar' ? 'من الأرباح' : 'Des gains';
+    if (this.account) this.renderDash();
+  },
+  toggleLang(){ this.lang = this.lang==='ar'?'fr':'ar'; Store.lang=this.lang; this.applyLang(); },
+
+  // ── device fingerprint (stable, privacy-light) ──
+  async fingerprint(){
+    if (this._fp) return this._fp;
+    let saved; try { saved = localStorage.getItem('oc_fp'); } catch {}
+    if (saved) return (this._fp = saved);
+    const parts = [navigator.userAgent, navigator.language, screen.width+'x'+screen.height,
+      screen.colorDepth, new Date().getTimezoneOffset(), navigator.hardwareConcurrency||0,
+      navigator.platform||''].join('|');
+    const buf = await crypto.subtle.digest('SHA-256', new TextEncoder().encode(parts + '|' + (Math.random().toString(36)+Date.now())));
+    const fp = Array.from(new Uint8Array(buf)).slice(0,16).map(b=>b.toString(16).padStart(2,'0')).join('');
+    try { localStorage.setItem('oc_fp', fp); } catch {}
+    return (this._fp = fp);
   },
 
-  toggleLang() {
-    this.lang = this.lang === 'ar' ? 'fr' : 'ar';
-    this.applyLang();
-    if (!document.getElementById('view-account').classList.contains('hidden')) this.renderAccount();
+  // ── API ──
+  async api(path, data){
+    const res = await fetch(`/api/${path}`, {
+      method:'POST', headers:{'Content-Type':'application/json'},
+      body: JSON.stringify(data||{}),
+    });
+    return res.json().catch(()=>({error:'parse'}));
   },
 
-  scrollTo(id) { document.getElementById(id)?.scrollIntoView({ behavior: 'smooth' }); },
+  // ── views ──
+  show(view){
+    ['landing','verify','present','dash','ref'].forEach(v=>{
+      document.getElementById('view-'+v).classList.toggle('hidden', v!==view);
+    });
+    this.current = view;
+    document.getElementById('scroll').scrollTop = 0;
+    const loggedIn = ['dash','ref'].includes(view);
+    document.getElementById('bottomnav').classList.toggle('hidden', !this.account || !loggedIn);
+    if (this.account){
+      document.querySelectorAll('.nav-item').forEach(n=>n.classList.toggle('on', n.dataset.nav===view));
+    }
+  },
+  nav(v){ if (v==='dash'||v==='ref') this.show(v); },
 
-  toast(msg) {
-    const t = document.getElementById('toast');
-    t.textContent = msg; t.classList.add('show');
-    clearTimeout(this._tt);
-    this._tt = setTimeout(() => t.classList.remove('show'), 3600);
+  openVerify(){ document.getElementById('verifyErr').textContent=''; document.getElementById('gidInput').value=''; this.show('verify'); setTimeout(()=>document.getElementById('gidInput').focus(),300); },
+
+  // ── toast ──
+  toast(msg){
+    const t=document.getElementById('toast'); t.textContent=msg; t.classList.add('show');
+    clearTimeout(this._tt); this._tt=setTimeout(()=>t.classList.remove('show'),3400);
   },
 
-  async api(endpoint, data) {
-    try {
-      const res = await fetch(`/api/${endpoint}`, {
-        method: 'POST', headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(data),
-      });
-      return res.json();
-    } catch (e) { return { error: 'network' }; }
+  // ── sheets ──
+  openSheet(html){
+    document.getElementById('sheet').innerHTML = `<div class="sheet-grip"></div>${html}`;
+    document.getElementById('sheetBg').classList.add('show');
+  },
+  closeSheet(){ document.getElementById('sheetBg').classList.remove('show'); },
+  closeSheetBg(e){ if (e.target.id==='sheetBg') this.closeSheet(); },
+
+  // ═══ VERIFY FLOW ═══
+  async doVerify(){
+    const raw = document.getElementById('gidInput').value;
+    const gid = raw.replace(/[\s\-_]/g,'');
+    const err = document.getElementById('verifyErr');
+    err.textContent='';
+    if (!/^\d{6,13}$/.test(gid)){ err.textContent=this.t('verify_invalid'); return; }
+
+    const btn=document.getElementById('verifyBtn'); btn.style.opacity='.6'; btn.disabled=true;
+    // start honest sequence (real API runs in parallel)
+    const seqPromise = this.runSequence();
+    const r = await this.api('verify',{ game_id: gid });
+    await seqPromise; // ensure minimum visible stages complete with real call
+
+    btn.style.opacity='1'; btn.disabled=false;
+
+    if (r.status==='invalid'){ this.endSequence(false); err.textContent=this.t('verify_invalid'); return; }
+    if (r.status==='banned'){ this.endSequence(false); err.textContent=this.t('verify_banned'); return; }
+    if (r.status==='not_found'){ this.endSequence(false); err.textContent=this.t('verify_notfound'); return; }
+
+    if (r.status==='existing'){
+      // account exists → login (register endpoint attaches device)
+      await this.endSequence(true);
+      return this.login(gid);
+    }
+    // found new
+    this._verifyData = { game_id: gid, name: r.name, currency: r.currency };
+    await this.endSequence(true);
+    this.renderPresent();
   },
 
-  getRefFromUrl() {
-    const m = location.pathname.match(/\/r\/([A-Za-z0-9]{1,5})/);
-    if (m) return m[1].toUpperCase();
-    const q = new URLSearchParams(location.search).get('r');
-    return q ? q.toUpperCase() : '';
+  // honest multi-stage sequence — advances while real call is in flight
+  runSequence(){
+    const seq=document.getElementById('seq');
+    const T=window.TEXTS[this.lang];
+    const steps=['seq1','seq2','seq3','seq4'];
+    const box=document.getElementById('seqSteps');
+    box.innerHTML = steps.map((k,i)=>`<div class="seq-step" data-i="${i}"><div class="seq-tick"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><path d="M5 13l4 4L19 7"/></svg></div><span>${T[k]}</span></div>`).join('');
+    document.getElementById('seqLoader').style.display='flex';
+    document.getElementById('seqSuccess').classList.remove('show');
+    seq.classList.add('show');
+    return new Promise(resolve=>{
+      let i=0;
+      const els=[...box.querySelectorAll('.seq-step')];
+      els[0].classList.add('active');
+      this._seqTimer=setInterval(()=>{
+        if (i<els.length){ els[i].classList.remove('active'); els[i].classList.add('done'); }
+        i++;
+        if (i<els.length) els[i].classList.add('active');
+        else { clearInterval(this._seqTimer); resolve(); }
+      },560);
+    });
+  },
+  async endSequence(success){
+    clearInterval(this._seqTimer);
+    const seq=document.getElementById('seq');
+    if (!success){ seq.classList.remove('show'); return; }
+    document.getElementById('seqLoader').style.display='none';
+    document.getElementById('seqDoneTxt').textContent=this.t('seq_done');
+    document.getElementById('seqSuccess').classList.add('show');
+    await new Promise(r=>setTimeout(r,1100));
+    seq.classList.remove('show');
   },
 
-  openModal(html) {
-    document.getElementById('modalBox').innerHTML = '<div class="modal-grip"></div>' + html;
-    document.getElementById('modal').classList.add('open');
-  },
-  closeModal() { document.getElementById('modal').classList.remove('open'); },
-
-  openVideo(which) {
-    document.getElementById('vFrame').src = which === 'agency' ? VIDEO_AGENCY : VIDEO_REGISTER;
-    document.getElementById('videoModal').classList.add('open');
-  },
-  closeVideo() {
-    document.getElementById('videoModal').classList.remove('open');
-    document.getElementById('vFrame').src = '';
-  },
-
-  openChannel() { window.open(CHANNEL, '_blank'); },
-  openRegLink() { window.open(REG_LINK, '_blank'); },
-  openWhatsApp() { window.open(`https://wa.me/${SUPPORT_WA}`, '_blank'); },
-
-  // ═══ REGISTER (phone +222, first digit 4/3/2, link-only referrals) ═══
-  openRegister() {
-    this.pendingRef = this.getRefFromUrl();
-    this.openModal(`
-      <div class="modal-head"><h3>${this.t('reg_title')}</h3><button class="modal-close" onclick="App.closeModal()">&times;</button></div>
-      <div class="modal-intro">${this.t('reg_intro')}</div>
-      <div class="field">
-        <label>${this.t('reg_phone')}</label>
-        <div class="phone-wrap" id="phoneWrap">
-          <div class="phone-prefix">+222</div>
-          <input id="regPhone" type="tel" inputmode="numeric" maxlength="8" placeholder="XXXXXXXX" oninput="App.onPhoneInput(this)">
-        </div>
-        <div class="note">${this.t('reg_phone_note')}</div>
-        <div class="err-msg" id="regPhoneErr">${this.t('reg_err_phone')}</div>
+  // ═══ ACCOUNT PRESENTATION ═══
+  renderPresent(){
+    const d=this._verifyData, T=window.TEXTS[this.lang];
+    const initial=(d.name||'O').trim().charAt(0).toUpperCase()||'O';
+    document.getElementById('identityCard').innerHTML=`
+      <div class="id-top">
+        <div class="id-avatar">${initial}</div>
+        <div><div class="id-name">${this.esc(d.name||'—')}</div>
+        <div class="verified-badge"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><path d="M12 2l8 4v6c0 5-3.5 8-8 10-4.5-2-8-5-8-10V6z"/><path d="M9 12l2 2 4-4"/></svg>${T.present_verified}</div></div>
       </div>
-      <button class="btn btn-primary" onclick="App.doRegister()" id="regSubmit">${this.t('reg_submit')}</button>
-      <div class="mini-steps">
-        <div class="mst">${this.t('reg_steps_title')}</div>
-        <div class="mini-step"><div class="msn">1</div><div>${this.t('reg_s1')}</div></div>
-        <div class="mini-step"><div class="msn">2</div><div>${this.t('reg_s2')}</div></div>
-        <div class="mini-step"><div class="msn">3</div><div>${this.t('reg_s3')}</div></div>
-        <div class="mini-step"><div class="msn">4</div><div>${this.t('reg_s4')}</div></div>
+      <div class="id-rows">
+        <div class="id-row"><span class="k">${T.present_id}</span><span class="v mono">${this.esc(d.game_id)}</span></div>
+        <div class="id-row"><span class="k">${T.present_currency}</span><span class="v">${this.esc(d.currency)}</span></div>
+        <div class="id-row"><span class="k">${T.present_status}</span><span class="v" style="color:var(--accent)">${T.present_verified}</span></div>
       </div>
-      <button class="btn btn-outline" onclick="App.openRegLink()">${this.t('reg_link_btn')}</button>
+      <div class="protect-banner">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 2l8 4v6c0 5-3.5 8-8 10-4.5-2-8-5-8-10V6z"/><path d="M9 12l2 2 4-4"/></svg>
+        <span>${T.banner_protect}</span>
+      </div>`;
+    this.show('present');
+  },
+
+  // ═══ IDENTITY PROTECTION NOTICE ═══
+  openNotice(){
+    const T=window.TEXTS[this.lang];
+    const ck=`<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><path d="M5 13l4 4L19 7"/></svg>`;
+    this.openSheet(`
+      <h3>${T.notice_title}</h3>
+      <div class="notice-list">
+        <div class="notice-item">${this.iShield()}<span>${T.notice_1}</span></div>
+        <div class="notice-item">${this.iShield()}<span>${T.notice_2}</span></div>
+        <div class="notice-item">${this.iShield()}<span>${T.notice_3}</span></div>
+      </div>
+      <div class="check-row" id="noticeCheck" onclick="App.toggleCheck()">
+        <div class="check-box">${ck}</div><span>${T.notice_check}</span>
+      </div>
+      <button class="btn btn-primary" id="noticeBtn" style="opacity:.5;pointer-events:none" onclick="App.openPin()">${T.notice_btn}</button>
     `);
   },
-
-  onPhoneInput(el) {
-    let v = el.value.replace(/\D/g, '');
-    if (v.length === 1 && !['4', '3', '2'].includes(v[0])) v = '';
-    el.value = v.slice(0, 8);
-    document.getElementById('phoneWrap').classList.remove('error');
-    document.getElementById('regPhoneErr').classList.remove('show');
+  toggleCheck(){
+    const c=document.getElementById('noticeCheck'); c.classList.toggle('on');
+    const b=document.getElementById('noticeBtn');
+    const on=c.classList.contains('on');
+    b.style.opacity=on?'1':'.5'; b.style.pointerEvents=on?'auto':'none';
   },
 
-  validPhone(local) {
-    return /^[432]\d{7}$/.test(local);
-  },
-
-  async doRegister() {
-    const local = document.getElementById('regPhone').value.trim();
-    const wrap = document.getElementById('phoneWrap');
-    const err = document.getElementById('regPhoneErr');
-    if (!this.validPhone(local)) {
-      wrap.classList.add('error'); err.classList.add('show'); return;
-    }
-    const phone = '222' + local;
-    const btn = document.getElementById('regSubmit');
-    btn.disabled = true; btn.innerHTML = '<span class="spinner-sm"></span>';
-
-    const r = await this.api('register', { phone, ref_code: this.pendingRef || '', lang: this.lang });
-    btn.disabled = false; btn.textContent = this.t('reg_submit');
-
-    if (r.error === 'invalid_phone') { wrap.classList.add('error'); err.classList.add('show'); return; }
-    if (r.error) { this.toast(this.lang === 'ar' ? 'حدث خطأ، حاول مجدداً' : 'Erreur, réessayez'); return; }
-
-    this.user = r.user;
-    localStorage.setItem('ousso_phone', r.user.phone);
-    this.closeModal();
-    this.toast(this.lang === 'ar' ? 'تم إنشاء حسابك بنجاح' : 'Compte créé avec succès');
-    this.openAccount();
-  },
-
-  // ═══ ACCOUNT ═══
-  async openAccount() {
-    const phone = this.user?.phone || localStorage.getItem('ousso_phone');
-    if (!phone) { this.openLogin(); return; }
-    const r = await this.api('me', { phone });
-    if (r.error) { localStorage.removeItem('ousso_phone'); this.openLogin(); return; }
-    this.user = r.user; this.stats = r.stats;
-    if (r.notifications && r.notifications.length) {
-      r.notifications.forEach((n, i) => setTimeout(() => this.toast(n.title + (n.body ? ': ' + n.body : '')), 500 + i * 3800));
-    }
-    this.renderAccount();
-  },
-
-  openLogin() {
-    this.openModal(`
-      <div class="modal-head"><h3>${this.t('btn_account')}</h3><button class="modal-close" onclick="App.closeModal()">&times;</button></div>
-      <div class="modal-intro">${this.t('reg_intro')}</div>
-      <div class="field">
-        <label>${this.t('reg_phone')}</label>
-        <div class="phone-wrap" id="phoneWrap">
-          <div class="phone-prefix">+222</div>
-          <input id="loginPhone" type="tel" inputmode="numeric" maxlength="8" placeholder="XXXXXXXX" oninput="App.onPhoneInput2(this)">
-        </div>
-        <div class="err-msg" id="loginErr">${this.t('reg_err_phone')}</div>
-      </div>
-      <button class="btn btn-primary" onclick="App.doLogin()" id="loginBtn">${this.t('btn_account')}</button>
+  // ═══ PIN (optional) ═══
+  openPin(){
+    const T=window.TEXTS[this.lang]; this._pin='';
+    const keys=[1,2,3,4,5,6,7,8,9,'skip',0,'del'];
+    this.openSheet(`
+      <h3>${T.pin_title}</h3><div class="sub">${T.pin_sub}</div>
+      <div class="pin-display" id="pinDisplay">${'<div class="pin-dot"></div>'.repeat(4)}</div>
+      <div class="keypad">${keys.map(k=>{
+        if(k==='skip') return `<button class="key fn" onclick="App.finishActivation()">${T.pin_skip}</button>`;
+        if(k==='del') return `<button class="key fn" onclick="App.pinDel()">⌫</button>`;
+        return `<button class="key" onclick="App.pinAdd(${k})">${k}</button>`;
+      }).join('')}</div>
     `);
   },
-  onPhoneInput2(el) {
-    let v = el.value.replace(/\D/g, '');
-    if (v.length === 1 && !['4', '3', '2'].includes(v[0])) v = '';
-    el.value = v.slice(0, 8);
-    document.getElementById('phoneWrap').classList.remove('error');
-    document.getElementById('loginErr').classList.remove('show');
-  },
-  async doLogin() {
-    const local = document.getElementById('loginPhone').value.trim();
-    if (!this.validPhone(local)) {
-      document.getElementById('phoneWrap').classList.add('error');
-      document.getElementById('loginErr').classList.add('show'); return;
-    }
-    const btn = document.getElementById('loginBtn');
-    btn.disabled = true; btn.innerHTML = '<span class="spinner-sm"></span>';
-    const r = await this.api('me', { phone: '222' + local });
-    btn.disabled = false; btn.textContent = this.t('btn_account');
-    if (r.error) {
-      document.getElementById('loginErr').textContent = this.lang === 'ar' ? 'لا يوجد حساب بهذا الرقم. سجّل أولاً.' : 'Aucun compte. Inscrivez-vous d\'abord.';
-      document.getElementById('loginErr').classList.add('show');
-      document.getElementById('phoneWrap').classList.add('error'); return;
-    }
-    this.user = r.user; this.stats = r.stats;
-    localStorage.setItem('ousso_phone', r.user.phone);
-    this.closeModal(); this.renderAccount();
-  },
+  pinAdd(n){ if(this._pin.length>=4)return; this._pin+=n; this.renderPin();
+    if(this._pin.length===4) setTimeout(()=>this.finishActivation(),200); },
+  pinDel(){ this._pin=this._pin.slice(0,-1); this.renderPin(); },
+  renderPin(){ document.querySelectorAll('#pinDisplay .pin-dot').forEach((d,i)=>d.classList.toggle('on',i<this._pin.length)); },
 
-  renderAccount() {
-    const u = this.user, s = this.stats || { activated: 0, earned: 0 };
-    const refLink = `${location.origin}/r/${u.ref_code}`;
-    let badge, cls;
-    if (u.verified) { badge = this.t('status_verified'); cls = 'status-verified'; }
-    else if (u.pending_gid) { badge = this.t('status_pending'); cls = 'status-pending'; }
-    else { badge = this.t('status_new'); cls = 'status-new'; }
-
-    document.getElementById('view-home').classList.add('hidden');
-    const v = document.getElementById('view-account');
-    v.classList.remove('hidden');
-    v.innerHTML = `
-      <div class="acc-head">
-        <h2>${this.t('acc_title')}</h2>
-        <button class="lang-btn" onclick="App.logout()">${this.t('acc_logout')}</button>
+  // ═══ ACTIVATION: register account + trust device ═══
+  async finishActivation(){
+    const T=window.TEXTS[this.lang];
+    const ck=`<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><path d="M5 13l4 4L19 7"/></svg>`;
+    // device-init visual
+    this.openSheet(`
+      <h3>${T.dev_init}</h3>
+      <div class="dev-steps" id="devSteps">
+        <div class="dev-row" data-d="0"><div class="d">${ck}</div><span>${T.dev_secured}</span></div>
+        <div class="dev-row" data-d="1"><div class="d">${ck}</div><span>${T.dev_session}</span></div>
+        <div class="dev-row" data-d="2"><div class="d">${ck}</div><span>${T.dev_access}</span></div>
       </div>
-      <div class="acc-grid">
-        <div class="acc-card"><div class="lbl">${this.t('acc_balance')}</div><div class="val">${u.balance_um} UM</div></div>
-        <div class="acc-card alt"><div class="lbl">${this.t('acc_status')}</div><span class="status-badge ${cls}">${badge}</span></div>
-        <div class="acc-card alt"><div class="lbl">${this.t('acc_refs')}</div><div class="val" style="color:var(--blue-700)">${s.activated}</div></div>
-        <div class="acc-card alt"><div class="lbl">${this.t('acc_earned')}</div><div class="val" style="color:var(--blue-700)">${s.earned} UM</div></div>
-        ${u.game_id ? `<div class="acc-card alt full"><div class="lbl">${this.t('acc_gameid')}</div><div class="val" style="color:var(--blue-700);font-size:19px">${u.game_id}</div></div>` : ''}
-      </div>
+    `);
+    const rows=[...document.querySelectorAll('#devSteps .dev-row')];
 
-      <div class="ref-box">
-        <div class="rl">${this.t('acc_myref')}</div>
-        <div class="rn">${this.t('acc_myref_note')}</div>
-        <div class="rcode">${refLink}</div>
-        <div class="ref-actions">
-          <button class="btn-primary" style="color:#fff;background:linear-gradient(135deg,var(--blue-600),var(--blue-700))" onclick="App.copyRef('${refLink}')">${this.t('acc_copy')}</button>
-          <button class="btn-wa" style="color:#04210f;background:linear-gradient(135deg,#25d366,#1faa52)" onclick="App.shareRef('${refLink}')">${this.t('acc_share')}</button>
-        </div>
-      </div>
+    const fp=await this.fingerprint();
+    const payload={
+      game_id:this._verifyData.game_id, lang:this.lang, fingerprint:fp,
+      user_agent:navigator.userAgent, ref_code:this.getRefFromUrl(),
+      pin: this._pin.length===4 ? this._pin : '',
+    };
+    const reqP=this.api('register',payload);
 
-      ${!u.verified && !u.pending_gid ? `<button class="btn btn-primary" onclick="App.openVerify()" style="margin-bottom:11px">${this.t('acc_verify_btn')}</button>` : ''}
-      ${u.verified ? `<button class="btn btn-primary" onclick="App.openWithdraw()" style="margin-bottom:11px">${this.t('acc_withdraw_btn')}</button>` : ''}
-      <button class="btn btn-wa" onclick="App.openSupportChat()" style="margin-bottom:11px">
-        <svg viewBox="0 0 24 24" fill="currentColor"><path d="M12 2a10 10 0 00-8.5 15.3L2 22l4.8-1.5A10 10 0 1012 2z"/></svg>${this.t('btn_chat')}
-      </button>
-      <button class="btn btn-ghost" onclick="App.goHome()">${this.t('acc_home')}</button>
-    `;
-    window.scrollTo(0, 0);
+    // animate device steps
+    for(let i=0;i<rows.length;i++){ await new Promise(r=>setTimeout(r,480)); rows[i].classList.add('done'); }
+    const r=await reqP;
+
+    if(r.status==='banned'){ this.closeSheet(); this.toast(T.verify_banned); return; }
+    if(r.status==='not_found'){ this.closeSheet(); this.toast(T.verify_notfound); return; }
+    if(!r.ok){ this.closeSheet(); this.toast('Error'); return; }
+
+    Store.s=r.session; this.account=r.account; this.stats=null;
+    await new Promise(r=>setTimeout(r,400));
+    this.closeSheet();
+    await this.initOneSignal(this.account.game_id);
+    this.loadAndShowDash();
   },
 
-  goHome() {
-    document.getElementById('view-account').classList.add('hidden');
-    document.getElementById('view-home').classList.remove('hidden');
-  },
-  logout() { localStorage.removeItem('ousso_phone'); this.user = null; this.goHome(); },
-
-  copyRef(link) { navigator.clipboard?.writeText(link); this.toast(this.t('acc_copied')); },
-  shareRef(link) {
-    const txt = this.lang === 'ar'
-      ? `انضم إلى وكالة OussoCash المعتمدة واربح 100 UM مكافأة ترحيب:\n${link}`
-      : `Rejoignez l'agence OussoCash et gagnez 100 UM de bienvenue:\n${link}`;
-    if (navigator.share) navigator.share({ text: txt }).catch(() => {});
-    else { navigator.clipboard?.writeText(txt); this.toast(this.t('acc_copied')); }
+  // ═══ LOGIN (existing account) ═══
+  async login(gid){
+    const fp=await this.fingerprint();
+    const r=await this.api('register',{ game_id:gid, lang:this.lang, fingerprint:fp, user_agent:navigator.userAgent });
+    if(!r.ok){ this.toast('Error'); return; }
+    Store.s=r.session; this.account=r.account;
+    await this.initOneSignal(gid);
+    if(r.device==='new'){ this.showNewDevice(); return; }
+    this.toast(this.t('welcome_back'));
+    this.loadAndShowDash();
   },
 
-  // ═══ VERIFY ID ═══
-  openVerify() {
-    this.openModal(`
-      <div class="modal-head"><h3>${this.t('vid_title')}</h3><button class="modal-close" onclick="App.closeModal()">&times;</button></div>
-      <div class="modal-intro">${this.t('vid_intro')}</div>
-      <div class="field">
-        <label>${this.t('vid_enter')}</label>
-        <input id="gidInput" type="tel" inputmode="numeric" placeholder="123456789">
-      </div>
-      <ul class="confirm-list">
-        ${['confirm_l1','confirm_l2','confirm_l3','confirm_l4','confirm_l5'].map(k=>`<li><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><path d="M5 13l4 4L19 7"/></svg>${this.t(k)}</li>`).join('')}
-      </ul>
-      <button class="btn btn-primary" onclick="App.checkId()" id="checkBtn">${this.t('vid_check')}</button>
-      <div class="id-result" id="idResult"></div>
+  // ═══ NEW DEVICE ═══
+  showNewDevice(){
+    const T=window.TEXTS[this.lang];
+    this.openSheet(`
+      <div class="dev-warn-ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><rect x="5" y="2" width="14" height="20" rx="3"/><path d="M12 18h.01"/></svg></div>
+      <h3 style="text-align:center">${T.new_device_title}</h3>
+      <p class="sub" style="text-align:center">${T.new_device_action}</p>
+      <button class="btn btn-primary" onclick="App.requestDeviceAuth()">${T.new_device_btn}</button>
     `);
   },
-
-  async checkId() {
-    const gid = document.getElementById('gidInput').value.replace(/\D/g, '');
-    const btn = document.getElementById('checkBtn');
-    const box = document.getElementById('idResult');
-    if (gid.length < 9) { this.toast(this.lang === 'ar' ? 'أدخل Game ID صحيحاً' : 'Entrez un Game ID valide'); return; }
-    btn.disabled = true; btn.innerHTML = `<span class="spinner-sm"></span> ${this.t('vid_checking')}`;
-    box.classList.remove('show', 'ok', 'bad');
-
-    const r = await this.api('verify-id', { phone: this.user.phone, action: 'check', game_id: gid });
-    btn.disabled = false; btn.textContent = this.t('vid_check');
-
-    const check = `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><path d="M5 13l4 4L19 7"/></svg>`;
-    const cross = `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><path d="M18 6L6 18M6 6l12 12"/></svg>`;
-
-    if (r.status === 'found') {
-      box.classList.add('show', 'ok');
-      box.innerHTML = `
-        <div class="ir-title">${check}${this.t('vid_found')}</div>
-        <div class="ir-row"><span>${this.t('vid_name')}</span><b>${r.name || '-'}</b></div>
-        <div class="ir-row"><span>${this.t('vid_id')}</span><b>${this.pendingGid = gid}</b></div>
-        <div class="ir-row"><span>${this.t('vid_currency')}</span><b>${r.currency || 'MRU'}</b></div>
-        <div class="ir-note">${this.t('vid_found_note')}</div>
-      `;
-      this.pendingGid = gid; this.pendingName = r.name; this.pendingCurrency = r.currency;
-      setTimeout(() => this.showConfirm(), 1400);
-    } else {
-      box.classList.add('show', 'bad');
-      let msg = this.t('vid_notfound');
-      if (r.status === 'taken') msg = this.t('vid_taken');
-      else if (r.status === 'banned') msg = this.t('vid_banned');
-      box.innerHTML = `<div class="ir-title">${cross}${msg}</div>`;
-    }
+  async requestDeviceAuth(){
+    const fp=await this.fingerprint();
+    const r=await this.api('device-auth',{ session:Store.s, fingerprint:fp, user_agent:navigator.userAgent });
+    const ticket = r.ticket || '';
+    const msg = (this.lang==='ar'
+      ? `طلب تفعيل جهاز جديد · رقم الطلب: ${ticket} · المعرّف: ${this.account.game_id}`
+      : `Demande d'autorisation d'appareil · Ticket: ${ticket} · ID: ${this.account.game_id}`);
+    this.closeSheet();
+    window.open(`https://wa.me/${SUPPORT_WA}?text=${encodeURIComponent(msg)}`,'_blank');
+    // still allow read-only dashboard
+    this.loadAndShowDash();
   },
 
-  showConfirm() {
-    this.openModal(`
-      <div class="modal-head"><h3>${this.t('confirm_title')}</h3></div>
-      <div class="modal-intro">${this.t('confirm_desc')}</div>
-      <ul class="confirm-list">
-        ${['confirm_l1','confirm_l2','confirm_l3','confirm_l4','confirm_l5'].map(k=>`<li><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><path d="M5 13l4 4L19 7"/></svg>${this.t(k)}</li>`).join('')}
-      </ul>
-      <button class="btn btn-primary" onclick="App.confirmId()" id="confirmBtn" style="margin-bottom:10px">${this.t('confirm_yes')}</button>
-      <button class="btn btn-ghost" onclick="App.openVerify()">${this.t('confirm_no')}</button>
-    `);
+  // ═══ DASHBOARD ═══
+  async loadAndShowDash(){
+    const fp=await this.fingerprint();
+    const r=await this.api('me',{ session:Store.s, fingerprint:fp });
+    if(r.error==='no_session'||r.error==='banned'){ this.logout(); return; }
+    if(r.ok){ this.account=r.account; this.stats=r.stats; this._deviceTrusted=r.device_trusted;
+      (r.notifications||[]).forEach(n=>this.toast(n.body||n.title)); }
+    this.show('dash'); this.renderDash();
   },
 
-  async confirmId() {
-    const btn = document.getElementById('confirmBtn');
-    btn.disabled = true; btn.innerHTML = '<span class="spinner-sm"></span>';
-    const r = await this.api('verify-id', { phone: this.user.phone, action: 'confirm', game_id: this.pendingGid });
-    if (r.status === 'pending') {
-      this.closeModal();
-      this.toast(this.t('vid_sent'));
-      this.user.pending_gid = this.pendingGid;
-      this.maybeAskNotifications();
-      setTimeout(() => this.openAccount(), 2000);
-    } else {
-      btn.disabled = false; btn.textContent = this.t('confirm_yes');
-      this.toast(this.lang === 'ar' ? 'حدث خطأ' : 'Erreur');
-    }
+  renderDash(){
+    if(!this.account) return;
+    const a=this.account, T=window.TEXTS[this.lang], s=this.stats||{activated:0,earned:0};
+    const initial=(a.name||'O').trim().charAt(0).toUpperCase()||'O';
+    document.getElementById('dashAvatar').textContent=initial;
+    document.getElementById('dashName').textContent=a.name||a.game_id;
+    document.getElementById('balAmt').textContent=(a.balance_um||0).toLocaleString();
+    document.getElementById('statRefs').textContent=s.activated||0;
+    document.getElementById('statEarned').textContent=(s.earned||0)+' UM';
+
+    // status pill
+    const map={active:'st_active',pending:'st_pending',deposit_incomplete:'st_deposit',banned:'st_banned'};
+    const cls={active:'st-active',pending:'st-pending',deposit_incomplete:'st-deposit',banned:'st-deposit'};
+    const st=a.status||'pending';
+    document.getElementById('statStatus').innerHTML=`<span class="status-pill ${cls[st]}"><span class="d"></span>${T[map[st]]}</span>`;
+    document.getElementById('depositWarn').classList.toggle('hidden', st!=='deposit_incomplete');
+
+    // timeline
+    const acts=[
+      {ic:this.iShield(),b:T.act_verified},
+      {ic:this.iDevice(),b:T.act_device},
+      {ic:this.iLock(),b:T.act_protect},
+    ];
+    document.getElementById('timeline').innerHTML=acts.map(x=>`
+      <div class="tl-item"><div class="tl-dot"><div class="tl-ic">${x.ic}</div></div>
+      <div class="tl-txt"><b>${x.b}</b><span>${a.game_id}</span></div></div>`).join('');
+
+    // referral mirror
+    this.renderRef();
   },
 
-  // ═══ NOTIFICATIONS ═══
-  maybeAskNotifications() {
-    if (!('Notification' in window) || Notification.permission === 'granted') return;
-    setTimeout(() => {
-      this.openModal(`
-        <div class="modal-head"><h3>${this.t('notif_title')}</h3><button class="modal-close" onclick="App.closeModal()">&times;</button></div>
-        <div class="modal-intro">${this.t('notif_enable')}</div>
-        <button class="btn btn-primary" onclick="App.enableNotifications()">${this.t('notif_btn')}</button>
-      `);
-    }, 2400);
+  // ═══ REFERRAL ═══
+  renderRef(){
+    if(!this.account) return;
+    const link=`${location.origin}/r/${this.account.ref_code}`;
+    document.getElementById('refLink').textContent=link;
+    const s=this.stats||{activated:0,earned:0};
+    document.getElementById('refStatRefs').textContent=s.activated||0;
+    document.getElementById('refStatEarned').textContent=(s.earned||0)+' UM';
+    // mirror nav labels
+    const T=window.TEXTS[this.lang];
+    document.getElementById('t-ref_title2').textContent=T.ref_title;
+    document.getElementById('t-support_title2').textContent=T.support_title.replace(/مركز |Centre de /,'');
+    document.getElementById('t-dash_refs2').textContent=T.dash_refs;
+    document.getElementById('t-dash_earned2').textContent=T.dash_earned;
   },
-  async enableNotifications() {
-    try { await Notification.requestPermission(); } catch {}
-    this.closeModal();
+  copyRef(){
+    const link=`${location.origin}/r/${this.account.ref_code}`;
+    navigator.clipboard?.writeText(link).then(()=>this.toast(this.t('ref_copied')))
+      .catch(()=>{ const t=document.createElement('textarea'); t.value=link; document.body.appendChild(t); t.select(); document.execCommand('copy'); t.remove(); this.toast(this.t('ref_copied')); });
+  },
+  async shareRef(){
+    const link=`${location.origin}/r/${this.account.ref_code}`;
+    const text=`${this.t('ref_share_msg')} ${link}`;
+    if(navigator.share){ try{ await navigator.share({title:'OussoCash',text,url:link}); return; }catch{} }
+    window.open(`https://wa.me/?text=${encodeURIComponent(text)}`,'_blank');
+  },
+  getRefFromUrl(){
+    const m=location.pathname.match(/^\/r\/([A-Za-z0-9]{4,8})/);
+    if(m) return m[1].toUpperCase();
+    const p=new URLSearchParams(location.search).get('ref');
+    return p?p.toUpperCase():'';
   },
 
   // ═══ WITHDRAW ═══
-  openWithdraw() {
-    const bal = this.user.balance_um;
-    const can = bal >= 300;
-    this.openModal(`
-      <div class="modal-head"><h3>${this.t('wd_title')}</h3><button class="modal-close" onclick="App.closeModal()">&times;</button></div>
-      <div class="acc-card full" style="margin-bottom:16px"><div class="lbl">${this.t('wd_balance')}</div><div class="val">${bal} UM</div></div>
-      ${!can ? `<div class="id-result show bad"><div class="ir-title"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><path d="M12 8v5M12 16h.01M10.3 3.9L2 18a2 2 0 001.7 3h16.6a2 2 0 001.7-3L13.7 3.9a2 2 0 00-3.4 0z"/></svg>${this.t('wd_min')}</div><div style="color:var(--muted);font-size:13px;line-height:1.6;margin-top:8px">${this.t('wd_insufficient')}</div></div>` : `
-        <label style="display:block;font-weight:800;margin-bottom:8px;font-size:14px">${this.t('wd_choose')}</label>
-        <div class="method-select">
-          <div class="method-opt" onclick="App.selectMethod(this,'Bankily')"><img src="/logos/bankily.jpg"><div class="mn">Bankily</div></div>
-          <div class="method-opt" onclick="App.selectMethod(this,'Masrvi')"><img src="/logos/masrvi.jpg"><div class="mn">Masrvi</div></div>
-          <div class="method-opt" onclick="App.selectMethod(this,'Sedad')"><img src="/logos/sedad.jpg"><div class="mn">Sedad</div></div>
-        </div>
-        <div class="field" style="margin-top:14px">
-          <label>${this.t('wd_account')}</label>
-          <input id="wdAccount" type="tel" inputmode="numeric" placeholder="${this.t('wd_account_ph')}">
-          <div class="note">${this.t('wd_confirm_note')}</div>
-        </div>
-        <button class="btn btn-primary" onclick="App.confirmWithdraw()" id="wdBtn">${this.t('wd_confirm')}</button>
-      `}
-    `);
-    this.wdMethod = null;
-  },
-  selectMethod(el, m) {
-    document.querySelectorAll('.method-opt').forEach((x) => x.classList.remove('active'));
-    el.classList.add('active'); this.wdMethod = m;
-  },
-  async confirmWithdraw() {
-    const account = document.getElementById('wdAccount').value.trim();
-    if (!this.wdMethod) { this.toast(this.t('wd_choose')); return; }
-    if (account.length < 6) { this.toast(this.t('wd_account')); return; }
-    const btn = document.getElementById('wdBtn');
-    btn.disabled = true; btn.innerHTML = '<span class="spinner-sm"></span>';
-    const r = await this.api('withdraw', { phone: this.user.phone, method: this.wdMethod, account_number: account });
-    if (r.ok) {
-      this.closeModal(); this.toast(this.t('wd_sent'));
-      this.user.balance_um = 0; setTimeout(() => this.openAccount(), 1400);
-    } else {
-      btn.disabled = false; btn.textContent = this.t('wd_confirm');
-      if (r.error === 'pending_exists') this.toast(this.t('wd_pending'));
-      else if (r.error === 'insufficient') this.toast(this.t('wd_insufficient'));
-      else this.toast(this.lang === 'ar' ? 'حدث خطأ' : 'Erreur');
+  openWithdraw(){
+    const T=window.TEXTS[this.lang], a=this.account;
+    if(!this._deviceTrusted){ this.toast(T.wd_untrusted); this.showNewDevice(); return; }
+    if((a.balance_um||0)<300){
+      this.openSheet(`<h3>${T.wd_title}</h3><div class="warn-box" style="margin-top:8px"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 9v4M12 17h.01"/><circle cx="12" cy="12" r="10"/></svg><span>${T.wd_insufficient}</span></div><button class="btn btn-ghost" style="margin-top:16px" onclick="App.closeSheet();App.nav('ref')">${T.ref_share}</button>`);
+      return;
     }
-  },
-
-  // ═══ SMART SUPPORT ═══
-  openSupportChat() {
-    this.openModal(`
-      <div class="modal-head"><h3>${this.t('support_chat_title')}</h3><button class="modal-close" onclick="App.closeModal()">&times;</button></div>
-      <div class="chat-msgs" id="chatMsgs">
-        <div class="chat-msg bot">${this.t('support_chat_greet')}</div>
-      </div>
-      <div class="chat-input">
-        <input id="chatInput" type="text" placeholder="${this.t('support_chat_ph')}" onkeydown="if(event.key==='Enter')App.sendChat()">
-        <button onclick="App.sendChat()"><svg viewBox="0 0 24 24" fill="currentColor"><path d="M2 21l21-9L2 3v7l15 2-15 2z"/></svg></button>
-      </div>
-      <button class="btn btn-wa" onclick="App.openWhatsApp()" style="margin-top:12px">
-        <svg viewBox="0 0 24 24" fill="currentColor"><path d="M12 2a10 10 0 00-8.5 15.3L2 22l4.8-1.5A10 10 0 1012 2z"/></svg>${this.t('support_human')}
-      </button>
+    this._wdMethod=null;
+    const methods=[['Bankily','/logos/bankily.jpg'],['Masrvi','/logos/masrvi.jpg'],['Sedad','/logos/sedad.jpg']];
+    this.openSheet(`
+      <h3>${T.wd_title}</h3>
+      <div class="sub">${T.wd_balance}: <b style="color:var(--accent)">${(a.balance_um).toLocaleString()} UM</b></div>
+      <div class="method-grid">${methods.map(m=>`
+        <div class="method" data-m="${m[0]}" onclick="App.pickMethod('${m[0]}')">
+          <img src="${m[1]}" alt=""><b>${m[0]}</b><div class="radio"></div></div>`).join('')}</div>
+      <div class="field"><input id="wdAccount" inputmode="numeric" placeholder="${T.wd_account_ph}"></div>
+      <p class="field-note" style="margin-bottom:14px">${T.wd_note}</p>
+      <button class="btn btn-primary" id="wdBtn" onclick="App.submitWithdraw()">${T.wd_confirm}</button>
     `);
   },
-  async sendChat() {
-    const input = document.getElementById('chatInput');
-    const msg = input.value.trim();
-    if (!msg) return;
-    const box = document.getElementById('chatMsgs');
-    box.innerHTML += `<div class="chat-msg user">${this.escape(msg)}</div>`;
-    input.value = ''; box.scrollTop = box.scrollHeight;
-
-    const r = await this.api('support', { message: msg, lang: this.lang });
-    const ans = r.found ? r.answer : (this.lang === 'ar'
-      ? 'لم أفهم سؤالك تماماً. يمكنك إعادة صياغته، أو التواصل مع الدعم المباشر عبر واتساب أسفل المحادثة لمساعدتك فوراً.'
-      : 'Je n\'ai pas bien compris. Reformulez, ou contactez le support direct via WhatsApp ci-dessous.');
-    box.innerHTML += `<div class="chat-msg bot">${this.escape(ans)}</div>`;
-    box.scrollTop = box.scrollHeight;
+  pickMethod(m){ this._wdMethod=m; document.querySelectorAll('.method').forEach(e=>e.classList.toggle('on',e.dataset.m===m)); },
+  async submitWithdraw(){
+    const T=window.TEXTS[this.lang];
+    const account=document.getElementById('wdAccount').value.trim();
+    if(!this._wdMethod){ this.toast(T.wd_choose); return; }
+    if(account.length<6){ this.toast(T.wd_account); return; }
+    const fp=await this.fingerprint();
+    const r=await this.api('withdraw',{ session:Store.s, fingerprint:fp, method:this._wdMethod, account_number:account });
+    if(r.error==='pending_exists'){ this.toast(T.wd_pending); return; }
+    if(r.error==='device_untrusted'){ this.toast(T.wd_untrusted); this.closeSheet(); this.showNewDevice(); return; }
+    if(r.error==='insufficient'){ this.toast(T.wd_insufficient); return; }
+    if(!r.ok){ this.toast('Error'); return; }
+    this.account.balance_um=0;
+    this.closeSheet(); this.renderDash(); this.toast(T.wd_sent);
   },
-  escape(s) { const d = document.createElement('div'); d.textContent = s; return d.innerHTML; },
 
-  // ═══ INIT ═══
-  async loadConfig() {
-    const c = await this.api('config', {});
-    if (c && c.support_whatsapp) SUPPORT_WA = c.support_whatsapp;
-    if (c && c.channel_url) CHANNEL = c.channel_url;
+  // ═══ SUPPORT ═══
+  openSupport(){
+    const T=window.TEXTS[this.lang];
+    const items=[[T.support_verify,this.iShield()],[T.support_device,this.iDevice()],[T.support_wd,this.iCash()],[T.support_review,this.iSearch()]];
+    this.openSheet(`
+      <h3>${T.support_title}</h3><div class="sub">${T.support_sub}</div>
+      <div class="support-grid">${items.map(i=>`<div class="sup-item">${i[1]}<span>${i[0]}</span></div>`).join('')}</div>
+      <button class="btn btn-primary" onclick="App.openWhatsapp()">${T.support_open}</button>
+      <button class="btn btn-ghost" style="margin-top:10px" onclick="window.open('${CHANNEL}','_blank')">${T.support_channel}</button>
+    `);
   },
-  init() {
-    if ((navigator.language || 'ar').slice(0, 2).toLowerCase() === 'fr') this.lang = 'fr';
-    this.applyLang();
-    this.loadConfig();
-    document.getElementById('modal').addEventListener('click', (e) => { if (e.target.id === 'modal') this.closeModal(); });
-    document.getElementById('videoModal').addEventListener('click', (e) => { if (e.target.id === 'videoModal') this.closeVideo(); });
-    setTimeout(() => { document.getElementById('splash').classList.add('hide'); }, 2000);
-    const saved = localStorage.getItem('ousso_phone');
-    if (this.getRefFromUrl() && !saved) setTimeout(() => this.openRegister(), 2300);
+  openWhatsapp(){
+    const id=this.account?this.account.game_id:'';
+    const msg=this.lang==='ar'?`دعم OussoCash · المعرّف: ${id}`:`Support OussoCash · ID: ${id}`;
+    window.open(`https://wa.me/${SUPPORT_WA}?text=${encodeURIComponent(msg)}`,'_blank');
+  },
+
+  // ═══ OneSignal ═══
+  async initOneSignal(gid){
+    if(!OS_APP_ID || !window.OneSignalDeferred) return;
+    window.OneSignalDeferred.push(async (OneSignal)=>{
+      try{
+        if(!this._osInit){ await OneSignal.init({ appId:OS_APP_ID, allowLocalhostAsSecureOrigin:true }); this._osInit=true; }
+        await OneSignal.login(String(gid));
+        await OneSignal.Notifications.requestPermission().catch(()=>{});
+      }catch{}
+    });
+  },
+
+  logout(){ Store.s=null; this.account=null; this.stats=null; this.show('landing'); document.getElementById('bottomnav').classList.add('hidden'); },
+
+  // ═══ AGENCY ═══
+  openRegLink(){ window.open(REG_LINK,'_blank'); },
+  copyPromo(){
+    navigator.clipboard?.writeText('OUSSO').then(()=>this.toast(this.t('agency_promo_copied')))
+      .catch(()=>this.toast(this.t('agency_promo_copied')));
+  },
+  openVideo(){
+    this.openSheet(`
+      <h3>${this.t('agency_video_btn')}</h3>
+      <iframe class="video-frame" src="${VIDEO_REGISTER}" allow="autoplay; fullscreen; encrypted-media" allowfullscreen></iframe>
+      <button class="btn btn-primary" style="margin-top:14px" onclick="App.openRegLink()">${this.t('agency_reg_btn')}</button>
+    `);
+  },
+
+  // ── icon helpers ──
+  iShield(){ return `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 2l8 4v6c0 5-3.5 8-8 10-4.5-2-8-5-8-10V6z"/><path d="M9 12l2 2 4-4"/></svg>`; },
+  iDevice(){ return `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="5" y="2" width="14" height="20" rx="3"/><path d="M11 18h2"/></svg>`; },
+  iLock(){ return `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="4" y="10" width="16" height="11" rx="2"/><path d="M8 10V7a4 4 0 018 0v3"/></svg>`; },
+  iCash(){ return `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 1v22M17 5H9.5a3.5 3.5 0 000 7h5a3.5 3.5 0 010 7H6"/></svg>`; },
+  iSearch(){ return `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="7"/><path d="M21 21l-4-4"/></svg>`; },
+  esc(s){ return String(s||'').replace(/[<>&"]/g,c=>({'<':'&lt;','>':'&gt;','&':'&amp;','"':'&quot;'}[c])); },
+
+  // ═══ BOOT ═══
+  async boot(){
+    this.lang=Store.lang; this.applyLang();
+    // load config
+    try{ const c=await this.api('config'); SUPPORT_WA=c.support_whatsapp||SUPPORT_WA; CHANNEL=c.channel_url||CHANNEL; OS_APP_ID=c.onesignal_app_id||''; }catch{}
+    // hide splash
+    setTimeout(()=>document.getElementById('splash').classList.add('gone'),1500);
+    // session restore
+    if(Store.s){
+      const fp=await this.fingerprint();
+      const r=await this.api('me',{ session:Store.s, fingerprint:fp });
+      if(r.ok){ this.account=r.account; this.stats=r.stats; this._deviceTrusted=r.device_trusted;
+        await this.initOneSignal(this.account.game_id);
+        this.show('dash'); this.renderDash();
+        (r.notifications||[]).forEach(n=>setTimeout(()=>this.toast(n.body||n.title),2000));
+        return;
+      } else { Store.s=null; }
+    }
+    // referral landing → straight to verify
+    if(this.getRefFromUrl()){ this.show('landing'); }
+    else this.show('landing');
   },
 };
 
-window.addEventListener('DOMContentLoaded', () => App.init());
+document.addEventListener('DOMContentLoaded',()=>App.boot());

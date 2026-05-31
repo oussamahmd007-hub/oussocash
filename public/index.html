@@ -2,145 +2,240 @@
 <html lang="ar" dir="rtl">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-<title>OussoCash — وكالة 1xBet المعتمدة في موريتانيا</title>
-<meta name="description" content="OussoCash - وكالة 1xBet الرسمية المعتمدة في موريتانيا منذ 2022">
-<meta name="theme-color" content="#0F172A">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, viewport-fit=cover, user-scalable=no">
+<title>OussoCash — وكالة 1xBet المعتمدة</title>
+<meta name="description" content="OussoCash — منصة آمنة لمستخدمي 1xBet · تحقق سريع وسحب محمي">
+<meta name="theme-color" content="#0a0e1a">
 <link rel="icon" href="/logos/mascot_sm.png">
 <link rel="apple-touch-icon" href="/logos/mascot_sm.png">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;600;700;800;900&family=Tajawal:wght@500;700;800&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=Cairo:wght@400;500;600;700;800&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="/styles.css">
+<script src="https://cdn.onesignal.com/sdks/web/v16/OneSignalSDK.page.js" defer></script>
 </head>
 <body>
 
-<div id="splash" style="background-image:url('/logos/mascot.jpg')">
-  <div class="splash-in">
-    <img src="/logos/mascot.jpg" class="splash-logo" alt="OussoCash">
-    <h1>OussoCash</h1>
-    <div class="stag" id="s-splash_tag"></div>
-    <div class="splash-bar"><i></i></div>
+<!-- ═══ SPLASH ═══ -->
+<div id="splash">
+  <img src="/logos/mascot_sm.png" class="splash-logo" alt="OussoCash">
+  <div class="splash-brand">Ousso<span>Cash</span></div>
+  <div class="splash-tag" id="s-splash_tag"></div>
+  <div class="splash-bar"><i></i></div>
+</div>
+
+<!-- ═══ VERIFICATION SEQUENCE (overlay) ═══ -->
+<div id="seq">
+  <div id="seqLoader" style="display:flex;flex-direction:column;align-items:center;gap:30px">
+    <div class="seq-orb">
+      <div class="ring spin"></div><div class="ring spin2"></div>
+      <div class="core"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 2l8 4v6c0 5-3.5 8-8 10-4.5-2-8-5-8-10V6z"/><path d="M9 12l2 2 4-4"/></svg></div>
+    </div>
+    <div class="seq-steps" id="seqSteps"></div>
+  </div>
+  <div class="seq-success" id="seqSuccess">
+    <div class="success-check"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"><path d="M5 13l4 4L19 7"/></svg></div>
+    <p id="seqDoneTxt"></p>
   </div>
 </div>
 
-<header class="topbar">
-  <div class="logo">
-    <img src="/logos/mascot_sm.png" alt="OussoCash">
-    <b>Ousso<span>Cash</span></b>
-  </div>
-  <button class="lang-btn" id="langBtn" onclick="App.toggleLang()">FR</button>
-</header>
+<!-- ═══ APP SHELL ═══ -->
+<div class="app">
+  <header class="topbar">
+    <div class="tb-logo"><img src="/logos/mascot_sm.png" alt=""><b class="wordmark"><span>Ousso</span>Cash</b></div>
+    <button class="lang-btn" id="langBtn" onclick="App.toggleLang()">FR</button>
+  </header>
 
-<div class="wrap">
+  <div class="scroll" id="scroll">
 
-  <div id="view-home">
-    <div class="banner mt"><img id="bannerWelcome" src="/images/welcome_ar.jpg" alt="OussoCash"></div>
-
-    <div class="hero-txt">
-      <h1 id="t-hero_title"></h1>
-      <p id="t-hero_desc"></p>
-    </div>
-
-    <div class="btns">
-      <button class="btn btn-primary" onclick="App.openRegister()" id="t-btn_register"></button>
-      <button class="btn btn-outline" onclick="App.scrollTo('sec-steps')" id="t-btn_how"></button>
-      <button class="btn btn-ghost" onclick="App.openAccount()" id="t-btn_account"></button>
-    </div>
-
-    <div class="section">
-      <div class="section-title" id="t-trust_title"></div>
-      <div class="trust" style="margin-top:18px">
-        <div class="trust-card"><div class="ti"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M12 2l8 4v6c0 5-3.5 8-8 10-4.5-2-8-5-8-10V6z"/></svg></div><b id="t-trust1"></b><span id="t-trust1d"></span></div>
-        <div class="trust-card"><div class="ti"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M12 1v22M17 5H9.5a3.5 3.5 0 000 7h5a3.5 3.5 0 010 7H6"/></svg></div><b id="t-trust2"></b><span id="t-trust2d"></span></div>
-        <div class="trust-card"><div class="ti"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><rect x="4" y="10" width="16" height="11" rx="2"/><path d="M8 10V7a4 4 0 018 0v3"/></svg></div><b id="t-trust3"></b><span id="t-trust3d"></span></div>
-        <div class="trust-card"><div class="ti"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M3 18v-6a9 9 0 0118 0v6M21 19a2 2 0 01-2 2h-1a2 2 0 01-2-2v-3a2 2 0 012-2h3zM3 19a2 2 0 002 2h1a2 2 0 002-2v-3a2 2 0 00-2-2H3z"/></svg></div><b id="t-trust4"></b><span id="t-trust4d"></span></div>
+    <!-- ── LANDING ── -->
+    <div id="view-landing" class="view pad">
+      <div class="hero">
+        <span class="eyebrow"><span class="dot"></span><span id="t-hero_eyebrow"></span></span>
+        <h1 id="t-hero_title"></h1>
+        <p id="t-hero_sub"></p>
       </div>
-    </div>
-
-    <div class="section">
-      <div class="section-title" id="t-rewards_title"></div>
-      <div class="section-intro" id="t-rewards_intro"></div>
-      <div class="banner"><img id="bannerReferral" src="/images/referral_ar.jpg" alt="Referral"></div>
-      <div class="rewards">
-        <div class="rw-card"><div class="n">100</div><div class="t" id="t-rw_welcome"></div><div class="d" id="t-rw_welcome_d"></div></div>
-        <div class="rw-card"><div class="n">20</div><div class="t" id="t-rw_ref"></div><div class="d" id="t-rw_ref_d"></div></div>
-        <div class="rw-card"><div class="n">25%</div><div class="t" id="t-rw_pct"></div><div class="d" id="t-rw_pct_d"></div></div>
-      </div>
-    </div>
-
-    <div class="section" id="sec-steps">
-      <div class="section-title" id="t-steps_title"></div>
-      <div style="margin-top:18px">
-        <div class="step"><div class="sn">1</div><div class="st" id="t-step1"><span id="t-step1d"></span></div></div>
-        <div class="step"><div class="sn">2</div><div class="st" id="t-step2"><span id="t-step2d"></span></div></div>
-        <div class="step"><div class="sn">3</div><div class="st" id="t-step3"><span id="t-step3d"></span></div></div>
-        <div class="step"><div class="sn">4</div><div class="st" id="t-step4"><span id="t-step4d"></span></div></div>
-      </div>
-    </div>
-
-    <div class="section">
-      <div class="section-title" id="t-videos_title"></div>
-      <div style="margin-top:18px">
-        <div class="video-card" onclick="App.openVideo('register')">
-          <div class="play"><svg viewBox="0 0 24 24" fill="currentColor"><path d="M8 5v14l11-7z"/></svg></div>
-          <div class="vt" id="t-vid_register"><span id="t-vid_register_d"></span></div>
-        </div>
-        <div class="video-card" onclick="App.openVideo('agency')">
-          <div class="play"><svg viewBox="0 0 24 24" fill="currentColor"><path d="M8 5v14l11-7z"/></svg></div>
-          <div class="vt" id="t-vid_agency"><span id="t-vid_agency_d"></span></div>
-        </div>
-      </div>
-    </div>
-
-    <div class="section">
-      <div class="section-title" id="t-agency_title"></div>
-      <div class="banner mt"><img id="bannerAgency" src="/images/agency_ar.jpg" alt="Agency"></div>
-      <div class="agency-verify">
-        <h3 id="t-agency_verify_title"></h3>
-        <div class="av-desc" id="t-agency_verify_desc"></div>
-        <div class="av-step"><div class="avn">1</div><p id="t-agency_v1"></p></div>
-        <div class="av-step"><div class="avn">2</div><p id="t-agency_v2"></p></div>
-        <div class="av-step"><div class="avn">3</div><p id="t-agency_v3"></p></div>
-        <div class="av-step"><div class="avn">4</div><p id="t-agency_v4"></p></div>
-        <div class="av-step"><div class="avn">5</div><p id="t-agency_v5"></p></div>
-        <button class="btn btn-dark" onclick="App.openRegLink()" id="t-agency_link_btn"></button>
-        <div class="av-note" id="t-agency_note"></div>
-      </div>
-    </div>
-
-    <div class="section">
-      <div class="section-title" id="t-withdraw_title"></div>
-      <div class="section-intro" id="t-withdraw_sub"></div>
-      <div class="methods">
-        <div class="method"><img src="/logos/bankily.jpg" alt="Bankily"><div class="mn">Bankily</div></div>
-        <div class="method"><img src="/logos/masrvi.jpg" alt="Masrvi"><div class="mn">Masrvi</div></div>
-        <div class="method"><img src="/logos/sedad.jpg" alt="Sedad"><div class="mn">Sedad</div></div>
-      </div>
-    </div>
-
-    <div class="section">
-      <div class="support-box">
-        <h3 id="t-support_title"></h3>
-        <p id="t-support_desc"></p>
-        <button class="btn btn-wa" onclick="App.openSupportChat()" style="margin-bottom:10px">
-          <svg viewBox="0 0 24 24" fill="currentColor"><path d="M12 2a10 10 0 00-8.5 15.3L2 22l4.8-1.5A10 10 0 1012 2zm0 18a8 8 0 01-4.1-1.1l-.3-.2-3 .9.9-2.9-.2-.3A8 8 0 1112 20zm4.4-6c-.2-.1-1.4-.7-1.6-.8-.2-.1-.4-.1-.5.1l-.7.9c-.1.2-.3.2-.5.1a6.5 6.5 0 01-3.2-2.8c-.2-.4.2-.4.6-1.2.1-.1 0-.3 0-.4l-.8-1.9c-.2-.5-.4-.4-.5-.4h-.5a1 1 0 00-.7.3c-.7.7-.9 1.7-.5 2.8a11 11 0 004.6 4.5c1.7.7 2.4.6 3.2.5.5 0 1.4-.6 1.6-1.1.2-.6.2-1 .1-1.1z"/></svg>
-          <span id="t-btn_chat"></span>
+      <div class="cta-stack">
+        <button class="btn btn-primary" onclick="App.openVerify()">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" style="width:19px;height:19px"><path d="M12 2l8 4v6c0 5-3.5 8-8 10-4.5-2-8-5-8-10V6z"/><path d="M9 12l2 2 4-4"/></svg>
+          <span id="t-cta_verify"></span>
         </button>
-        <button class="btn btn-dark" onclick="App.openChannel()" id="t-btn_channel"></button>
+        <button class="btn btn-ghost" onclick="App.openVerify()" id="t-cta_have_account"></button>
+      </div>
+      <div class="features">
+        <div class="feat"><div class="ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="4" y="10" width="16" height="11" rx="2"/><path d="M8 10V7a4 4 0 018 0v3"/></svg></div><b id="t-feat1_t"></b><span id="t-feat1_d"></span></div>
+        <div class="feat"><div class="ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 2l8 4v6c0 5-3.5 8-8 10-4.5-2-8-5-8-10V6z"/></svg></div><b id="t-feat2_t"></b><span id="t-feat2_d"></span></div>
+        <div class="feat"><div class="ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="5" y="2" width="14" height="20" rx="3"/><path d="M11 18h2"/></svg></div><b id="t-feat3_t"></b><span id="t-feat3_d"></span></div>
+        <div class="feat"><div class="ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="9" cy="7" r="3"/><path d="M3 21v-2a5 5 0 015-5h2"/><path d="M16 11l2 2 4-4"/></svg></div><b id="t-feat4_t"></b><span id="t-feat4_d"></span></div>
+      </div>
+      <div class="trust-strip">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 2l8 4v6c0 5-3.5 8-8 10-4.5-2-8-5-8-10V6z"/></svg>
+        <span id="t-secured_by"></span>
+      </div>
+
+      <!-- AGENCY SECTION -->
+      <div class="section-h" id="t-agency_eyebrow"></div>
+      <div class="card agency-card">
+        <h3 class="agency-h" id="t-agency_title"></h3>
+        <p class="agency-p" id="t-agency_sub"></p>
+
+        <div class="agency-promo" onclick="App.copyPromo()">
+          <div>
+            <div class="agency-promo-lbl" id="t-agency_promo"></div>
+            <div class="agency-promo-code">OUSSO</div>
+          </div>
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="9" y="9" width="11" height="11" rx="2"/><path d="M5 15V5a2 2 0 012-2h10"/></svg>
+        </div>
+
+        <div class="agency-steps">
+          <div class="ag-step"><span class="ag-num">1</span><div><b id="t-agency_step1_t"></b><span id="t-agency_step1_d"></span></div></div>
+          <div class="ag-step"><span class="ag-num">2</span><div><b id="t-agency_step2_t"></b><span id="t-agency_step2_d"></span></div></div>
+          <div class="ag-step"><span class="ag-num">3</span><div><b id="t-agency_step3_t"></b><span id="t-agency_step3_d"></span></div></div>
+          <div class="ag-step"><span class="ag-num">4</span><div><b id="t-agency_step4_t"></b><span id="t-agency_step4_d"></span></div></div>
+        </div>
+
+        <button class="btn btn-primary" style="margin-top:6px" onclick="App.openRegLink()">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width:18px;height:18px"><path d="M15 3h6v6M10 14L21 3M18 13v6a2 2 0 01-2 2H5a2 2 0 01-2-2V8a2 2 0 012-2h6"/></svg>
+          <span id="t-agency_reg_btn"></span>
+        </button>
+        <button class="btn btn-ghost" style="margin-top:10px" onclick="App.openVideo()">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width:18px;height:18px"><circle cx="12" cy="12" r="10"/><path d="M10 8l6 4-6 4z" fill="currentColor"/></svg>
+          <span id="t-agency_video_btn"></span>
+        </button>
+
+        <div class="agency-verify">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 2l8 4v6c0 5-3.5 8-8 10-4.5-2-8-5-8-10V6z"/><path d="M9 12l2 2 4-4"/></svg>
+          <div><b id="t-agency_verify_t"></b><span id="t-agency_verify_d"></span></div>
+        </div>
       </div>
     </div>
 
-    <div class="foot"><b>OussoCash</b><br><span id="t-brand_sub"></span><br>&copy; 2026</div>
-  </div>
+    <!-- ── VERIFY (ID ENTRY) ── -->
+    <div id="view-verify" class="view hidden">
+      <div class="center-wrap">
+        <div class="id-head">
+          <div class="id-shield"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M12 2l8 4v6c0 5-3.5 8-8 10-4.5-2-8-5-8-10V6z"/><path d="M9 12l2 2 4-4"/></svg></div>
+          <h2 id="t-verify_title"></h2>
+          <p id="t-verify_sub"></p>
+        </div>
+        <div class="field">
+          <input id="gidInput" inputmode="numeric" autocomplete="off" placeholder="" maxlength="13">
+        </div>
+        <div class="field-note">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="4" y="10" width="16" height="11" rx="2"/><path d="M8 10V7a4 4 0 018 0v3"/></svg>
+          <span id="t-verify_note"></span>
+        </div>
+        <div class="field-err" id="verifyErr"></div>
+        <button class="btn btn-primary" id="verifyBtn" onclick="App.doVerify()"></button>
+        <button class="btn btn-ghost" style="margin-top:11px" onclick="App.openRegLink()" id="t-agency_reg_btn2"></button>
+      </div>
+    </div>
 
-  <div id="view-account" class="hidden"></div>
+    <!-- ── ACCOUNT PRESENTATION ── -->
+    <div id="view-present" class="view hidden pad">
+      <div style="text-align:center;padding:24px 0 4px">
+        <div class="verified-badge" style="justify-content:center;font-size:13px;margin-bottom:6px"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><path d="M12 2l8 4v6c0 5-3.5 8-8 10-4.5-2-8-5-8-10V6z"/><path d="M9 12l2 2 4-4"/></svg><span id="t-present_title"></span></div>
+      </div>
+      <div class="identity-card" id="identityCard"></div>
+      <button class="btn btn-primary btn-block" style="margin-top:20px" onclick="App.openNotice()" id="t-present_continue"></button>
+    </div>
 
+    <!-- ── DASHBOARD ── -->
+    <div id="view-dash" class="view hidden pad">
+      <div class="dash-head">
+        <div class="dash-avatar" id="dashAvatar">O</div>
+        <div>
+          <div class="dash-name" id="dashName"></div>
+          <div class="dash-sub"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><path d="M12 2l8 4v6c0 5-3.5 8-8 10-4.5-2-8-5-8-10V6z"/><path d="M9 12l2 2 4-4"/></svg><span id="t-present_verified"></span></div>
+        </div>
+      </div>
+
+      <div class="balance-card">
+        <div class="balance-label" id="t-dash_balance"></div>
+        <div class="balance-amt"><span id="balAmt">0</span><small>UM</small></div>
+        <button class="balance-cta" onclick="App.openWithdraw()">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 5v14M5 12l7 7 7-7"/></svg>
+          <span id="t-dash_withdraw"></span>
+        </button>
+      </div>
+
+      <div id="depositWarn" class="warn-box hidden">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 9v4M12 17h.01"/><path d="M10.3 3.9 1.8 18a2 2 0 001.7 3h17a2 2 0 001.7-3L13.7 3.9a2 2 0 00-3.4 0z"/></svg>
+        <span id="t-deposit_warn"></span>
+      </div>
+
+      <div class="stat-grid">
+        <div class="stat"><div class="stat-ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="9" cy="7" r="3"/><path d="M3 21v-2a5 5 0 015-5h2"/></svg></div><div class="label" id="t-dash_refs"></div><div class="val" id="statRefs">0</div></div>
+        <div class="stat"><div class="stat-ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 1v22M17 5H9.5a3.5 3.5 0 000 7h5a3.5 3.5 0 010 7H6"/></svg></div><div class="label" id="t-dash_earned"></div><div class="val" id="statEarned">0</div></div>
+        <div class="stat"><div class="stat-ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="9"/><path d="M9 12l2 2 4-4"/></svg></div><div class="label" id="t-dash_status"></div><div style="margin-top:8px" id="statStatus"></div></div>
+        <div class="stat"><div class="stat-ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 2l8 4v6c0 5-3.5 8-8 10-4.5-2-8-5-8-10V6z"/></svg></div><div class="label" id="t-dash_security"></div><div class="val sm" style="color:var(--accent)" id="t-dash_sec_high"></div></div>
+      </div>
+
+      <div class="section-h" id="t-activity_title"></div>
+      <div class="card" style="padding:10px 18px">
+        <div class="timeline" id="timeline"></div>
+      </div>
+    </div>
+
+    <!-- ── REFERRAL ── -->
+    <div id="view-ref" class="view hidden pad">
+      <div style="padding:22px 4px 0">
+        <h2 style="font-size:23px;font-weight:800;letter-spacing:-.4px" id="t-ref_title"></h2>
+      </div>
+      <div class="card">
+        <p style="color:var(--txt-2);font-size:13.5px" id="t-ref_intro"></p>
+        <div class="ref-rewards">
+          <div class="reward"><div class="num">100</div><div class="lbl" id="rwLbl1"></div></div>
+          <div class="reward"><div class="num">20</div><div class="lbl" id="rwLbl2"></div></div>
+          <div class="reward"><div class="num">25%</div><div class="lbl" id="rwLbl3"></div></div>
+        </div>
+        <div class="section-h" style="margin:20px 0 0;padding:0" id="t-ref_your_link"></div>
+        <div class="ref-link-box">
+          <div class="lk" id="refLink"></div>
+          <button class="ref-copy-btn" onclick="App.copyRef()" id="t-ref_copy"></button>
+        </div>
+        <button class="btn btn-primary ref-share-btn" onclick="App.shareRef()">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width:18px;height:18px"><circle cx="18" cy="5" r="3"/><circle cx="6" cy="12" r="3"/><circle cx="18" cy="19" r="3"/><path d="M8.6 13.5l6.8 4M15.4 6.5l-6.8 4"/></svg>
+          <span id="t-ref_share"></span>
+        </button>
+      </div>
+      <div class="stat-grid" style="margin-top:14px">
+        <div class="stat"><div class="label" id="t-dash_refs2"></div><div class="val" id="refStatRefs">0</div></div>
+        <div class="stat"><div class="label" id="t-dash_earned2"></div><div class="val" id="refStatEarned">0</div></div>
+      </div>
+    </div>
+
+  </div><!-- /scroll -->
+
+  <!-- bottom nav (only when logged in) -->
+  <nav class="bottomnav hidden" id="bottomnav">
+    <button class="nav-item on" data-nav="dash" onclick="App.nav('dash')">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="8" height="8" rx="2"/><rect x="13" y="3" width="8" height="8" rx="2"/><rect x="3" y="13" width="8" height="8" rx="2"/><rect x="13" y="13" width="8" height="8" rx="2"/></svg>
+      <span id="t-home"></span>
+    </button>
+    <button class="nav-item" data-nav="ref" onclick="App.nav('ref')">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="9" cy="7" r="3"/><path d="M3 21v-2a5 5 0 015-5h2"/><path d="M16 11l2 2 4-4"/></svg>
+      <span id="t-ref_title2"></span>
+    </button>
+    <button class="nav-item" data-nav="support" onclick="App.openSupport()">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 2a10 10 0 00-8 16l-1 4 4-1a10 10 0 109-19z"/></svg>
+      <span id="t-support_title2"></span>
+    </button>
+    <button class="nav-item" data-nav="logout" onclick="App.logout()">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 21H5a2 2 0 01-2-2V5a2 2 0 012-2h4M16 17l5-5-5-5M21 12H9"/></svg>
+      <span id="t-logout"></span>
+    </button>
+  </nav>
 </div>
 
-<div class="modal" id="modal"><div class="modal-box" id="modalBox"></div></div>
-<div class="modal" id="videoModal"><div class="modal-box video"><iframe id="vFrame" src="" allow="autoplay;fullscreen" allowfullscreen></iframe></div></div>
-<div class="toast" id="toast"></div>
+<!-- ═══ SHEETS ═══ -->
+<div class="sheet-bg" id="sheetBg" onclick="App.closeSheetBg(event)">
+  <div class="sheet" id="sheet" onclick="event.stopPropagation()"></div>
+</div>
+
+<div id="toast"></div>
 
 <script src="/texts.js"></script>
 <script src="/app.js"></script>
