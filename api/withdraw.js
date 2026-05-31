@@ -1,6 +1,8 @@
-// api/withdraw.js — طلب سحب (Bankily/Masrvi/Sedad)
+// api/withdraw.js — Demande de retrait (session + appareil de confiance requis)
+// طلب سحب — يتطلب جلسة + جهاز موثوق، الحد الأدنى 300 UM
 const {
-  sbGet, sbInsert, sbUpdate, cleanPhone, json, readBody, MIN_WITHDRAW,
+  sbGet, sbInsert, sbUpdate, readSession, hashFingerprint,
+  pushNotify, json, readBody, MIN_WITHDRAW,
 } = require('../lib/core');
 
 const METHODS = ['Bankily', 'Masrvi', 'Sedad'];
@@ -9,34 +11,40 @@ module.exports = async (req, res) => {
   if (req.method !== 'POST') return json(res, 405, { error: 'method' });
   try {
     const body = await readBody(req);
-    const phone = cleanPhone(body.phone);
+    const sess = readSession(body.session);
+    if (!sess) return json(res, 401, { error: 'no_session' });
+
+    const gid = sess.gid;
     const method = body.method;
     const account = String(body.account_number || '').trim();
 
-    const user = await sbGet('users', `phone=eq.${phone}&select=*`);
-    if (!user) return json(res, 400, { error: 'no_user' });
-    if (!user.verified) return json(res, 400, { error: 'not_verified' });
+    const acc = await sbGet('accounts', `game_id=eq.${gid}&select=*`);
+    if (!acc) return json(res, 400, { error: 'no_account' });
+    if (acc.status !== 'active') return json(res, 400, { error: 'not_active' });
     if (!METHODS.includes(method)) return json(res, 400, { error: 'bad_method' });
     if (account.length < 6) return json(res, 400, { error: 'bad_account' });
 
-    // الرصيد كافٍ؟
-    if (user.balance_um < MIN_WITHDRAW) {
-      return json(res, 400, { error: 'insufficient', balance: user.balance_um, min: MIN_WITHDRAW });
+    // Appareil de confiance obligatoire pour les retraits protégés
+    const fp = hashFingerprint(body.fingerprint);
+    const dev = await sbGet('devices', `game_id=eq.${gid}&fingerprint=eq.${fp}&select=trusted`);
+    if (!dev || !dev.trusted) return json(res, 403, { error: 'device_untrusted' });
+
+    if (acc.balance_um < MIN_WITHDRAW) {
+      return json(res, 400, { error: 'insufficient', balance: acc.balance_um, min: MIN_WITHDRAW });
     }
 
-    // طلب معلّق موجود؟ (منع طلبين)
-    const pending = await sbGet('withdrawals', `phone=eq.${phone}&status=eq.pending&select=id`);
+    const pending = await sbGet('withdrawals', `game_id=eq.${gid}&status=eq.pending&select=id`);
     if (pending) return json(res, 400, { error: 'pending_exists' });
 
-    const amount = user.balance_um; // المبلغ كامل
-
+    const amount = acc.balance_um;
     await sbInsert('withdrawals', {
-      phone, amount_um: amount, method, account_number: account, status: 'pending',
+      game_id: gid, amount_um: amount, method, account_number: account, status: 'pending',
     });
-    // خصم مؤقت
-    await sbUpdate('users', `phone=eq.${phone}`, { balance_um: 0 });
+    await sbUpdate('accounts', `game_id=eq.${gid}`, { balance_um: 0 });
 
-    return json(res, 200, { ok: true, amount, method, account });
+    await pushNotify(gid, 'OussoCash', 'Demande de retrait reçue · تم استلام طلب السحب');
+
+    return json(res, 200, { ok: true, amount, method });
   } catch (e) {
     console.error('withdraw error', e);
     return json(res, 500, { error: 'server' });

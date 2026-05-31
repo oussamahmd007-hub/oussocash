@@ -1,65 +1,77 @@
-// api/admin.js — لوحة الأدمن (محمية بكلمة مرور)
+// api/admin.js — Panneau d'administration (protégé par mot de passe)
+// لوحة الإدارة — محمية بكلمة مرور
 const {
-  sb, sbGet, sbInsert, sbUpdate, json, readBody,
-  WELCOME_BONUS, REFERRAL_COMMISSION, MIN_DEPOSIT_USD, USD_TO_UM, ADMIN_PASSWORD, maskPhone,
+  sb, sbGet, sbInsert, sbUpdate, sbDelete, json, readBody, pushNotify,
+  WELCOME_BONUS, REFERRAL_COMMISSION, REFERRAL_PERCENT,
+  MIN_DEPOSIT_USD, USD_TO_UM, DEPOSIT_DEADLINE_DAYS, PENDING_TTL_HOURS, ADMIN_PASSWORD,
 } = require('../lib/core');
 
 module.exports = async (req, res) => {
   if (req.method !== 'POST') return json(res, 405, { error: 'method' });
   try {
     const body = await readBody(req);
-    if (body.password !== ADMIN_PASSWORD) return json(res, 401, { error: 'unauthorized' });
-
+    if (!ADMIN_PASSWORD || body.password !== ADMIN_PASSWORD) return json(res, 401, { error: 'unauthorized' });
     const action = body.action;
 
-    // ─── إحصائيات اللوحة ───
     if (action === 'dashboard') {
-      const users = await sb('users?select=verified,balance_um,created_at');
+      const accs = await sb('accounts?select=status,balance_um,created_at');
       const wd = await sb('withdrawals?status=eq.pending&select=amount_um');
       const refs = await sb('referrals?paid=eq.true&select=commission_um');
       return json(res, 200, {
-        total_users: users.length,
-        verified: users.filter((u) => u.verified).length,
+        total: accs.length,
+        active: accs.filter((a) => a.status === 'active').length,
+        pending: accs.filter((a) => a.status === 'pending').length,
         pending_wd: wd.length,
         pending_wd_amount: wd.reduce((s, w) => s + w.amount_um, 0),
         total_commissions: refs.reduce((s, r) => s + r.commission_um, 0),
       });
     }
 
-    // ─── قائمة المستخدمين ───
-    if (action === 'users') {
-      const users = await sb('users?select=*&order=created_at.desc&limit=200');
-      return json(res, 200, { users });
+    if (action === 'accounts') {
+      const accs = await sb('accounts?select=*&order=created_at.desc&limit=300');
+      return json(res, 200, { accounts: accs });
     }
 
-    // ─── السحوبات المعلّقة ───
     if (action === 'withdrawals') {
       const wd = await sb('withdrawals?status=eq.pending&select=*&order=requested_at.asc');
       return json(res, 200, { withdrawals: wd });
     }
 
-    // ─── معالجة سحب ───
     if (action === 'process_wd') {
-      const wid = body.id;
-      const approve = body.approve;
+      const wid = body.id, approve = body.approve;
       const wd = await sbGet('withdrawals', `id=eq.${wid}&select=*`);
       if (!wd || wd.status !== 'pending') return json(res, 400, { error: 'not_found' });
       if (approve) {
         await sbUpdate('withdrawals', `id=eq.${wid}`, { status: 'approved', processed_at: new Date().toISOString() });
-        await sbInsert('notifications', { phone: wd.phone, title: 'تم السحب', body: `تم ارسال ${wd.amount_um} UM عبر ${wd.method}` }).catch(() => {});
+        await pushNotify(wd.game_id, 'OussoCash', `Retrait traité · تم السحب · ${wd.amount_um} UM`);
       } else {
-        // إرجاع الرصيد
-        const u = await sbGet('users', `phone=eq.${wd.phone}&select=balance_um`);
-        await sbUpdate('users', `phone=eq.${wd.phone}`, { balance_um: (u.balance_um || 0) + wd.amount_um });
+        const a = await sbGet('accounts', `game_id=eq.${wd.game_id}&select=balance_um`);
+        await sbUpdate('accounts', `game_id=eq.${wd.game_id}`, { balance_um: (a.balance_um || 0) + wd.amount_um });
         await sbUpdate('withdrawals', `id=eq.${wid}`, { status: 'rejected', processed_at: new Date().toISOString() });
       }
       return json(res, 200, { ok: true });
     }
 
-    // ─── الإعدادات ───
+    if (action === 'trust_device') {
+      // Autoriser un appareil après vérification support
+      await sbUpdate('devices', `game_id=eq.${body.game_id}&fingerprint=eq.${body.fingerprint}`, { trusted: true }).catch(() => {});
+      await pushNotify(body.game_id, 'OussoCash', 'Appareil de confiance ajouté · تمت إضافة جهاز موثوق');
+      return json(res, 200, { ok: true });
+    }
+
+    if (action === 'devices') {
+      const devs = await sb(`devices?game_id=eq.${body.game_id}&select=fingerprint,trusted,user_agent,created_at,last_seen_at&order=created_at.desc`);
+      return json(res, 200, { devices: devs });
+    }
+
+    if (action === 'ban_id') {
+      await sbInsert('banned_ids', { game_id: String(body.game_id), reason: body.reason || 'manual_admin' }).catch(() => {});
+      await sbUpdate('accounts', `game_id=eq.${body.game_id}`, { status: 'banned' }).catch(() => {});
+      return json(res, 200, { ok: true });
+    }
+
     if (action === 'get_settings') {
-      const s = await sb('settings?select=*');
-      const map = {};
+      const s = await sb('settings?select=*'); const map = {};
       s.forEach((r) => (map[r.key] = r.value));
       return json(res, 200, { settings: map });
     }
@@ -68,17 +80,16 @@ module.exports = async (req, res) => {
       return json(res, 200, { ok: true });
     }
 
-    // ─── حظر ID ───
-    if (action === 'ban_id') {
-      await sbInsert('banned_ids', { game_id: String(body.game_id), reason: 'manual_admin' }).catch(() => {});
-      return json(res, 200, { ok: true });
+    // Nettoyage : comptes en attente expirés (> 24h sans dépôt + suppression CSV)
+    if (action === 'cleanup_pending') {
+      const cutoff = new Date(Date.now() - PENDING_TTL_HOURS * 36e5).toISOString();
+      const stale = await sb(`accounts?status=eq.pending&created_at=lt.${cutoff}&deposit_done=eq.false&select=game_id`);
+      for (const a of stale) await sbDelete('accounts', `game_id=eq.${a.game_id}`).catch(() => {});
+      return json(res, 200, { ok: true, removed: stale.length });
     }
 
-    // ─── معالجة CSV (نص الملف يُرسل من المتصفح) ───
     if (action === 'process_csv') {
-      const content = body.csv || '';
-      const result = await processCSV(content, body.filename || 'upload.csv');
-      return json(res, 200, result);
+      return json(res, 200, await processCSV(body.csv || '', body.filename || 'upload.csv'));
     }
 
     return json(res, 400, { error: 'bad_action' });
@@ -89,110 +100,117 @@ module.exports = async (req, res) => {
 };
 
 // ═══════════════════════════════════════════════════════════════════
-//  معالجة ملف 1xBet CSV (مفصول ;، ترويسة عربية)
+//  Traitement du rapport CSV 1xBet (séparateur ;, en-tête AR/EN)
+//  معالجة تقرير 1xBet — استخراج: معرف اللاعب، SubId، الإيداعات، البلد، تاريخ التسجيل
+//  Structure réelle: bloc méta en haut, puis ligne d'en-tête contenant "معرف اللاعب"
 // ═══════════════════════════════════════════════════════════════════
 async function processCSV(content, filename) {
   const lines = content.split('\n');
-  let headerIdx = -1;
-  for (let i = 0; i < lines.length; i++) {
-    if (lines[i].includes('معرف اللاعب') || lines[i].includes('Player Id') || lines[i].includes('Player ID')) {
-      headerIdx = i; break;
-    }
-  }
-  if (headerIdx < 0) return { error: 'no_header', message: 'لم يتم العثور على عمود معرف اللاعب' };
 
-  const header = lines[headerIdx].split(';');
-  let cP = -1, cS = -1, cD = -1;
+  // Trouver la ligne d'en-tête du tableau (contient "معرف اللاعب" ou "Player Id")
+  let hIdx = -1;
+  for (let i = 0; i < lines.length; i++) {
+    if (lines[i].includes('معرف اللاعب') || /Player\s*Id/i.test(lines[i])) { hIdx = i; break; }
+  }
+  if (hIdx < 0) return { error: 'no_header', message: 'عمود معرف اللاعب غير موجود · colonne Player Id introuvable' };
+
+  // Détecter les colonnes par nom (robuste à l'ordre)
+  const header = lines[hIdx].split(';');
+  const col = { id: -1, sub: -1, dep: -1, country: -1, reg: -1 };
   header.forEach((h, i) => {
     const hc = h.trim();
-    if (hc.includes('معرف اللاعب') || hc.includes('Player Id') || hc.includes('Player ID')) cP = i;
-    else if (hc.includes('SubId')) cS = i;
-    else if (hc.includes('مجموع الإيداعات') || hc.includes('Deposits sum')) cD = i;
+    if (hc.includes('معرف اللاعب') || /Player\s*Id/i.test(hc)) col.id = i;
+    else if (/SubId/i.test(hc)) col.sub = i;
+    else if (hc.includes('مجموع الإيداعات') || /Deposits?\s*sum/i.test(hc)) col.dep = i;
+    else if (hc.includes('البلد') || /Country/i.test(hc)) col.country = i;
+    else if (hc.includes('تاريخ التسجيل') || /Registration\s*date/i.test(hc)) col.reg = i;
   });
+  if (col.id < 0) return { error: 'no_id_col', message: 'تعذّر تحديد عمود معرف اللاعب' };
 
-  // اقرأ بيانات الملف
-  const csvData = {};
-  for (let i = headerIdx + 1; i < lines.length; i++) {
+  // Lire les données réelles du fichier
+  const csv = {};
+  for (let i = hIdx + 1; i < lines.length; i++) {
     const row = lines[i].split(';');
-    if (row.length > cP && row[cP].trim()) {
-      csvData[row[cP].trim()] = {
-        sub: (cS >= 0 && row[cS] ? row[cS].trim().toUpperCase() : ''),
-        dep: (cD >= 0 && row[cD] ? row[cD].trim() : '0'),
-      };
-    }
+    const gid = (row[col.id] || '').trim();
+    if (!/^\d{6,13}$/.test(gid)) continue; // ignorer les lignes vides/non-joueur
+    csv[gid] = {
+      sub: col.sub >= 0 ? (row[col.sub] || '').trim().toUpperCase() : '',
+      dep: col.dep >= 0 ? (row[col.dep] || '0').trim() : '0',
+      country: col.country >= 0 ? (row[col.country] || '').trim() : '',
+      reg: col.reg >= 0 ? (row[col.reg] || '').trim() : '',
+    };
   }
 
-  // كل الحسابات قيد التحقق (pending_gid غير فارغ)
-  const allPending = await sb('users?select=phone,lang,referrer_code,pending_gid,csv_attempts&pending_gid=not.is.null');
-  const pending = allPending.filter((u) => u.pending_gid && u.pending_gid.length > 0);
-  const stats = { ok: 0, no_sub: 0, no_dep: 0, not_found: 0, taken: 0, total: pending.length };
+  // Tous les comptes en attente / dépôt incomplet
+  const pending = await sb('accounts?select=*&status=in.(pending,deposit_incomplete)');
+  const stats = { activated: 0, no_sub: 0, deposit_incomplete: 0, not_in_csv: 0, total: pending.length };
+  const now = new Date().toISOString();
 
-  for (const u of pending) {
-    const gid = u.pending_gid;
-    if (!gid) continue;
+  for (const a of pending) {
+    const gid = a.game_id;
 
-    if (!csvData[gid]) {
-      stats.not_found++;
-      const att = (u.csv_attempts || 0) + 1;
-      if (att >= 5) {
-        await sbUpdate('users', `phone=eq.${u.phone}`, { pending_gid: '', pending_since: null, csv_attempts: 0 });
-        await notify(u.phone, 'لم يتم العثور على حسابك', `تم حذف الـ ID ${gid} بعد 5 محاولات`);
-      } else {
-        await sbUpdate('users', `phone=eq.${u.phone}`, { csv_attempts: att });
-      }
+    // ID absent du rapport → le joueur n'existe pas / non rattaché → suppression
+    if (!csv[gid]) {
+      stats.not_in_csv++;
+      await sbDelete('accounts', `game_id=eq.${gid}`).catch(() => {});
       continue;
     }
 
-    const r = csvData[gid];
+    const r = csv[gid];
     const depUsd = parseFloat(r.dep.replace(',', '.')) || 0;
     const depUm = Math.round(depUsd * USD_TO_UM);
 
+    // Enregistrer les données extraites (pays, date d'inscription, dépôt total)
+    const extracted = { country: r.country, xbet_reg_date: r.reg, total_deposit: depUsd };
+
+    // SubId doit contenir OUSSO (promo de l'agence)
     if (!r.sub.includes('OUSSO')) {
       stats.no_sub++;
-      await sbUpdate('users', `phone=eq.${u.phone}`, { pending_gid: '', pending_since: null });
-      await notify(u.phone, 'تعذر قبول حسابك', `الحساب ${gid} غير مرتبط ببروموكود OUSSO`);
+      await sbInsert('banned_ids', { game_id: gid, reason: 'no_ousso_subid' }).catch(() => {});
+      await sbDelete('accounts', `game_id=eq.${gid}`).catch(() => {});
       continue;
     }
+
+    // Dépôt incomplet (< 200 UM ≈ 4 USD)
     if (depUsd < MIN_DEPOSIT_USD) {
-      stats.no_dep++;
-      await notify(u.phone, 'الايداع غير كافٍ', `ايداعك ${depUm} UM، المطلوب 200 UM`);
-      continue;
-    }
-    const taken = await sbGet('verified_ids', `game_id=eq.${gid}&select=phone`);
-    if (taken && taken.phone !== u.phone) {
-      stats.taken++;
-      await sbUpdate('users', `phone=eq.${u.phone}`, { pending_gid: '', pending_since: null });
+      stats.deposit_incomplete++;
+      if (a.deadline_at && new Date(a.deadline_at) < new Date()) {
+        // Délai dépassé → bannir et supprimer
+        await sbInsert('banned_ids', { game_id: gid, reason: 'deposit_deadline_passed' }).catch(() => {});
+        await sbDelete('accounts', `game_id=eq.${gid}`).catch(() => {});
+        await pushNotify(gid, 'OussoCash', 'ID supprimé · تم حذف المعرّف لعدم إكمال الإيداع');
+      } else {
+        const deadline = a.deadline_at || new Date(Date.now() + DEPOSIT_DEADLINE_DAYS * 864e5).toISOString();
+        await sbUpdate('accounts', `game_id=eq.${gid}`, { ...extracted, status: 'deposit_incomplete', deadline_at: deadline });
+        await pushNotify(gid, 'OussoCash', `Dépôt incomplet · إيداع غير مكتمل · أكمله خلال ${DEPOSIT_DEADLINE_DAYS} أيام`);
+      }
       continue;
     }
 
-    // ✅ تفعيل
-    const cur = await sbGet('users', `phone=eq.${u.phone}&select=balance_um`);
-    await sbUpdate('users', `phone=eq.${u.phone}`, {
-      verified: true, game_id: gid, pending_gid: '',
-      balance_um: (cur.balance_um || 0) + WELCOME_BONUS,
-      activated_at: new Date().toISOString(),
+    // ✅ Activation : SubId OUSSO + dépôt suffisant
+    await sbUpdate('accounts', `game_id=eq.${gid}`, {
+      ...extracted, status: 'active', deposit_done: true,
+      balance_um: (a.balance_um || 0) + (a.referrer_code ? WELCOME_BONUS : 0),
+      activated_at: now,
     });
-    await sbInsert('verified_ids', { game_id: gid, phone: u.phone }).catch(() => {});
-    stats.ok++;
-    await notify(u.phone, 'تم تفعيل حسابك', `مبروك! حصلت على ${WELCOME_BONUS} UM. شارك رابطك واربح المزيد`);
+    stats.activated++;
+    await pushNotify(gid, 'OussoCash', a.referrer_code
+      ? `Compte activé · تم التفعيل · +${WELCOME_BONUS} UM`
+      : 'Compte activé · تم تفعيل حسابك');
 
-    // عمولة الإحالة
-    if (u.referrer_code) {
-      const ref = await sbGet('users', `ref_code=eq.${u.referrer_code}&select=phone,balance_um`);
+    // Commission de parrainage
+    if (a.referrer_code) {
+      const ref = await sbGet('accounts', `ref_code=eq.${a.referrer_code}&select=game_id,balance_um`);
       if (ref) {
-        await sbUpdate('users', `phone=eq.${ref.phone}`, { balance_um: (ref.balance_um || 0) + REFERRAL_COMMISSION });
-        await sbUpdate('referrals', `referred_phone=eq.${u.phone}`, {
-          commission_um: REFERRAL_COMMISSION, paid: true, activated_at: new Date().toISOString(),
+        await sbUpdate('accounts', `game_id=eq.${ref.game_id}`, { balance_um: (ref.balance_um || 0) + REFERRAL_COMMISSION });
+        await sbUpdate('referrals', `referred_gid=eq.${gid}`, {
+          commission_um: REFERRAL_COMMISSION, paid: true, activated_at: now,
         });
-        await notify(ref.phone, 'احالة جديدة فعلت', `ربحت ${REFERRAL_COMMISSION} UM من احالة ${maskPhone(u.phone)}`);
+        await pushNotify(ref.game_id, 'OussoCash', `Parrainage activé · إحالة جديدة · +${REFERRAL_COMMISSION} UM`);
       }
     }
   }
 
-  await sbInsert('csv_uploads', { filename, rows_total: stats.total, rows_activated: stats.ok }).catch(() => {});
-  return { ok: true, stats };
-}
-
-async function notify(phone, title, bodyText) {
-  await sbInsert('notifications', { phone, title, body: bodyText }).catch(() => {});
+  await sbInsert('csv_uploads', { filename, rows_total: stats.total, rows_activated: stats.activated }).catch(() => {});
+  return { ok: true, stats, columns_found: col };
 }

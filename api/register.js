@@ -1,72 +1,92 @@
-// api/register.js — تسجيل مستخدم برقم واتساب
+// api/register.js — Activation de l'identité (création de compte par 1xBet ID)
+// تفعيل الهوية — إنشاء الحساب عبر 1xBet ID + ربط الجهاز + الإحالة
 const {
-  sbGet, sbInsert, generateRefCode, cleanPhone, isValidPhone,
-  isValidRefCodeFormat, json, readBody,
+  sb, sbGet, sbInsert, sbUpdate, isValidGameId, cleanGameId,
+  isValidRefCode, generateRefCode, xbetSearchPlayer,
+  hashFingerprint, hashPin, makeSession, publicAccount,
+  json, readBody, DEPOSIT_DEADLINE_DAYS,
 } = require('../lib/core');
 
 module.exports = async (req, res) => {
   if (req.method !== 'POST') return json(res, 405, { error: 'method' });
   try {
-    const body = await readBody(req);
-    const phone = cleanPhone(body.phone);
-    const lang = body.lang === 'fr' ? 'fr' : 'ar';
-    let referrerCode = (body.ref_code || '').trim().toUpperCase();
+    const body  = await readBody(req);
+    const gid   = cleanGameId(body.game_id);
+    const lang  = body.lang === 'fr' ? 'fr' : 'ar';
+    const fp    = hashFingerprint(body.fingerprint);
+    const ua    = String(body.user_agent || '').slice(0, 180);
+    const pin   = String(body.pin || '').replace(/\D/g, '').slice(0, 4);
+    let refCode = String(body.ref_code || '').trim().toUpperCase();
 
-    // تحقق الرقم
-    if (!isValidPhone(phone)) {
-      return json(res, 400, { error: 'invalid_phone' });
-    }
+    if (!isValidGameId(gid)) return json(res, 400, { error: 'invalid_id' });
+    if (!body.fingerprint)   return json(res, 400, { error: 'no_device' });
 
-    // موجود مسبقاً؟ → تسجيل دخول (نُرجع بياناته)
-    const existing = await sbGet('users', `phone=eq.${phone}&select=*`);
+    const banned = await sbGet('banned_ids', `game_id=eq.${gid}&select=game_id`);
+    if (banned) return json(res, 200, { status: 'banned' });
+
+    // Compte déjà existant → connexion (rattacher l'appareil)
+    const existing = await sbGet('accounts', `game_id=eq.${gid}&select=*`);
     if (existing) {
-      return json(res, 200, { ok: true, existing: true, user: publicUser(existing) });
+      const result = await attachDevice(existing, fp, ua);
+      return json(res, 200, {
+        ok: true, existing: true,
+        device: result.device,                 // 'trusted' | 'new'
+        account: publicAccount(existing),
+        session: makeSession(gid, fp),
+      });
     }
 
-    // تحقق كود الإحالة (إن وُجد)
+    // Nouveau compte — confirmer l'existence réelle du joueur
+    const r = await xbetSearchPlayer(gid);
+    if (!r.found) return json(res, 200, { status: 'not_found' });
+
+    // Code de parrainage du parrain (si fourni)
     let validReferrer = null;
-    if (referrerCode) {
-      if (!isValidRefCodeFormat(referrerCode)) {
-        return json(res, 400, { error: 'invalid_ref_format' });
-      }
-      const refUser = await sbGet('users', `ref_code=eq.${referrerCode}&select=phone,ref_code`);
-      if (!refUser) {
-        return json(res, 400, { error: 'ref_not_found' }); // رمز الإحالة غير صحيح
-      }
-      validReferrer = refUser.ref_code;
+    if (refCode && isValidRefCode(refCode)) {
+      const ref = await sbGet('accounts', `ref_code=eq.${refCode}&select=game_id,ref_code`);
+      if (ref && ref.game_id !== gid) validReferrer = ref.ref_code;
     }
 
-    // أنشئ كود إحالة فريد للمستخدم الجديد
-    const myCode = generateRefCode(phone);
+    const myCode = generateRefCode(gid);
+    const deadline = new Date(Date.now() + DEPOSIT_DEADLINE_DAYS * 864e5).toISOString();
 
-    const newUser = await sbInsert('users', {
-      phone, lang, ref_code: myCode,
-      referrer_code: validReferrer,
+    const created = await sbInsert('accounts', {
+      game_id: gid, name: r.name, currency: r.currency || 'MRU', lang,
+      status: 'pending', ref_code: myCode, referrer_code: validReferrer,
+      pin_hash: pin.length === 4 ? hashPin(gid, pin) : null,
+      deadline_at: deadline,
     });
-    const user = Array.isArray(newUser) ? newUser[0] : newUser;
+    const account = Array.isArray(created) ? created[0] : created;
 
-    // سجّل الإحالة (المكافأة تُمنح فقط عند التفعيل)
+    // Premier appareil = de confiance automatiquement
+    await sbInsert('devices', { game_id: gid, fingerprint: fp, trusted: true, user_agent: ua }).catch(() => {});
+
+    // Enregistrer le parrainage (commission versée à l'activation)
     if (validReferrer) {
-      const refUser = await sbGet('users', `ref_code=eq.${validReferrer}&select=phone`);
-      if (refUser) {
-        await sbInsert('referrals', {
-          referrer_phone: refUser.phone,
-          referred_phone: phone,
-        }).catch(() => {});
-      }
+      const ref = await sbGet('accounts', `ref_code=eq.${validReferrer}&select=game_id`);
+      if (ref) await sbInsert('referrals', { referrer_gid: ref.game_id, referred_gid: gid }).catch(() => {});
     }
 
-    return json(res, 200, { ok: true, existing: false, user: publicUser(user) });
+    return json(res, 200, {
+      ok: true, existing: false, device: 'trusted',
+      account: publicAccount(account),
+      session: makeSession(gid, fp),
+    });
   } catch (e) {
     console.error('register error', e);
     return json(res, 500, { error: 'server' });
   }
 };
 
-function publicUser(u) {
-  return {
-    phone: u.phone, lang: u.lang, name: u.name, game_id: u.game_id,
-    verified: u.verified, balance_um: u.balance_um, ref_code: u.ref_code,
-    pending_gid: u.pending_gid, currency: u.currency,
-  };
+// Rattache l'appareil au compte. Renvoie 'trusted' si déjà connu, sinon 'new'.
+async function attachDevice(account, fp, ua) {
+  const gid = account.game_id;
+  const dev = await sbGet('devices', `game_id=eq.${gid}&fingerprint=eq.${fp}&select=trusted`);
+  if (dev) {
+    await sbUpdate('devices', `game_id=eq.${gid}&fingerprint=eq.${fp}`, { last_seen_at: new Date().toISOString() }).catch(() => {});
+    return { device: dev.trusted ? 'trusted' : 'new' };
+  }
+  // Nouvel appareil — enregistré mais NON de confiance (autorisation via support)
+  await sbInsert('devices', { game_id: gid, fingerprint: fp, trusted: false, user_agent: ua }).catch(() => {});
+  return { device: 'new' };
 }
