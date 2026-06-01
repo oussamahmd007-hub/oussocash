@@ -35,6 +35,7 @@ CREATE TABLE IF NOT EXISTS accounts (
     deposit_done    BOOLEAN DEFAULT FALSE,           -- هل أكمل الإيداع المطلوب
     deposit_needed  INTEGER DEFAULT 0,               -- المبلغ الناقص للوصول لـ 200 UM
     deadline_at     TIMESTAMPTZ DEFAULT NULL,        -- مهلة إكمال الإيداع (3 أيام)
+    csv_miss_count  INTEGER DEFAULT 0,               -- عدد مرات غياب المعرّف عن CSV (يُحذف عند 2)
     created_at      TIMESTAMPTZ DEFAULT NOW(),
     activated_at    TIMESTAMPTZ DEFAULT NULL,        -- وقت التفعيل (يُستخدم للمسابقات)
     last_seen_at    TIMESTAMPTZ DEFAULT NOW()
@@ -52,6 +53,7 @@ ALTER TABLE accounts ADD COLUMN IF NOT EXISTS deposit_needed INTEGER DEFAULT 0;
 ALTER TABLE accounts ADD COLUMN IF NOT EXISTS deadline_at    TIMESTAMPTZ DEFAULT NULL;
 ALTER TABLE accounts ADD COLUMN IF NOT EXISTS owner_device   TEXT DEFAULT NULL;
 ALTER TABLE accounts ADD COLUMN IF NOT EXISTS activated_at   TIMESTAMPTZ DEFAULT NULL;
+ALTER TABLE accounts ADD COLUMN IF NOT EXISTS csv_miss_count INTEGER DEFAULT 0;
 
 
 -- ───────────────────────────────────────────────────────────────────
