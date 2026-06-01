@@ -87,7 +87,7 @@ const App = {
     else if(v==='contest'){ this.show('contest'); this.loadContest(); }
     else if(v==='sport'){ this.show('sport'); this.sportView(this._sportView||'today'); }
     else if(v==='support'){ this.show('support'); this.initChat(); }
-    else if(v==='agency'){ this.show('agency'); }
+    else if(v==='agency'){ this.show('agency'); this.renderPayStrip(); }
   },
 
   // ═══ نقطتا الدخول: تسجيل جديد / لدي حساب ═══
@@ -336,11 +336,12 @@ const App = {
     this.show('pending');
   },
   refreshNotifBanner(){
-    const banner=document.getElementById('notifBanner');
-    if(!banner) return;
     let granted=false;
-    try{ granted = (typeof Notification!=='undefined' && Notification.permission==='granted'); }catch{}
-    banner.style.display = granted ? 'none' : 'flex';
+    try{ granted=(typeof Notification!=='undefined' && Notification.permission==='granted'); }catch{}
+    const banner=document.getElementById('notifBanner');
+    if(banner) banner.style.display = granted ? 'none' : 'flex';
+    const dot=document.getElementById('notifDot');
+    if(dot) dot.classList.toggle('hidden', granted);
   },
   async askNotif(){
     if(!window.OneSignalDeferred){ return; }
@@ -575,6 +576,22 @@ const App = {
       {n:'Champions League',c:'CL',img:'https://crests.football-data.org/CL.png'},
     ];
     box.innerHTML=leagues.map(l=>`<div class="league-chip"><img src="${l.img}" onerror="this.style.display='none'" alt=""><span>${l.n}</span></div>`).join('');
+  },
+  renderPayStrip(){
+    const track=document.getElementById('payTrack');
+    if(!track || track.dataset.done) return;
+    const pays=[
+      ['bankily','Bankily'],['masrvi','Masrvi'],['sedad','Sedad'],['click','Click BNM'],
+      ['moov','Moov Money'],['amanty','Amanty'],['bim','BIM Bank'],['bimbank','BimBank'],
+      ['sumar','Sumar'],['saddad','Saddad'],['sedad2','Sedad Pay'],['attijari','Attijari ePay'],
+      ['baridcash','BaridCash'],['gimtel','GIMTEL'],
+    ];
+    // مضاعفة للحركة السلسة (loop)
+    const items=[...pays,...pays].map(p=>
+      `<div class="pay-chip"><img src="/pay/${p[0]}.jpg" onerror="this.style.display='none'" alt="${p[1]}"><span>${p[1]}</span></div>`
+    ).join('');
+    track.innerHTML=items;
+    track.dataset.done='1';
   },
   setupPWA(){
     // تسجيل service worker للتثبيت
@@ -832,6 +849,7 @@ const App = {
     this.lang=Store.lang; this.applyLang();
     this.setupPWA();
     this.renderLeagues();
+    this.refreshNotifBanner();
     this.maybeShowNotifModal();
     // load config
     try{ const c=await this.api('config'); SUPPORT_WA=c.support_whatsapp||SUPPORT_WA; CHANNEL=c.channel_url||CHANNEL; OS_APP_ID=c.onesignal_app_id||''; }catch{}

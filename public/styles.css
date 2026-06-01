@@ -742,34 +742,69 @@ html[dir="rtl"] .sl-arrow{transform:scaleX(-1)}
 .nb-txt b{display:block;font-size:13.5px;font-weight:700}
 .nb-txt span{font-size:11.5px;color:var(--txt-2);line-height:1.4}
 
-/* ─── Payment methods grid ─── */
-.pay-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:10px}
-.pay-item{display:flex;flex-direction:column;align-items:center;gap:7px;background:var(--surface);
-  border:1px solid var(--line);border-radius:14px;padding:13px 8px;box-shadow:var(--shadow-card)}
-.pay-item img{width:46px;height:46px;object-fit:contain;border-radius:10px}
-.pay-item span{font-size:10.5px;font-weight:700;color:var(--txt-2);text-align:center;line-height:1.2}
+/* ─── Agency card top + animated payment strip ─── */
+.agency-card-top{border-radius:20px;overflow:hidden;box-shadow:var(--shadow-card);cursor:pointer;
+  border:1px solid var(--line);transition:.2s var(--ease)}
+.agency-card-top:active{transform:scale(.99)}
+.agency-card-img{width:100%;height:auto;display:block}
+.pay-strip-label{font-size:13px;font-weight:700;color:var(--txt-2);margin:18px 4px 10px;text-align:center}
+.pay-marquee{overflow:hidden;position:relative;padding:4px 0;
+  -webkit-mask-image:linear-gradient(90deg,transparent,#000 8%,#000 92%,transparent);
+  mask-image:linear-gradient(90deg,transparent,#000 8%,#000 92%,transparent)}
+.pay-track{display:flex;gap:12px;width:max-content;animation:payScroll 28s linear infinite}
+.pay-marquee:hover .pay-track{animation-play-state:paused}
+@keyframes payScroll{from{transform:translateX(0)}to{transform:translateX(-50%)}}
+html[dir="rtl"] .pay-track{animation-name:payScrollRtl}
+@keyframes payScrollRtl{from{transform:translateX(0)}to{transform:translateX(50%)}}
+.pay-chip{flex-shrink:0;width:92px;display:flex;flex-direction:column;align-items:center;gap:7px;
+  background:var(--surface);border:1px solid var(--line);border-radius:14px;padding:12px 6px;box-shadow:var(--shadow-card)}
+.pay-chip img{width:48px;height:48px;object-fit:contain;border-radius:10px}
+.pay-chip span{font-size:10px;font-weight:700;color:var(--txt-2);text-align:center;line-height:1.2;white-space:nowrap}
 
-/* ─── Agency WhatsApp card ─── */
-.agency-wa-card{background:var(--surface);border:1px solid var(--line);border-radius:18px;overflow:hidden;
-  box-shadow:var(--shadow-card);cursor:pointer;transition:.2s var(--ease)}
-.agency-wa-card:active{transform:scale(.99)}
-.agency-wa-img{width:100%;height:auto;display:block}
-.agency-wa-info{padding:16px}
+/* ─── Agency contact card ─── */
+.agency-contact-card{background:var(--surface);border:1px solid var(--line);border-radius:18px;
+  padding:20px;text-align:center;cursor:pointer;box-shadow:var(--shadow-card);transition:.2s var(--ease)}
+.agency-contact-card:active{transform:scale(.99)}
+
+/* ─── Notification permission modal (من الأعلى) ─── */
+.notif-modal{position:fixed;inset:0;z-index:200;display:flex;align-items:flex-start;justify-content:center;
+  padding:0;background:rgba(15,28,52,.45);backdrop-filter:blur(6px);opacity:0;transition:opacity .25s}
+.notif-modal.show{opacity:1}
+.notif-modal-card{background:var(--surface);border-radius:0 0 26px 26px;padding:26px 24px calc(26px + env(safe-area-inset-top));
+  padding-top:calc(26px + env(safe-area-inset-top));max-width:480px;width:100%;
+  text-align:center;box-shadow:0 18px 50px rgba(15,28,52,.25);transform:translateY(-110%);transition:transform .35s var(--ease)}
+.notif-modal.show .notif-modal-card{transform:translateY(0)}
+.notif-modal-ic{width:64px;height:64px;border-radius:20px;background:linear-gradient(135deg,var(--accent),var(--accent-2));
+  display:grid;place-items:center;margin:0 auto 16px;box-shadow:var(--shadow-blue)}
+.notif-modal-ic svg{width:32px;height:32px;color:#fff}
+.notif-modal-card h3{font-size:19px;font-weight:800;letter-spacing:-.3px;margin-bottom:9px}
+.notif-modal-card p{font-size:13.5px;color:var(--txt-2);line-height:1.6;margin-bottom:20px}
+.notif-modal-no{margin-top:10px;color:var(--txt-3);font-size:13.5px;font-weight:600;background:none;width:100%;padding:8px}
+
+/* notification bell in topbar */
+.tb-notif-btn{position:relative;width:38px;height:38px;border-radius:11px;background:var(--surface);
+  border:1px solid var(--line-2);display:grid;place-items:center;color:var(--txt-2)}
+.tb-notif-btn svg{width:19px;height:19px}
+.tb-notif-dot{position:absolute;top:8px;right:9px;width:8px;height:8px;border-radius:50%;background:var(--danger);
+  border:2px solid var(--surface)}
+.tb-notif-dot.hidden{display:none}
+
+/* agency contact row */
 .agency-wa-row{display:flex;align-items:center;gap:10px;justify-content:center}
 .agency-wa-row svg{width:26px;height:26px;color:#25d366;flex-shrink:0}
 .agency-wa-row a{font-size:21px;font-weight:800;color:var(--accent);letter-spacing:.5px;direction:ltr;text-decoration:none}
-.agency-wa-info small{display:block;text-align:center;font-size:12px;color:var(--txt-3);margin-top:8px}
+.agency-contact-card small{display:block;text-align:center;font-size:12px;color:var(--txt-3);margin-top:8px}
 
-/* ─── Notification permission modal ─── */
-.notif-modal{position:fixed;inset:0;z-index:200;display:flex;align-items:center;justify-content:center;
-  padding:24px;background:rgba(15,28,52,.45);backdrop-filter:blur(6px);opacity:0;transition:opacity .25s}
-.notif-modal.show{opacity:1}
-.notif-modal-card{background:var(--surface);border-radius:24px;padding:28px 24px;max-width:360px;width:100%;
-  text-align:center;box-shadow:0 24px 60px rgba(15,28,52,.3);transform:scale(.92);transition:transform .25s var(--ease)}
-.notif-modal.show .notif-modal-card{transform:scale(1)}
-.notif-modal-ic{width:72px;height:72px;border-radius:22px;background:linear-gradient(135deg,var(--accent),var(--accent-2));
-  display:grid;place-items:center;margin:0 auto 18px;box-shadow:var(--shadow-blue)}
-.notif-modal-ic svg{width:36px;height:36px;color:#fff}
-.notif-modal-card h3{font-size:20px;font-weight:800;letter-spacing:-.3px;margin-bottom:10px}
-.notif-modal-card p{font-size:14px;color:var(--txt-2);line-height:1.6;margin-bottom:22px}
-.notif-modal-no{margin-top:12px;color:var(--txt-3);font-size:13.5px;font-weight:600;background:none;width:100%;padding:8px}
+/* ─── Dev/feedback card on dashboard ─── */
+.dev-card{display:flex;align-items:center;gap:14px;margin-top:16px;padding:16px;cursor:pointer;
+  background:linear-gradient(120deg,var(--accent-soft),rgba(37,99,235,.03));
+  border:1px solid rgba(37,99,235,.22);border-radius:18px;transition:.2s var(--ease)}
+.dev-card:active{transform:scale(.99)}
+.dev-card-ic{width:46px;height:46px;border-radius:14px;background:var(--accent);color:#fff;
+  display:grid;place-items:center;flex-shrink:0}
+.dev-card-ic svg{width:23px;height:23px}
+.dev-card-txt{flex:1}
+.dev-card-txt b{display:block;font-size:14px;font-weight:800}
+.dev-card-txt span{font-size:11.5px;color:var(--txt-2);line-height:1.4}
+.dev-card-arrow{width:18px;height:18px;color:var(--accent);flex-shrink:0}
+html[dir="rtl"] .dev-card-arrow{transform:scaleX(-1)}

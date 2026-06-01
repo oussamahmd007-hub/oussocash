@@ -269,6 +269,8 @@ window.TEXTS = {
     notif_modal_d: 'اسمح بالإشعارات لتصلك تنبيهات فورية عند تفعيل حسابك، وصول أرباحك، والمسابقات والجوائز القيمة.',
     notif_modal_yes: 'السماح بالإشعارات',
     notif_modal_no: 'لاحقاً',
+    dev_card_t: 'ساهم في تطوير OussoCash',
+    dev_card_d: 'نتشرّف دائماً باقتراحاتكم لنكون الأفضل دائماً',
     wd_to_1xbet: 'السحب إلى حساب 1xBet',
     wd_note_1xbet: 'سيُرسل طلب السحب إلى معرّف 1xBet المرتبط بحسابك. تُحوَّل أرباح الإحالات مباشرة إلى رصيدك في 1xBet.',
 
@@ -560,6 +562,8 @@ window.TEXTS = {
     notif_modal_d: 'Autorisez les notifications pour être averti dès l\'activation de votre compte, vos gains et les concours et prix.',
     notif_modal_yes: 'Autoriser',
     notif_modal_no: 'Plus tard',
+    dev_card_t: 'Contribuer au développement',
+    dev_card_d: 'Vos suggestions nous aident à toujours être les meilleurs',
     wd_to_1xbet: 'Retrait vers le compte 1xBet',
     wd_note_1xbet: 'La demande sera envoyée à l\'ID 1xBet lié à votre compte. Les gains de parrainage sont transférés directement sur votre solde 1xBet.',
 

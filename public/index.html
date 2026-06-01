@@ -49,6 +49,10 @@
   <header class="topbar">
     <div class="tb-logo"><img src="/logos/mascot_sm.png" alt=""><b class="wordmark"><span>Ousso</span>Cash</b></div>
     <div class="tb-actions">
+      <button class="tb-notif-btn" id="notifBtn" onclick="App.acceptNotif()" aria-label="notifications">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 8A6 6 0 006 8c0 7-3 9-3 9h18s-3-2-3-9M13.7 21a2 2 0 01-3.4 0"/></svg>
+        <span class="tb-notif-dot" id="notifDot"></span>
+      </button>
       <button class="install-btn hidden" id="installBtn" onclick="App.installApp()">
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 3v12M8 11l4 4 4-4M5 21h14"/></svg>
         <span id="t-install_btn"></span>
@@ -272,6 +276,13 @@
       <div class="card" style="padding:10px 18px">
         <div class="timeline" id="timeline"></div>
       </div>
+
+      <!-- ساهم في تطوير OussoCash -->
+      <div class="dev-card" onclick="App.openFeedback()">
+        <div class="dev-card-ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M12 2l2.4 7.4H22l-6 4.6 2.3 7.4-6.3-4.6L5.7 21 8 14 2 9.4h7.6z"/></svg></div>
+        <div class="dev-card-txt"><b id="t-dev_card_t"></b><span id="t-dev_card_d"></span></div>
+        <svg class="dev-card-arrow" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 18l6-6-6-6"/></svg>
+      </div>
     </div>
 
     <!-- ── REFERRAL ── -->
@@ -371,6 +382,17 @@
         <h2 style="font-size:23px;font-weight:800;letter-spacing:-.4px" id="t-agency_page_title"></h2>
       </div>
 
+      <!-- صورة الوكالة في الأعلى (أول ما يراه المستخدم) -->
+      <div class="agency-card-top" onclick="App.openWhatsapp()">
+        <img src="/pay/agency-card.jpg" alt="OussoCash 1xBet" class="agency-card-img">
+      </div>
+
+      <!-- شريط طرق الدفع المتحرك أسفل الصورة -->
+      <div class="pay-strip-label" id="t-agency_pay_title"></div>
+      <div class="pay-marquee">
+        <div class="pay-track" id="payTrack"></div>
+      </div>
+
       <!-- البطاقة الرئيسية: رسالة واحدة واضحة -->
       <div class="agency-hero">
         <div class="agency-hero-badge"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 2l8 4v6c0 5-3.5 8-8 10-4.5-2-8-5-8-10V6z"/><path d="M9 12l2 2 4-4"/></svg></div>
@@ -399,44 +421,15 @@
       </button>
       <button class="btn btn-ghost" style="margin-top:10px" onclick="App.openVideo()" id="t-agency_video_btn2"></button>
 
-      <!-- طرق الدفع المحلية المدعومة -->
-      <div class="section-h" style="padding:0;margin:24px 0 6px" id="t-agency_pay_title"></div>
-      <p class="sport-pred-sub" id="t-agency_pay_sub" style="margin-bottom:14px"></p>
-      <div class="pay-grid">
-        <div class="pay-item"><img src="/pay/bankily.jpg" alt="Bankily"><span>Bankily</span></div>
-        <div class="pay-item"><img src="/pay/masrvi.jpg" alt="Masrvi"><span>Masrvi</span></div>
-        <div class="pay-item"><img src="/pay/sedad.jpg" alt="Sedad"><span>Sedad</span></div>
-        <div class="pay-item"><img src="/pay/click.jpg" alt="Click"><span>Click BNM</span></div>
-        <div class="pay-item"><img src="/pay/moov.jpg" alt="Moov Money"><span>Moov Money</span></div>
-        <div class="pay-item"><img src="/pay/amanty.jpg" alt="Amanty"><span>Amanty</span></div>
-        <div class="pay-item"><img src="/pay/bimbank.jpg" alt="BimBank"><span>BimBank</span></div>
-        <div class="pay-item"><img src="/pay/bimbank2.jpg" alt="BimBank"><span>BIM Bank</span></div>
-        <div class="pay-item"><img src="/pay/gaza.jpg" alt="Gaza"><span>Gaza Pay</span></div>
-        <div class="pay-item"><img src="/pay/sumar.jpg" alt="Sumar"><span>Sumar</span></div>
-        <div class="pay-item"><img src="/pay/saddad.jpg" alt="Saddad"><span>Saddad</span></div>
-        <div class="pay-item"><img src="/pay/bmci.jpg" alt="BMCI"><span>BMCI</span></div>
-        <div class="pay-item"><img src="/pay/attijari.jpg" alt="Attijari ePay"><span>Attijari</span></div>
-        <div class="pay-item"><img src="/pay/baridcash.jpg" alt="BaridCash"><span>BaridCash</span></div>
-        <div class="pay-item"><img src="/pay/gimtel.jpg" alt="GIMTEL"><span>GIMTEL</span></div>
-      </div>
-
       <!-- بطاقة التواصل (واتساب) -->
       <div class="section-h" style="padding:0;margin:24px 0 10px" id="t-agency_contact_title"></div>
-      <div class="agency-wa-card" onclick="App.openWhatsapp()">
-        <img src="/pay/agency-card.jpg" alt="OussoCash" class="agency-wa-img">
-        <div class="agency-wa-info">
-          <div class="agency-wa-row">
-            <svg viewBox="0 0 24 24" fill="currentColor"><path d="M12 2a10 10 0 00-8.5 15.3L2 22l4.8-1.4A10 10 0 1012 2zm0 18a8 8 0 01-4.1-1.1l-.3-.2-2.8.8.8-2.8-.2-.3A8 8 0 1112 20zm4.4-6c-.2-.1-1.4-.7-1.6-.8s-.4-.1-.5.1-.6.8-.8 1-.3.2-.5.1a6.5 6.5 0 01-1.9-1.2 7.3 7.3 0 01-1.4-1.7c-.1-.2 0-.4.1-.5l.4-.4.2-.4v-.4l-.8-1.8c-.2-.5-.4-.4-.5-.4h-.5a.9.9 0 00-.7.3 2.8 2.8 0 00-.9 2.1 4.9 4.9 0 001 2.6 11 11 0 004.3 3.8c1.5.6 1.8.5 2.2.5a2.6 2.6 0 001.7-1.2 2.1 2.1 0 00.1-1.2c0-.1-.2-.2-.4-.3z"/></svg>
-            <a id="agencyPhone">+222 32 23 04 04</a>
-          </div>
-          <small id="t-agency_support_note"></small>
+      <div class="agency-contact-card" onclick="App.openWhatsapp()">
+        <div class="agency-wa-row">
+          <svg viewBox="0 0 24 24" fill="currentColor"><path d="M12 2a10 10 0 00-8.5 15.3L2 22l4.8-1.4A10 10 0 1012 2zm0 18a8 8 0 01-4.1-1.1l-.3-.2-2.8.8.8-2.8-.2-.3A8 8 0 1112 20zm4.4-6c-.2-.1-1.4-.7-1.6-.8s-.4-.1-.5.1-.6.8-.8 1-.3.2-.5.1a6.5 6.5 0 01-1.9-1.2 7.3 7.3 0 01-1.4-1.7c-.1-.2 0-.4.1-.5l.4-.4.2-.4v-.4l-.8-1.8c-.2-.5-.4-.4-.5-.4h-.5a.9.9 0 00-.7.3 2.8 2.8 0 00-.9 2.1 4.9 4.9 0 001 2.6 11 11 0 004.3 3.8c1.5.6 1.8.5 2.2.5a2.6 2.6 0 001.7-1.2 2.1 2.1 0 00.1-1.2c0-.1-.2-.2-.4-.3z"/></svg>
+          <a id="agencyPhone">+222 32 23 04 04</a>
         </div>
+        <small id="t-agency_support_note"></small>
       </div>
-
-      <button class="btn btn-ghost" style="margin-top:16px" onclick="App.openFeedback()">
-        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width:18px;height:18px"><path d="M12 2l2.4 7.4H22l-6 4.6 2.3 7.4-6.3-4.6L5.7 21 8 14 2 9.4h7.6z"/></svg>
-        <span id="t-fb_open"></span>
-      </button>
     </div>
 
   </div><!-- /scroll -->
