@@ -741,3 +741,35 @@ html[dir="rtl"] .sl-arrow{transform:scaleX(-1)}
 .nb-txt{flex:1;text-align:start}
 .nb-txt b{display:block;font-size:13.5px;font-weight:700}
 .nb-txt span{font-size:11.5px;color:var(--txt-2);line-height:1.4}
+
+/* ─── Payment methods grid ─── */
+.pay-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:10px}
+.pay-item{display:flex;flex-direction:column;align-items:center;gap:7px;background:var(--surface);
+  border:1px solid var(--line);border-radius:14px;padding:13px 8px;box-shadow:var(--shadow-card)}
+.pay-item img{width:46px;height:46px;object-fit:contain;border-radius:10px}
+.pay-item span{font-size:10.5px;font-weight:700;color:var(--txt-2);text-align:center;line-height:1.2}
+
+/* ─── Agency WhatsApp card ─── */
+.agency-wa-card{background:var(--surface);border:1px solid var(--line);border-radius:18px;overflow:hidden;
+  box-shadow:var(--shadow-card);cursor:pointer;transition:.2s var(--ease)}
+.agency-wa-card:active{transform:scale(.99)}
+.agency-wa-img{width:100%;height:auto;display:block}
+.agency-wa-info{padding:16px}
+.agency-wa-row{display:flex;align-items:center;gap:10px;justify-content:center}
+.agency-wa-row svg{width:26px;height:26px;color:#25d366;flex-shrink:0}
+.agency-wa-row a{font-size:21px;font-weight:800;color:var(--accent);letter-spacing:.5px;direction:ltr;text-decoration:none}
+.agency-wa-info small{display:block;text-align:center;font-size:12px;color:var(--txt-3);margin-top:8px}
+
+/* ─── Notification permission modal ─── */
+.notif-modal{position:fixed;inset:0;z-index:200;display:flex;align-items:center;justify-content:center;
+  padding:24px;background:rgba(15,28,52,.45);backdrop-filter:blur(6px);opacity:0;transition:opacity .25s}
+.notif-modal.show{opacity:1}
+.notif-modal-card{background:var(--surface);border-radius:24px;padding:28px 24px;max-width:360px;width:100%;
+  text-align:center;box-shadow:0 24px 60px rgba(15,28,52,.3);transform:scale(.92);transition:transform .25s var(--ease)}
+.notif-modal.show .notif-modal-card{transform:scale(1)}
+.notif-modal-ic{width:72px;height:72px;border-radius:22px;background:linear-gradient(135deg,var(--accent),var(--accent-2));
+  display:grid;place-items:center;margin:0 auto 18px;box-shadow:var(--shadow-blue)}
+.notif-modal-ic svg{width:36px;height:36px;color:#fff}
+.notif-modal-card h3{font-size:20px;font-weight:800;letter-spacing:-.3px;margin-bottom:10px}
+.notif-modal-card p{font-size:14px;color:var(--txt-2);line-height:1.6;margin-bottom:22px}
+.notif-modal-no{margin-top:12px;color:var(--txt-3);font-size:13.5px;font-weight:600;background:none;width:100%;padding:8px}

@@ -4,7 +4,7 @@
 // ═══════════════════════════════════════════════════════════════════
 const REG_LINK = 'https://reffpa.com/L?tag=d_3649166m_1599c_OUSSO&site=3649166&ad=1599&r=en/registration';
 const VIDEO_REGISTER = 'https://player.cloudinary.com/embed/?cloud_name=djkqimryk&public_id=lv_0_%D9%A2%D9%A0%D9%A2%D9%A6%D9%A0%D9%A4%D9%A1%D9%A0%D9%A1%D9%A4%D9%A1%D9%A1%D9%A3%D9%A2_ylopqt';
-let SUPPORT_WA = '22249002902';
+let SUPPORT_WA = '22232230404';
 let CHANNEL    = 'https://whatsapp.com/channel/0029Vb7TGP52phHUrKJ13u1p';
 let OS_APP_ID  = '';
 
@@ -349,6 +349,36 @@ const App = {
       try{ localStorage.setItem('oc_notif_asked','1'); }catch{}
       this.refreshNotifBanner();
     });
+  },
+
+  // ═══ نافذة الإشعارات المنبثقة (عند الدخول) ═══
+  maybeShowNotifModal(){
+    let granted=false, asked=false;
+    try{ granted=(typeof Notification!=='undefined' && Notification.permission==='granted'); }catch{}
+    try{ asked=localStorage.getItem('oc_notif_modal')==='1'; }catch{}
+    // أظهر النافذة مرة واحدة إن لم يُمنح الإذن بعد
+    if(granted || asked) return;
+    setTimeout(()=>{
+      const m=document.getElementById('notifModal');
+      if(m){ m.classList.remove('hidden'); requestAnimationFrame(()=>m.classList.add('show')); }
+    }, 1200);
+  },
+  async acceptNotif(){
+    try{ localStorage.setItem('oc_notif_modal','1'); }catch{}
+    this.closeNotifModal();
+    // طلب الإذن الحقيقي (ضمن إيماءة المستخدم = موثوق)
+    if(window.OneSignalDeferred){
+      window.OneSignalDeferred.push(async (OneSignal)=>{
+        try{ await OneSignal.Notifications.requestPermission(); }catch{}
+        try{ localStorage.setItem('oc_notif_asked','1'); }catch{}
+        this.refreshNotifBanner();
+      });
+    }
+  },
+  dismissNotif(){ try{ localStorage.setItem('oc_notif_modal','1'); }catch{} this.closeNotifModal(); },
+  closeNotifModal(){
+    const m=document.getElementById('notifModal');
+    if(m){ m.classList.remove('show'); setTimeout(()=>m.classList.add('hidden'),250); }
   },
   async checkActivation(){
     const fp=await this.fingerprint();
@@ -802,6 +832,7 @@ const App = {
     this.lang=Store.lang; this.applyLang();
     this.setupPWA();
     this.renderLeagues();
+    this.maybeShowNotifModal();
     // load config
     try{ const c=await this.api('config'); SUPPORT_WA=c.support_whatsapp||SUPPORT_WA; CHANNEL=c.channel_url||CHANNEL; OS_APP_ID=c.onesignal_app_id||''; }catch{}
     // عرض رقم الوكالة بشكل منسّق
