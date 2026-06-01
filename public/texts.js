@@ -194,6 +194,10 @@ window.TEXTS = {
     sport_pos: 'المركز',
     sport_disclaimer: 'التوقعات تحليلية لأغراض إعلامية، النتائج غير مضمونة.',
     sport_unavailable: 'قسم الرياضة غير متاح حالياً، حاول لاحقاً.',
+    sport_resources: 'مصادر موثوقة',
+    sport_link_pred: 'توقعات ونصائح',
+    sport_link_fotmob: 'أخبار ومباريات مباشرة',
+    sport_link_koorah: 'أخبار عربية',
 
     // Smart support
     support_nav: 'الدعم',
@@ -259,6 +263,8 @@ window.TEXTS = {
     pending_not_yet: 'لم يتم تفعيل حسابك بعد. سيصلك إشعار فور التفعيل.',
     login_not_found: 'هذا المعرّف غير مسجّل لدينا. إن كنت جديداً اضغط «سجّل الآن».',
     login_pending: 'حسابك لا يزال قيد التحقق. سيصلك إشعار عند التفعيل.',
+    notif_banner_t: 'فعّل الإشعارات',
+    notif_banner_d: 'لنُعلِمك فور تفعيل حسابك وعند وصول أرباحك والمسابقات. اضغط للسماح.',
     wd_to_1xbet: 'السحب إلى حساب 1xBet',
     wd_note_1xbet: 'سيُرسل طلب السحب إلى معرّف 1xBet المرتبط بحسابك. تُحوَّل أرباح الإحالات مباشرة إلى رصيدك في 1xBet.',
 
@@ -473,6 +479,10 @@ window.TEXTS = {
     sport_pos: 'Position',
     sport_disclaimer: 'Pronostics analytiques à titre informatif, résultats non garantis.',
     sport_unavailable: 'Section sport indisponible, réessayez plus tard.',
+    sport_resources: 'Sources fiables',
+    sport_link_pred: 'Pronostics et conseils',
+    sport_link_fotmob: 'Actus et matchs en direct',
+    sport_link_koorah: 'Actualités arabes',
 
     // Smart support
     support_nav: 'Support',
@@ -538,6 +548,8 @@ window.TEXTS = {
     pending_not_yet: 'Votre compte n\'est pas encore activé. Vous serez notifié.',
     login_not_found: 'Cet ID n\'est pas enregistré. Si vous êtes nouveau, cliquez « S\'inscrire ».',
     login_pending: 'Votre compte est en cours de vérification. Vous serez notifié.',
+    notif_banner_t: 'Activez les notifications',
+    notif_banner_d: 'Pour vous prévenir dès l\'activation de votre compte, vos gains et les concours. Appuyez pour autoriser.',
     wd_to_1xbet: 'Retrait vers le compte 1xBet',
     wd_note_1xbet: 'La demande sera envoyée à l\'ID 1xBet lié à votre compte. Les gains de parrainage sont transférés directement sur votre solde 1xBet.',
 

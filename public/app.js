@@ -315,29 +315,6 @@ const App = {
     this.loadAndShowDash();
   },
 
-  // ═══ NEW DEVICE ═══
-  showNewDevice(){
-    const T=window.TEXTS[this.lang];
-    this.openSheet(`
-      <div class="dev-warn-ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><rect x="5" y="2" width="14" height="20" rx="3"/><path d="M12 18h.01"/></svg></div>
-      <h3 style="text-align:center">${T.new_device_title}</h3>
-      <p class="sub" style="text-align:center">${T.new_device_action}</p>
-      <button class="btn btn-primary" onclick="App.requestDeviceAuth()">${T.new_device_btn}</button>
-    `);
-  },
-  async requestDeviceAuth(){
-    const fp=await this.fingerprint();
-    const r=await this.api('device-auth',{ session:Store.s, fingerprint:fp, user_agent:navigator.userAgent });
-    const ticket = r.ticket || '';
-    const msg = (this.lang==='ar'
-      ? `طلب تفعيل جهاز جديد · رقم الطلب: ${ticket} · المعرّف: ${this.account.game_id}`
-      : `Demande d'autorisation d'appareil · Ticket: ${ticket} · ID: ${this.account.game_id}`);
-    this.closeSheet();
-    window.open(`https://wa.me/${SUPPORT_WA}?text=${encodeURIComponent(msg)}`,'_blank');
-    // still allow read-only dashboard
-    this.loadAndShowDash();
-  },
-
   // ═══ DASHBOARD ═══
   async loadAndShowDash(){
     const fp=await this.fingerprint();
@@ -354,7 +331,24 @@ const App = {
   showPending(){
     const gid = this.account ? this.account.game_id : '';
     const el=document.getElementById('pendingIdVal'); if(el) el.textContent=gid;
+    // إظهار لافتة الإشعارات إن لم يُمنح الإذن بعد
+    this.refreshNotifBanner();
     this.show('pending');
+  },
+  refreshNotifBanner(){
+    const banner=document.getElementById('notifBanner');
+    if(!banner) return;
+    let granted=false;
+    try{ granted = (typeof Notification!=='undefined' && Notification.permission==='granted'); }catch{}
+    banner.style.display = granted ? 'none' : 'flex';
+  },
+  async askNotif(){
+    if(!window.OneSignalDeferred){ return; }
+    window.OneSignalDeferred.push(async (OneSignal)=>{
+      try{ await OneSignal.Notifications.requestPermission(); }catch{}
+      try{ localStorage.setItem('oc_notif_asked','1'); }catch{}
+      this.refreshNotifBanner();
+    });
   },
   async checkActivation(){
     const fp=await this.fingerprint();
@@ -481,7 +475,6 @@ const App = {
       <button class="btn btn-primary" id="wdBtn" onclick="App.submitWithdraw()">${T.wd_confirm}</button>
     `);
   },
-  pickMethod(m){ this._wdMethod=m; document.querySelectorAll('.method').forEach(e=>e.classList.toggle('on',e.dataset.m===m)); },
   async submitWithdraw(){
     const T=window.TEXTS[this.lang];
     const fp=await this.fingerprint();

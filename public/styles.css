@@ -713,3 +713,31 @@ html[dir="rtl"] .chat-send svg{transform:scaleX(-1)}
 .fb-textarea{width:100%;background:var(--surface);border:1.5px solid var(--line-2);border-radius:13px;
   padding:13px 15px;color:var(--txt);font-size:14px;font-family:inherit;outline:none;resize:vertical;margin-top:12px;line-height:1.6}
 .fb-textarea:focus{border-color:var(--accent)}
+
+/* ─── Sport external links ─── */
+.sport-links{display:flex;flex-direction:column;gap:10px}
+.sport-link{display:flex;align-items:center;gap:13px;background:var(--surface);border:1px solid var(--line);
+  border-radius:16px;padding:14px 16px;text-decoration:none;color:var(--txt);box-shadow:var(--shadow-card);transition:.2s var(--ease)}
+.sport-link:active{transform:scale(.99);border-color:var(--accent)}
+.sl-ic{width:44px;height:44px;border-radius:13px;display:grid;place-items:center;color:#fff;flex-shrink:0}
+.sl-ic svg{width:22px;height:22px}
+.sl-pred{background:linear-gradient(135deg,#2563eb,#1d4ed8)}
+.sl-news{background:linear-gradient(135deg,#3d82f7,#2563eb)}
+.sl-ar{background:linear-gradient(135deg,#1e40af,#1d4ed8)}
+.sl-txt{flex:1}
+.sl-txt b{display:block;font-size:14.5px;font-weight:700}
+.sl-txt span{font-size:12px;color:var(--txt-3)}
+.sl-arrow{width:18px;height:18px;color:var(--txt-3)}
+html[dir="rtl"] .sl-arrow{transform:scaleX(-1)}
+
+/* ─── Notification banner (pending) ─── */
+.notif-banner{display:flex;align-items:center;gap:13px;width:100%;max-width:340px;margin-top:16px;
+  padding:15px 16px;cursor:pointer;background:linear-gradient(120deg,var(--accent-soft),rgba(37,99,235,.04));
+  border:1px solid rgba(37,99,235,.28);border-radius:16px;transition:.2s var(--ease)}
+.notif-banner:active{transform:scale(.99)}
+.nb-ic{width:42px;height:42px;border-radius:12px;background:var(--accent);color:#fff;display:grid;place-items:center;flex-shrink:0;
+  animation:installPulse 2.4s infinite}
+.nb-ic svg{width:21px;height:21px}
+.nb-txt{flex:1;text-align:start}
+.nb-txt b{display:block;font-size:13.5px;font-weight:700}
+.nb-txt span{font-size:11.5px;color:var(--txt-2);line-height:1.4}
