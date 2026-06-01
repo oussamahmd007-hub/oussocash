@@ -183,14 +183,36 @@ module.exports = async (req, res) => {
 //  بنية حقيقية: كتلة معلومات أعلى الملف ثم صف ترويسة يحوي "معرف اللاعب"
 // ═══════════════════════════════════════════════════════════════════
 async function processCSV(content, filename) {
+  // إزالة BOM إن وُجد + توحيد أسطر الفصل
+  content = String(content || '').replace(/^\uFEFF/, '').replace(/\r\n/g, '\n').replace(/\r/g, '\n');
   const lines = content.split('\n');
+
+  // إيجاد صف الترويسة (يحوي "معرف اللاعب")
   let hIdx = -1;
   for (let i = 0; i < lines.length; i++) {
     if (lines[i].includes('معرف اللاعب') || /Player\s*Id/i.test(lines[i])) { hIdx = i; break; }
   }
-  if (hIdx < 0) return { error: 'no_header', message: 'عمود معرف اللاعب غير موجود' };
+  if (hIdx < 0) return { error: 'no_header', message: 'تعذّر إيجاد عمود "معرف اللاعب" في الملف' };
 
-  const header = lines[hIdx].split(';');
+  // الكشف التلقائي عن الفاصل: فاصلة منقوطة ; أو فاصلة , (حسب الأكثر تكراراً في الترويسة)
+  const headerLine = lines[hIdx];
+  const sep = (headerLine.split(';').length >= headerLine.split(',').length) ? ';' : ',';
+
+  // محلّل صف CSV يدعم الحقول المقتبسة "..." التي قد تحوي الفاصل
+  function parseRow(line) {
+    const out = []; let cur = ''; let inQ = false;
+    for (let i = 0; i < line.length; i++) {
+      const ch = line[i];
+      if (ch === '"') { if (inQ && line[i + 1] === '"') { cur += '"'; i++; } else inQ = !inQ; }
+      else if (ch === sep && !inQ) { out.push(cur); cur = ''; }
+      else cur += ch;
+    }
+    out.push(cur);
+    return out.map((s) => s.trim());
+  }
+
+  // تحديد الأعمدة بالاسم (مرن لأي ترتيب)
+  const header = parseRow(headerLine);
   const col = { id: -1, sub: -1, dep: -1, country: -1, reg: -1 };
   header.forEach((h, i) => {
     const hc = h.trim();
@@ -202,9 +224,11 @@ async function processCSV(content, filename) {
   });
   if (col.id < 0) return { error: 'no_id_col', message: 'تعذّر تحديد عمود معرف اللاعب' };
 
+  // قراءة كل صفوف اللاعبين (استخراج: معرف اللاعب · SubId · الإيداعات · البلد · تاريخ التسجيل)
   const csv = {};
   for (let i = hIdx + 1; i < lines.length; i++) {
-    const row = lines[i].split(';');
+    if (!lines[i].trim()) continue;
+    const row = parseRow(lines[i]);
     const gid = (row[col.id] || '').trim();
     if (!/^\d{6,13}$/.test(gid)) continue;
     csv[gid] = {
@@ -215,29 +239,55 @@ async function processCSV(content, filename) {
     };
   }
 
-  const pending = await sb('accounts?select=*&status=in.(pending,deposit_incomplete)');
-  const stats = { activated: 0, no_sub: 0, deposit_incomplete: 0, not_in_csv: 0, total: pending.length };
+  const csvCount = Object.keys(csv).length;
+  if (csvCount === 0) return { error: 'no_rows', message: 'لم يتم العثور على أي معرّف لاعب صالح في الملف' };
+
+  // كل الحسابات (لتطبيق قاعدة الغياب على المعلّقة والمفعّلة)
+  const allAccounts = await sb('accounts?select=*&status=in.(pending,deposit_incomplete,active)');
+  const stats = { activated: 0, no_sub: 0, deposit_incomplete: 0, not_in_csv: 0, missed: 0, deleted: 0, total: allAccounts.length };
   const now = new Date().toISOString();
 
-  for (const a of pending) {
+  for (const a of allAccounts) {
     const gid = a.game_id;
 
-    if (!csv[gid]) { // غير موجود في التقرير → حذف
+    if (!csv[gid]) {
+      // المعرّف غير موجود في هذا التقرير → زيادة عدّاد الغياب
+      const miss = (a.csv_miss_count || 0) + 1;
+      if (miss >= 2) {
+        // غاب عن تقريرين متتاليين → حذف
+        stats.deleted++;
+        await sbDelete('accounts', `game_id=eq.${gid}`).catch(() => {});
+        await pushNotify(gid, 'OussoCash', 'تم حذف معرّفك لعدم وجوده في التقارير · ID supprimé');
+      } else {
+        // غياب أول → تحذير فقط، لا حذف
+        stats.missed++;
+        await sbUpdate('accounts', `game_id=eq.${gid}`, { csv_miss_count: miss }).catch(() => {});
+      }
       stats.not_in_csv++;
-      await sbDelete('accounts', `game_id=eq.${gid}`).catch(() => {});
       continue;
     }
 
+    // موجود في التقرير → تصفير عدّاد الغياب
     const r = csv[gid];
-    const depUsd = parseFloat(r.dep.replace(',', '.')) || 0;
+    // تحليل الإيداع: يدعم 140.3 و 140,3 (يزيل فواصل الآلاف)
+    let depRaw = r.dep.replace(/\s/g, '');
+    if (depRaw.includes(',') && depRaw.includes('.')) depRaw = depRaw.replace(/,/g, ''); // 1,140.30
+    else depRaw = depRaw.replace(',', '.'); // 140,3 → 140.3
+    const depUsd = parseFloat(depRaw) || 0;
     const depUm = Math.round(depUsd * USD_TO_UM);
     const minUm = Math.round(MIN_DEPOSIT_USD * USD_TO_UM);
-    const extracted = { country: r.country, xbet_reg_date: r.reg, total_deposit: depUsd };
+    const extracted = { country: r.country, xbet_reg_date: r.reg, total_deposit: depUsd, csv_miss_count: 0 };
 
     if (!r.sub.includes('OUSSO')) { // ليس عبر وكالتنا → حظر + حذف
       stats.no_sub++;
       await sbInsert('banned_ids', { game_id: gid, reason: 'no_ousso_subid' }).catch(() => {});
       await sbDelete('accounts', `game_id=eq.${gid}`).catch(() => {});
+      continue;
+    }
+
+    // الحساب المفعّل مسبقاً: حدّث بياناته فقط وصفّر الغياب
+    if (a.status === 'active') {
+      await sbUpdate('accounts', `game_id=eq.${gid}`, extracted).catch(() => {});
       continue;
     }
 
@@ -251,7 +301,8 @@ async function processCSV(content, filename) {
       } else {
         const deadline = a.deadline_at || new Date(Date.now() + DEPOSIT_DEADLINE_DAYS * 864e5).toISOString();
         await sbUpdate('accounts', `game_id=eq.${gid}`, { ...extracted, status: 'deposit_incomplete', deposit_needed: needed, deadline_at: deadline });
-        await pushNotify(gid, 'OussoCash', `أكمل إيداعك: ينقصك ${needed} UM خلال 3 أيام · Complétez ${needed} UM`);
+        await pushNotify(gid, 'OussoCash',
+          `إيداعك غير مكتمل ⚠️ ينقصك ${needed} UM للوصول إلى الحد المطلوب (200 UM). أكمل الإيداع خلال ${DEPOSIT_DEADLINE_DAYS} أيام والعب به لتفعيل حسابك. · Dépôt incomplet : il manque ${needed} UM, complétez sous ${DEPOSIT_DEADLINE_DAYS} jours.`);
       }
       continue;
     }
@@ -264,8 +315,8 @@ async function processCSV(content, filename) {
     });
     stats.activated++;
     await pushNotify(gid, 'OussoCash', a.referrer_code
-      ? `تم تفعيل حسابك · Compte activé · +${WELCOME_BONUS} UM`
-      : 'تم تفعيل حسابك · Compte activé');
+      ? `تم تفعيل حسابك بنجاح ✅ مرحباً بك في OussoCash! حصلت على مكافأة ترحيب ${WELCOME_BONUS} UM. · Compte activé ! Bonus de ${WELCOME_BONUS} UM ajouté.`
+      : 'تم تفعيل حسابك بنجاح ✅ مرحباً بك في OussoCash! يمكنك الآن الدخول والاستفادة من جميع الخدمات. · Votre compte est activé !');
 
     if (a.referrer_code) { // عمولة الإحالة
       const ref = await sbGet('accounts', `ref_code=eq.${a.referrer_code}&select=game_id,balance_um`);
