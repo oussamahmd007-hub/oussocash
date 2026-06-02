@@ -20,6 +20,8 @@ async function bsd(path) {
   if (!r.ok) throw new Error('bsd_' + r.status);
   return r.json();
 }
+// طلب آمن لا يرمي (للجلب المتوازي للموارد الفرعية)
+async function bsdSafe(path) { try { return await bsd(path); } catch { return null; } }
 
 function ymd(d) { return d.toISOString().slice(0, 10); }
 
@@ -41,61 +43,175 @@ function simplifyMatch(m) {
     minute: m.current_minute || null,
     home: m.home_team || '',
     away: m.away_team || '',
+    home_id: m.home_team_id || null,
+    away_id: m.away_team_id || null,
     home_logo: teamImg(m.home_team_id),
     away_logo: teamImg(m.away_team_id),
     score_home: (m.home_score != null ? m.home_score : null),
     score_away: (m.away_score != null ? m.away_score : null),
+    score_home_ht: (m.home_score_ht != null ? m.home_score_ht : null),
+    score_away_ht: (m.away_score_ht != null ? m.away_score_ht : null),
+    live_ws: !!m.live_websocket,
   };
 }
 
 const isLive = (s) => /inprogress|penalties|1st|2nd|halftime|extra/i.test(s);
 const isFinished = (s) => /finished|ft/i.test(s);
 
-// ── تبسيط توقع من /predictions/ (نموذج CatBoost ML) ──
+// ── تبسيط توقع من /predictions/ (نموذج CatBoost ML) — مُثرى ──
 function simplifyPrediction(p) {
   const ev = p.event || {};
-  const mr = (p.markets && p.markets.match_result) || {};
+  const M = p.markets || {};
+  const mr = M.match_result || {};
+  const eg = M.expected_goals || {};
+  const ou = M.over_under || {};
+  const btts = M.btts || {};
+  const score = M.score || {};
   const rec = p.recommendations || {};
-  const score = (p.markets && p.markets.score) || {};
-  const ou = (p.markets && p.markets.over_under) || {};
-  const btts = (p.markets && p.markets.btts) || {};
-  // الفائز المتوقع
+  const mdl = p.model || {};
   const fav = mr.predicted || rec.favorite || null; // H | D | A
   const home = ev.home_team || '';
   const away = ev.away_team || '';
   let tipName = '';
   if (fav === 'H') tipName = home; else if (fav === 'A') tipName = away; else if (fav === 'D') tipName = 'تعادل';
-  // نسبة الثقة: أعلى احتمال في نتيجة المباراة
-  let confidence = Math.round(Math.max(mr.prob_home || 0, mr.prob_draw || 0, mr.prob_away || 0));
+  const pH = Math.round(mr.prob_home || 0), pD = Math.round(mr.prob_draw || 0), pA = Math.round(mr.prob_away || 0);
+  const confidence = Math.max(pH, pD, pA);
+  const dc = [
+    { key: '1X', prob: pH + pD },
+    { key: 'X2', prob: pD + pA },
+    { key: '12', prob: pH + pA },
+  ].sort((a, b) => b.prob - a.prob)[0];
   return {
     id: p.id,
     event_id: ev.id,
     home, away,
+    home_id: ev.home_team_id || null,
+    away_id: ev.away_team_id || null,
     home_logo: teamImg(ev.home_team_id),
     away_logo: teamImg(ev.away_team_id),
     league: ev.league_name || '',
+    league_id: ev.league_id || null,
     league_logo: leagueImg(ev.league_id),
     date: ev.event_date || '',
+    status: ev.status || 'notstarted',
     tip: tipName,
     fav,
     confidence,
-    prob_home: Math.round(mr.prob_home || 0),
-    prob_draw: Math.round(mr.prob_draw || 0),
-    prob_away: Math.round(mr.prob_away || 0),
+    prob_home: pH, prob_draw: pD, prob_away: pA,
     score: score.most_likely || '',
+    eg_home: eg.home != null ? Number(eg.home) : null,
+    eg_away: eg.away != null ? Number(eg.away) : null,
+    over15: ou.prob_over_15 != null ? Math.round(ou.prob_over_15) : null,
     over25: ou.prob_over_25 != null ? Math.round(ou.prob_over_25) : null,
+    over35: ou.prob_over_35 != null ? Math.round(ou.prob_over_35) : null,
     btts_yes: btts.prob_yes != null ? Math.round(btts.prob_yes) : null,
-    model_conf: p.model && p.model.confidence != null ? Math.round(p.model.confidence * 100) : confidence,
+    dc_key: dc.key, dc_prob: Math.round(dc.prob),
+    model_conf: mdl.confidence != null ? Math.round(mdl.confidence * 100) : confidence,
+    model_version: mdl.version || '',
     recommended: !!(rec.winner || rec.bet_favorite),
+    rec: {
+      winner: !!rec.winner, favorite: !!rec.bet_favorite,
+      over15: !!rec.over_15, over25: !!rec.over_25, over35: !!rec.over_35, btts: !!rec.btts,
+    },
   };
 }
 
-// قسيمة اليوم: أفضل التوقعات موثوقية
-function buildCoupon(preds) {
+// قسيمة اليوم: أفضل التوقعات موثوقية (أعلى ثقة، استبعاد التعادل)
+function buildCoupon(preds, n) {
   return preds
     .filter((p) => p.tip && p.tip !== 'تعادل' && p.confidence >= 55)
     .sort((a, b) => b.confidence - a.confidence)
-    .slice(0, 5);
+    .slice(0, n || 5);
+}
+
+// ── خرائط الإحصائيات للعرض المقارن ──
+const STAT_DEFS = [
+  ['ball_possession', 'st_possession', 'pct'],
+  ['total_shots', 'st_shots', 'num'],
+  ['shots_on_target', 'st_shots_on', 'num'],
+  ['big_chances', 'st_big_chances', 'num'],
+  ['corner_kicks', 'st_corners', 'num'],
+  ['corners', 'st_corners', 'num'],
+  ['fouls', 'st_fouls', 'num'],
+  ['offsides', 'st_offsides', 'num'],
+  ['yellow_cards', 'st_yellow', 'num'],
+  ['red_cards', 'st_red', 'num'],
+  ['saves', 'st_saves', 'num'],
+  ['pass_accuracy_pct', 'st_pass_acc', 'pct'],
+  ['crosses', 'st_crosses', 'ratio'],
+  ['dribbles', 'st_dribbles', 'ratio'],
+  ['long_balls', 'st_long_balls', 'ratio'],
+  ['aerial_duels', 'st_aerial', 'ratio'],
+  ['attack', 'st_attacks', 'num'],
+  ['dangerous_attack', 'st_dangerous', 'num'],
+];
+
+function readStat(side, key) {
+  if (!side) return null;
+  const v = side[key];
+  if (v == null) return null;
+  if (typeof v === 'object') {
+    const pct = v.pct != null ? v.pct : null;
+    const value = v.value != null ? v.value : null;
+    return { display: value != null ? `${value}/${v.total != null ? v.total : '?'}` : (pct != null ? pct + '%' : ''), num: value != null ? Number(value) : (pct || 0), pct };
+  }
+  return { display: String(v), num: Number(v) || 0 };
+}
+
+function buildStatsCompare(stats) {
+  if (!stats) return { rows: [], xg: null };
+  const h = stats.home || {}, a = stats.away || {};
+  const seen = {};
+  const rows = [];
+  for (const [key, label, type] of STAT_DEFS) {
+    if (seen[label]) continue;
+    const rh = readStat(h, key), ra = readStat(a, key);
+    if (!rh && !ra) continue;
+    seen[label] = true;
+    rows.push({
+      label, type,
+      home: rh ? rh.display : '0', away: ra ? ra.display : '0',
+      hn: rh ? rh.num : 0, an: ra ? ra.num : 0,
+    });
+  }
+  let xg = null;
+  const xh = h.xg && (h.xg.actual != null) ? Number(h.xg.actual) : null;
+  const xa = a.xg && (a.xg.actual != null) ? Number(a.xg.actual) : null;
+  if (xh != null || xa != null) xg = { home: xh != null ? xh : 0, away: xa != null ? xa : 0 };
+  return { rows, xg };
+}
+
+// ── تبسيط أحداث المباراة (timeline) ──
+function simplifyIncidents(arr) {
+  if (!Array.isArray(arr)) return [];
+  const keep = { goal: 1, card: 1, substitution: 1, varDecision: 1, penalty: 1 };
+  return arr.filter((i) => keep[i.type]).map((i) => ({
+    type: i.type,
+    minute: i.minute != null ? i.minute : null,
+    is_home: i.is_home != null ? !!i.is_home : null,
+    player: i.player || i.player_in || '',
+    player_out: i.player_out || '',
+    card_type: i.card_type || '',
+    detail: i.detail || i.decision || '',
+  }));
+}
+
+// ── تبسيط التشكيلة ──
+function simplifyLineupSide(side) {
+  if (!side) return null;
+  const mapP = (p) => ({
+    name: p.short_name || p.name || '',
+    position: p.position || '',
+    jersey: p.jersey_number != null ? p.jersey_number : null,
+    ai: p.ai_score != null ? Math.round(p.ai_score * 100) : null,
+  });
+  return {
+    team: side.team_name || '',
+    formation: side.formation || '',
+    confidence: side.confidence != null ? Math.round(side.confidence * 100) : null,
+    players: (side.players || []).map(mapP),
+    subs: (side.substitutes || []).map(mapP),
+  };
 }
 
 module.exports = async (req, res) => {
@@ -136,7 +252,7 @@ module.exports = async (req, res) => {
 
     // ── الترتيب (دوري محدد) ──
     if (view === 'standings') {
-      const leagueId = body.league_id || 17; // افتراضي: الدوري الإنجليزي
+      const leagueId = body.league_id || 17;
       const ck = 'standings_' + leagueId;
       let st = getCache(ck, 30 * 60e3);
       if (!st) {
@@ -148,13 +264,101 @@ module.exports = async (req, res) => {
             table: rows.map((r) => ({
               position: r.position, team: r.team_name, team_id: r.team_id,
               crest: teamImg(r.team_id), played: r.played, won: r.won, drawn: r.drawn,
-              lost: r.lost, gd: r.gd, points: r.pts, form: r.form || '',
+              lost: r.lost, gf: r.gf, ga: r.ga, gd: r.gd, points: r.pts, form: r.form || '',
             })),
           };
         } catch { st = { league: '', table: [] }; }
         setCache(ck, st);
       }
       return json(res, 200, { view, standings: st });
+    }
+
+    // ── تفاصيل مباراة كاملة (كل شيء) ──
+    if (view === 'match') {
+      const id = body.event_id;
+      if (!id) return json(res, 200, { view, error: 'no_id' });
+      const ck = 'match_' + id;
+      let data = getCache(ck, 45e3);
+      if (!data) {
+        const [detail, stats, incidents, odds, lineups, metadata, prediction] = await Promise.all([
+          bsdSafe(`/events/${id}/`),
+          bsdSafe(`/events/${id}/stats/`),
+          bsdSafe(`/events/${id}/incidents/`),
+          bsdSafe(`/events/${id}/odds/`),
+          bsdSafe(`/events/${id}/lineups/`),
+          bsdSafe(`/events/${id}/metadata/`),
+          bsdSafe(`/events/${id}/prediction/`),
+        ]);
+        const d = detail || {};
+        const [refRaw, venueRaw] = await Promise.all([
+          d.referee_id ? bsdSafe(`/referees/${d.referee_id}/`) : Promise.resolve(null),
+          d.venue_id ? bsdSafe(`/venues/${d.venue_id}/`) : Promise.resolve(null),
+        ]);
+
+        const sc = buildStatsCompare(stats && stats.stats);
+        const lu = lineups || {};
+        const pev = (prediction && prediction.event) ? prediction.event : {};
+        data = {
+          id,
+          core: {
+            league: d.league_name || pev.league_name || '',
+            league_id: d.league_id || null,
+            league_logo: leagueImg(d.league_id),
+            home: d.home_team || pev.home_team || '',
+            away: d.away_team || pev.away_team || '',
+            home_id: d.home_team_id || null,
+            away_id: d.away_team_id || null,
+            home_logo: teamImg(d.home_team_id),
+            away_logo: teamImg(d.away_team_id),
+            date: d.event_date || pev.event_date || '',
+            status: d.status || pev.status || 'notstarted',
+            period: d.period || null,
+            minute: d.current_minute != null ? d.current_minute : null,
+            score_home: d.home_score != null ? d.home_score : null,
+            score_away: d.away_score != null ? d.away_score : null,
+            score_home_ht: d.home_score_ht != null ? d.home_score_ht : null,
+            score_away_ht: d.away_score_ht != null ? d.away_score_ht : null,
+            round: d.round_number != null ? d.round_number : null,
+            derby: !!d.is_local_derby,
+            neutral: !!d.is_neutral_ground,
+            travel_km: d.travel_distance_km != null ? d.travel_distance_km : null,
+            attendance: d.attendance != null ? d.attendance : null,
+            weather: d.weather && d.weather.description ? {
+              desc: d.weather.description,
+              temp: d.weather.temperature_c != null ? d.weather.temperature_c : null,
+              wind: d.weather.wind_speed != null ? d.weather.wind_speed : null,
+            } : null,
+            live_ws: !!d.live_websocket,
+          },
+          referee: refRaw ? {
+            name: refRaw.name || '', country: refRaw.country || '',
+            avg_yellow: refRaw.avg_yellow_per_match != null ? refRaw.avg_yellow_per_match : null,
+            avg_red: refRaw.avg_red_per_match != null ? refRaw.avg_red_per_match : null,
+            matches: refRaw.matches != null ? refRaw.matches : null,
+          } : null,
+          venue: venueRaw ? {
+            name: venueRaw.name || '', city: venueRaw.city || '', country: venueRaw.country || '',
+            capacity: venueRaw.capacity != null ? venueRaw.capacity : null,
+            img: venueRaw.id ? `${IMG}/venue/${venueRaw.id}/` : '',
+          } : null,
+          prediction: (prediction && prediction.event) ? simplifyPrediction(prediction) : null,
+          stats: sc.rows,
+          xg: sc.xg,
+          incidents: simplifyIncidents(incidents && incidents.incidents),
+          odds: (odds && odds.odds) ? odds.odds : null,
+          lineups: {
+            status: lu.lineup_status || 'unavailable',
+            beta: !!lu.beta,
+            home: lu.lineups ? simplifyLineupSide(lu.lineups.home) : null,
+            away: lu.lineups ? simplifyLineupSide(lu.lineups.away) : null,
+            injuries: lu.unavailable_players || null,
+          },
+          facts: (metadata && Array.isArray(metadata.funfacts)) ? metadata.funfacts.map((f) => f.sentence).filter(Boolean) : [],
+          preview: (metadata && metadata.ai_preview && metadata.ai_preview.text) ? metadata.ai_preview.text : '',
+        };
+        setCache(ck, data);
+      }
+      return json(res, 200, { view, match: data });
     }
 
     // ── التوقعات + قسيمة اليوم ──
@@ -168,8 +372,10 @@ module.exports = async (req, res) => {
         } catch { preds = []; }
         setCache(ck, preds);
       }
-      const coupon = buildCoupon(preds);
-      return json(res, 200, { view, predictions: preds.slice(0, 15), coupon });
+      const coupon = buildCoupon(preds, 5);
+      const featured = buildCoupon(preds, 3);
+      const top_pick = featured[0] || null;
+      return json(res, 200, { view, predictions: preds.slice(0, 18), coupon, featured, top_pick });
     }
 
     // ── المباريات: اليوم / غداً / أمس / مباشر ──
@@ -189,7 +395,6 @@ module.exports = async (req, res) => {
           const ds = ymd(day);
           const d = await bsd(`/events/?date_from=${ds}&date_to=${ds}&limit=120`);
           all = (d.results || []).map(simplifyMatch);
-          // ترتيب: المباشر أولاً ثم الأقرب وقتاً
           all.sort((a, b) => String(a.date).localeCompare(String(b.date)));
         }
       } catch { all = []; }
