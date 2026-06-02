@@ -4,7 +4,7 @@
 const { json, readBody } = require('../lib/core');
 
 const TOKEN = process.env.BSD_API_TOKEN || process.env.FOOTBALL_API_KEY || '';
-const BASE = 'https://sports.bzzoiro.com/api';
+const BASE = 'https://sports.bzzoiro.com/api/v2';
 
 // كاش بالذاكرة لتقليل الطلبات
 const cache = {};
@@ -102,12 +102,27 @@ module.exports = async (req, res) => {
     const body = await readBody(req);
     const view = body.view || 'today';
 
+    // ── تشخيص: يعرض الاستجابة الخام من أي مسار (للتطوير فقط) ──
+    if (view === 'debug') {
+      const ep = body.endpoint || '/';
+      try {
+        const raw = await bsd(ep);
+        const sample = Array.isArray(raw) ? raw.slice(0, 2) : (raw && raw.results ? { count: raw.count, results: raw.results.slice(0, 2) } : raw);
+        return json(res, 200, { ok: true, endpoint: BASE + ep, sample });
+      } catch (e) {
+        return json(res, 200, { ok: false, endpoint: BASE + ep, error: String(e.message || e) });
+      }
+    }
+
     // ── الترتيب ──
     if (view === 'standings') {
       const ck = 'standings';
       let st = getCache(ck, 30 * 60e3);
       if (!st) {
-        try { st = arr(await bsd('/standings/')); } catch { st = []; }
+        st = [];
+        for (const ep of ['/standings/', '/leagues/standings/', '/tables/']) {
+          try { const d = await bsd(ep); st = arr(d); if (st.length) break; } catch {}
+        }
         setCache(ck, st);
       }
       return json(res, 200, { view, standings: st });
@@ -119,8 +134,9 @@ module.exports = async (req, res) => {
       let preds = getCache(ck, 30 * 60e3);
       if (!preds) {
         let raw = [];
-        try { raw = arr(await bsd('/odds/')); } catch {}
-        if (!raw.length) { try { raw = arr(await bsd('/predictions/')); } catch {} }
+        for (const ep of ['/odds/', '/predictions/', '/events/odds/']) {
+          try { const d = await bsd(ep); raw = arr(d); if (raw.length) break; } catch {}
+        }
         preds = raw.map(simplifyPrediction).filter((p) => p.home && p.away);
         setCache(ck, preds);
       }
@@ -133,10 +149,12 @@ module.exports = async (req, res) => {
     let matches = getCache(ck, view === 'live' ? 45e3 : 4 * 60e3);
     if (!matches) {
       let raw = [];
-      try {
-        if (view === 'live') raw = arr(await bsd('/live/'));
-        else raw = arr(await bsd('/matches/'));
-      } catch { raw = []; }
+      const eps = view === 'live'
+        ? ['/events/live/', '/live/', '/matches/live/']
+        : ['/matches/', '/events/', '/fixtures/'];
+      for (const ep of eps) {
+        try { const d = await bsd(ep); raw = arr(d); if (raw.length) break; } catch {}
+      }
       let all = raw.map(simplifyMatch);
 
       // تصفية حسب التبويب بالتاريخ
