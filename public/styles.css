@@ -836,3 +836,27 @@ html[dir="rtl"] .dev-card-arrow{transform:scaleX(-1)}
   box-shadow:var(--shadow-card);transition:.2s var(--ease)}
 .sport-news-btn:active{transform:scale(.99);border-color:var(--accent)}
 .sport-news-btn>span{flex:1;font-size:15px;font-weight:700}
+
+/* ─── Enhanced prediction cards (probability bars + extra) ─── */
+.pred-comp img{width:16px;height:16px;object-fit:contain;border-radius:3px;margin-inline-end:5px;vertical-align:middle}
+.pred-rec{color:#f59e0b;font-size:14px;margin-inline-start:auto}
+.pred-probs{display:flex;flex-direction:column;gap:6px;margin:12px 0;padding:12px 0;border-top:1px solid var(--line);border-bottom:1px solid var(--line)}
+.pp{display:flex;align-items:center;gap:8px;font-size:11.5px}
+.pp>span{width:78px;font-weight:600;color:var(--txt-2);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;text-align:start}
+.pp-bar{flex:1;height:7px;background:var(--line-2);border-radius:4px;overflow:hidden}
+.pp-bar i{display:block;height:100%;background:var(--accent);border-radius:4px}
+.pp-bar.draw i{background:var(--txt-3)}
+.pp>em{width:34px;text-align:end;font-style:normal;font-weight:800;color:var(--txt)}
+.pred-extra{display:flex;gap:8px;margin-top:11px;flex-wrap:wrap}
+.pred-chip{flex:1;min-width:70px;background:var(--accent-soft);border-radius:11px;padding:8px 6px;text-align:center}
+.pred-chip span{display:block;font-size:10px;color:var(--txt-3);font-weight:600}
+.pred-chip b{display:block;font-size:14px;font-weight:800;color:var(--accent);margin-top:2px}
+
+/* ─── Standings league selector ─── */
+.std-leagues{display:flex;gap:8px;overflow-x:auto;padding:4px 0 8px;-ms-overflow-style:none;scrollbar-width:none}
+.std-leagues::-webkit-scrollbar{display:none}
+.std-lg{flex-shrink:0;padding:8px 14px;border-radius:11px;background:var(--surface);border:1px solid var(--line);
+  font-size:12.5px;font-weight:700;color:var(--txt-2);white-space:nowrap}
+.std-lg.on{background:var(--accent);color:#fff;border-color:var(--accent)}
+.std-header{font-size:10.5px!important;color:var(--txt-3)!important;font-weight:700;border-bottom:1.5px solid var(--line)!important}
+.std-header .std-pos,.std-header .std-name{color:var(--txt-3)}
