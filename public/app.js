@@ -580,15 +580,12 @@ const App = {
   renderPayStrip(){
     const track=document.getElementById('payTrack');
     if(!track || track.dataset.done) return;
-    const pays=[
-      ['bankily','Bankily'],['masrvi','Masrvi'],['sedad','Sedad'],['click','Click BNM'],
-      ['moov','Moov Money'],['amanty','Amanty'],['bim','BIM Bank'],['bimbank','BimBank'],
-      ['sumar','Sumar'],['saddad','Saddad'],['sedad2','Sedad Pay'],['attijari','Attijari ePay'],
-      ['baridcash','BaridCash'],['gimtel','GIMTEL'],
-    ];
+    // أسماء ملفات الصور فقط (تُعرض اللوجوهات بدون أسماء)
+    const pays=['bankily','masrivi','sedad','click','moov_money','amanty','Bim_bank',
+      'Bamis_digital','Picy_pay','Rassidy','Gaza_pay','Attijari_apay','baridcash','gimtel'];
     // مضاعفة للحركة السلسة (loop)
-    const items=[...pays,...pays].map(p=>
-      `<div class="pay-chip"><img src="/pay/${p[0]}.jpg" onerror="this.style.display='none'" alt="${p[1]}"><span>${p[1]}</span></div>`
+    const items=[...pays,...pays].map(f=>
+      `<div class="pay-chip"><img src="/pay/${f}.jpg" onerror="this.parentElement.style.display='none'" alt=""></div>`
     ).join('');
     track.innerHTML=items;
     track.dataset.done='1';
@@ -728,70 +725,102 @@ const App = {
 
     if(v==='standings'){ this.renderStandings(r.standings); return; }
 
-    let html='';
-    // predictions block (today/tomorrow)
-    if(r.predictions && r.predictions.length){
-      html+=`<div class="section-h" style="padding:0;margin:4px 0 2px">${T.sport_predictions}</div>
-        <p class="sport-pred-sub">${T.sport_pred_sub}</p>`;
-      html+=r.predictions.map(p=>this.predCard(p)).join('');
-      html+=`<div class="sport-disclaimer">${T.sport_disclaimer}</div>`;
+    if(v==='predictions'){
+      let html='';
+      // قسيمة اليوم: أفضل التوقعات
+      if(r.coupon && r.coupon.length){
+        html+=`<div class="coupon-head"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 4h16v5a2 2 0 000 6v5H4v-5a2 2 0 000-6z"/><path d="M9 9l6 6M15 9l-6 6"/></svg><div><b>${T.sport_coupon}</b><span>${T.sport_coupon_sub}</span></div></div>`;
+        html+=`<div class="coupon-box">`;
+        html+=r.coupon.map(p=>this.couponRow(p)).join('');
+        html+=`</div>`;
+      }
+      // كل التوقعات
+      if(r.predictions && r.predictions.length){
+        html+=`<div class="section-h" style="padding:0;margin:20px 0 6px">${T.sport_predictions}</div>`;
+        html+=r.predictions.map(p=>this.predCard(p)).join('');
+        html+=`<div class="sport-disclaimer">${T.sport_disclaimer}</div>`;
+      }
+      if(!html) html=`<div class="sport-empty">${T.sport_no_matches}</div>`;
+      body.innerHTML=html;
+      return;
     }
-    // matches list
+
+    // المباريات
+    let html='';
     if(r.matches && r.matches.length){
-      html+=`<div class="section-h" style="padding:0;margin:18px 0 6px">${v==='live'?T.sport_live:v==='yesterday'?T.sport_yesterday:v==='tomorrow'?T.sport_tomorrow:T.sport_today}</div>`;
       html+=r.matches.map(m=>this.matchCard(m)).join('');
-    } else if(!r.predictions || !r.predictions.length){
+    } else {
       html+=`<div class="sport-empty">${T.sport_no_matches}</div>`;
     }
     body.innerHTML=html;
   },
+  couponRow(p){
+    const conf=p.confidence||0;
+    const cc=conf>=70?'high':conf>=60?'mid':'low';
+    return `<div class="coupon-row">
+      <div class="coupon-match">
+        <span class="coupon-teams">${this.esc(p.home)} <em>vs</em> ${this.esc(p.away)}</span>
+        ${p.league?`<span class="coupon-league">${this.esc(p.league)}</span>`:''}
+      </div>
+      <div class="coupon-tip"><span>${this.esc(p.tip)}</span></div>
+      <div class="coupon-conf ${cc}">${conf}%</div>
+    </div>`;
+  },
   predCard(p){
     const T=window.TEXTS[this.lang];
-    const pickTxt=p.pick==='draw'?T.sport_pick_draw:(p.pick===p.home?T.sport_pick_home:T.sport_pick_away);
-    const pickName=p.pick==='draw'?T.sport_pick_draw:p.pick;
     const conf=p.confidence||50;
-    const cc=conf>=65?'high':conf>=52?'mid':'low';
+    const cc=conf>=70?'high':conf>=60?'mid':'low';
     return `<div class="pred-card">
-      <div class="pred-comp">${this.esc(p.comp)}</div>
+      ${p.league?`<div class="pred-comp">${this.esc(p.league)}</div>`:''}
       <div class="pred-teams">
-        <div class="pred-team"><img src="${p.home_crest||''}" onerror="this.style.visibility='hidden'"><span>${this.esc(p.home)}</span>${p.home_pos?`<em>#${p.home_pos}</em>`:''}</div>
+        <div class="pred-team"><img src="${p.home_logo||''}" onerror="this.style.visibility='hidden'"><span>${this.esc(p.home)}</span></div>
         <div class="pred-vs">${T.sport_vs}</div>
-        <div class="pred-team"><img src="${p.away_crest||''}" onerror="this.style.visibility='hidden'"><span>${this.esc(p.away)}</span>${p.away_pos?`<em>#${p.away_pos}</em>`:''}</div>
+        <div class="pred-team"><img src="${p.away_logo||''}" onerror="this.style.visibility='hidden'"><span>${this.esc(p.away)}</span></div>
       </div>
       <div class="pred-foot">
-        <div class="pred-pick"><span>${T.sport_pick}</span><b>${this.esc(pickName)}</b></div>
+        <div class="pred-pick"><span>${T.sport_pick}</span><b>${this.esc(p.tip)}</b></div>
         <div class="pred-conf ${cc}"><div class="conf-bar"><i style="width:${conf}%"></i></div><span>${conf}%</span></div>
       </div>
     </div>`;
   },
   matchCard(m){
     const T=window.TEXTS[this.lang];
-    const live=['LIVE','IN_PLAY','PAUSED'].includes(m.status);
-    const done=m.status==='FINISHED';
-    const time=new Date(m.utcDate).toLocaleTimeString(this.lang==='fr'?'fr':'ar',{hour:'2-digit',minute:'2-digit'});
-    const score=(m.score_home!=null)?`${m.score_home} - ${m.score_away}`:time;
+    const live=['LIVE','IN_PLAY','PAUSED'].includes(m.status) || /LIVE|PLAY|1ST|2ND|HALF/.test(m.status);
+    const done=/FINISH|FT|ENDED|COMPLETE|FULL/.test(m.status);
+    let when='';
+    try{ when=m.date?new Date(m.date).toLocaleTimeString(this.lang==='fr'?'fr':'ar',{hour:'2-digit',minute:'2-digit'}):''; }catch{}
+    const score=(m.score_home!=null && m.score_home!=='')?`${m.score_home} - ${m.score_away}`:when;
     return `<div class="match-card">
-      <div class="match-comp"><img src="${m.comp_emblem||''}" onerror="this.style.display='none'"><span>${this.esc(m.comp)}</span>
-        ${live?`<span class="live-dot">${T.sport_live}</span>`:done?`<span class="done-tag">${T.sport_finished}</span>`:''}</div>
+      <div class="match-comp"><img src="${m.league_logo||''}" onerror="this.style.display='none'"><span>${this.esc(m.league)}</span>
+        ${live?`<span class="live-dot">${m.minute?m.minute+"'":T.sport_live}</span>`:done?`<span class="done-tag">${T.sport_finished}</span>`:''}</div>
       <div class="match-row">
-        <div class="match-team"><img src="${m.home_crest||''}" onerror="this.style.visibility='hidden'"><span>${this.esc(m.home)}</span></div>
+        <div class="match-team"><img src="${m.home_logo||''}" onerror="this.style.visibility='hidden'"><span>${this.esc(m.home)}</span></div>
         <div class="match-score ${live?'live':''}">${score}</div>
-        <div class="match-team away"><span>${this.esc(m.away)}</span><img src="${m.away_crest||''}" onerror="this.style.visibility='hidden'"></div>
+        <div class="match-team away"><span>${this.esc(m.away)}</span><img src="${m.away_logo||''}" onerror="this.style.visibility='hidden'"></div>
       </div>
     </div>`;
   },
   renderStandings(s){
     const body=document.getElementById('sportBody');
-    if(!s||!s.table){ body.innerHTML=`<div class="sport-empty">—</div>`; return; }
-    body.innerHTML=`<div class="section-h" style="padding:0;margin:4px 0 8px">${this.esc(s.name)}</div>
-      <div class="card" style="padding:6px 14px">
-      ${s.table.map(r=>`<div class="std-row">
-        <div class="std-pos ${r.position<=4?'top':r.position>=18?'rel':''}">${r.position}</div>
-        <img class="std-crest" src="${r.crest||''}" onerror="this.style.visibility='hidden'">
-        <div class="std-name">${this.esc(r.team)}</div>
-        <div class="std-pl">${r.played}</div>
-        <div class="std-pts">${r.points}</div>
-      </div>`).join('')}
+    const T=window.TEXTS[this.lang];
+    const list=Array.isArray(s)?s:[];
+    if(!list.length){ body.innerHTML=`<div class="sport-empty">${T.sport_no_matches}</div>`; return; }
+    // تجميع حسب الدوري إن وُجد
+    body.innerHTML=`<div class="card" style="padding:6px 14px">
+      ${list.slice(0,40).map((r,i)=>{
+        const pos=r.position||r.rank||(i+1);
+        const team=r.team&&r.team.name?r.team.name:(r.team_name||r.name||r.team||'');
+        const crest=(r.team&&r.team.logo)||r.logo||r.crest||'';
+        const played=r.played||r.games||(r.stats&&r.stats.played)||'-';
+        const points=r.points||r.pts||'-';
+        return `<div class="std-row">
+          <div class="std-pos ${pos<=4?'top':pos>=18?'rel':''}">${pos}</div>
+          <img class="std-crest" src="${crest}" onerror="this.style.visibility='hidden'">
+          <div class="std-name">${this.esc(team)}</div>
+          <div class="std-pl">${played}</div>
+          <div class="std-pts">${points}</div>
+        </div>`;
+      }).join('')}
       </div>`;
   },
 

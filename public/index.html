@@ -329,31 +329,19 @@
       <div class="sport-tabs" id="sportTabs">
         <button class="sport-tab on" data-sv="today" onclick="App.sportView('today')" id="t-sport_today"></button>
         <button class="sport-tab" data-sv="live" onclick="App.sportView('live')" id="t-sport_live"></button>
+        <button class="sport-tab" data-sv="predictions" onclick="App.sportView('predictions')" id="t-sport_predictions_tab"></button>
         <button class="sport-tab" data-sv="tomorrow" onclick="App.sportView('tomorrow')" id="t-sport_tomorrow"></button>
         <button class="sport-tab" data-sv="yesterday" onclick="App.sportView('yesterday')" id="t-sport_yesterday"></button>
         <button class="sport-tab" data-sv="standings" onclick="App.sportView('standings')" id="t-sport_standings"></button>
       </div>
       <div id="sportBody"></div>
 
-      <!-- مصادر خارجية احترافية -->
-      <div class="section-h" style="padding:0;margin:22px 0 10px" id="t-sport_resources"></div>
-      <div class="sport-links">
-        <a class="sport-link" href="https://www.forebet.com" target="_blank" rel="noopener">
-          <div class="sl-ic sl-pred"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 3v18h18"/><path d="M7 14l4-4 3 3 5-6"/></svg></div>
-          <div class="sl-txt"><b>Forebet</b><span id="t-sport_link_pred"></span></div>
-          <svg class="sl-arrow" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 18l6-6-6-6"/></svg>
-        </a>
-        <a class="sport-link" href="https://www.fotmob.com" target="_blank" rel="noopener">
-          <div class="sl-ic sl-news"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><path d="M2 12h20M12 2a15 15 0 010 20M12 2a15 15 0 000 20"/></svg></div>
-          <div class="sl-txt"><b>FotMob</b><span id="t-sport_link_fotmob"></span></div>
-          <svg class="sl-arrow" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 18l6-6-6-6"/></svg>
-        </a>
-        <a class="sport-link" href="https://koorahgoalnet.com" target="_blank" rel="noopener">
-          <div class="sl-ic sl-ar"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 19.5A2.5 2.5 0 016.5 17H20M4 19.5A2.5 2.5 0 006.5 22H20V2H6.5A2.5 2.5 0 004 4.5z"/></svg></div>
-          <div class="sl-txt"><b>KoorahGoalNet</b><span id="t-sport_link_koorah"></span></div>
-          <svg class="sl-arrow" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 18l6-6-6-6"/></svg>
-        </a>
-      </div>
+      <!-- زر أخبار الرياضة -->
+      <a class="sport-news-btn" href="https://koorahgoalnet.com" target="_blank" rel="noopener">
+        <div class="sl-ic sl-ar"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 19.5A2.5 2.5 0 016.5 17H20M4 19.5A2.5 2.5 0 006.5 22H20V2H6.5A2.5 2.5 0 004 4.5z"/></svg></div>
+        <span id="t-sport_news_btn"></span>
+        <svg class="sl-arrow" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 18l6-6-6-6"/></svg>
+      </a>
     </div>
 
     <!-- ── SUPPORT CHAT ── -->
