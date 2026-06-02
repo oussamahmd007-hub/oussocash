@@ -737,6 +737,9 @@ const App = {
 
     if(v==='predictions'){
       let html='';
+      // أفضل توقع منفرد (بطاقة بطل)
+      if(r.top_pick){ html+=this.heroPick(r.top_pick); }
+      // قسيمة اليوم — أفضل التوقعات موثوقية
       if(r.coupon && r.coupon.length){
         html+=`<div class="coupon-card">
           <div class="coupon-card-head">
@@ -747,7 +750,7 @@ const App = {
         </div>`;
       }
       if(r.predictions && r.predictions.length){
-        html+=`<div class="sport-sec-title">${T.sport_predictions}</div>`;
+        html+=`<div class="sport-sec-title">${T.sport_all_preds||T.sport_predictions} <small>${T.sport_tap_hint||''}</small></div>`;
         html+=`<div class="pred-grid">${r.predictions.map(p=>this.predCard(p)).join('')}</div>`;
         html+=`<div class="sport-disclaimer">${T.sport_disclaimer}</div>`;
       }
@@ -778,7 +781,7 @@ const App = {
   couponRow(p,rank){
     const conf=p.confidence||0;
     const cc=conf>=70?'high':conf>=60?'mid':'low';
-    return `<div class="coupon-row">
+    return `<div class="coupon-row" onclick="App.openMatch(${p.event_id||0})">
       <div class="coupon-rank">${rank||''}</div>
       <div class="coupon-mid">
         <div class="coupon-teams">${this.esc(p.home)} <em>—</em> ${this.esc(p.away)}</div>
@@ -787,23 +790,55 @@ const App = {
       <div class="coupon-conf ${cc}"><b>${conf}%</b><span>${this.lang==='fr'?'conf.':'ثقة'}</span></div>
     </div>`;
   },
+  // حلقة الثقة (دائرية SVG)
+  confRing(conf,cls){
+    const c=2*Math.PI*20, off=c*(1-(conf/100));
+    return `<div class="conf-ring ${cls}"><svg viewBox="0 0 48 48"><circle class="cr-bg" cx="24" cy="24" r="20"/><circle class="cr-fg" cx="24" cy="24" r="20" stroke-dasharray="${c.toFixed(1)}" stroke-dashoffset="${off.toFixed(1)}"/></svg><b>${conf}<small>%</small></b></div>`;
+  },
+  // بطاقة "أفضل توقع" البطل
+  heroPick(p){
+    const T=window.TEXTS[this.lang];
+    const conf=p.confidence||50;
+    const cc=conf>=70?'high':conf>=60?'mid':'low';
+    let chips='';
+    if(p.score) chips+=`<span class="hp-chip"><i>${T.sport_score}</i><b>${this.esc(p.score)}</b></span>`;
+    if(p.over25!=null) chips+=`<span class="hp-chip"><i>+2.5</i><b>${p.over25}%</b></span>`;
+    if(p.btts_yes!=null) chips+=`<span class="hp-chip"><i>BTTS</i><b>${p.btts_yes}%</b></span>`;
+    if(p.dc_key) chips+=`<span class="hp-chip"><i>${T.sport_dc}</i><b>${p.dc_key} · ${p.dc_prob}%</b></span>`;
+    return `<div class="hero-pick" onclick="App.openMatch(${p.event_id||0})">
+      <div class="hp-head">
+        <span class="hp-badge"><svg viewBox="0 0 24 24" fill="currentColor"><path d="M5 16L3 5l5.5 5L12 4l3.5 6L21 5l-2 11z"/></svg>${T.sport_top_pick}</span>
+        <span class="hp-league"><img src="${p.league_logo||''}" onerror="this.style.display='none'">${this.esc(p.league)}</span>
+      </div>
+      <div class="hp-body">
+        <div class="hp-teams">
+          <div class="hp-team"><img src="${p.home_logo||''}" onerror="this.style.visibility='hidden'"><span>${this.esc(p.home)}</span></div>
+          <div class="hp-mid">${this.confRing(conf,cc)}<small>${T.sport_confidence}</small></div>
+          <div class="hp-team"><img src="${p.away_logo||''}" onerror="this.style.visibility='hidden'"><span>${this.esc(p.away)}</span></div>
+        </div>
+        <div class="hp-pick"><span>${T.sport_pick}</span><b>${this.esc(p.tip)}</b></div>
+        ${chips?`<div class="hp-chips">${chips}</div>`:''}
+      </div>
+    </div>`;
+  },
   predCard(p){
     const T=window.TEXTS[this.lang];
     const conf=p.confidence||50;
     const cc=conf>=70?'high':conf>=60?'mid':'low';
-    // أشرطة احتمالات النتيجة H/D/A
     const probBar=`<div class="pred-probs">
-      <div class="pp"><span>${this.esc(p.home)}</span><div class="pp-bar"><i style="width:${p.prob_home}%"></i></div><em>${p.prob_home}%</em></div>
-      <div class="pp"><span>${T.sport_pick_draw}</span><div class="pp-bar draw"><i style="width:${p.prob_draw}%"></i></div><em>${p.prob_draw}%</em></div>
-      <div class="pp"><span>${this.esc(p.away)}</span><div class="pp-bar"><i style="width:${p.prob_away}%"></i></div><em>${p.prob_away}%</em></div>
+      <div class="pp"><span>1</span><div class="pp-bar"><i style="width:${p.prob_home}%"></i></div><em>${p.prob_home}%</em></div>
+      <div class="pp"><span>X</span><div class="pp-bar draw"><i style="width:${p.prob_draw}%"></i></div><em>${p.prob_draw}%</em></div>
+      <div class="pp"><span>2</span><div class="pp-bar"><i style="width:${p.prob_away}%"></i></div><em>${p.prob_away}%</em></div>
     </div>`;
-    // معلومات إضافية
     let extra='';
     if(p.score) extra+=`<div class="pred-chip"><span>${T.sport_score}</span><b>${this.esc(p.score)}</b></div>`;
     if(p.over25!=null) extra+=`<div class="pred-chip"><span>+2.5</span><b>${p.over25}%</b></div>`;
     if(p.btts_yes!=null) extra+=`<div class="pred-chip"><span>BTTS</span><b>${p.btts_yes}%</b></div>`;
-    return `<div class="pred-card">
-      <div class="pred-comp"><img src="${p.league_logo||''}" onerror="this.style.display='none'"><span>${this.esc(p.league)}</span>${p.recommended?`<span class="pred-rec">★</span>`:''}</div>
+    if(p.eg_home!=null&&p.eg_away!=null) extra+=`<div class="pred-chip"><span>xG</span><b>${p.eg_home.toFixed(1)}-${p.eg_away.toFixed(1)}</b></div>`;
+    let when='';
+    try{ when=p.date?new Date(p.date).toLocaleString(this.lang==='fr'?'fr':'ar-u-nu-latn',{day:'numeric',month:'short',hour:'2-digit',minute:'2-digit'}):''; }catch{}
+    return `<div class="pred-card" onclick="App.openMatch(${p.event_id||0})">
+      <div class="pred-comp"><img src="${p.league_logo||''}" onerror="this.style.display='none'"><span>${this.esc(p.league)}</span>${when?`<em class="pred-when">${when}</em>`:''}${p.recommended?`<span class="pred-rec">★</span>`:''}</div>
       <div class="pred-teams">
         <div class="pred-team"><img src="${p.home_logo||''}" onerror="this.style.visibility='hidden'"><span>${this.esc(p.home)}</span></div>
         <div class="pred-vs">${T.sport_vs}</div>
@@ -841,7 +876,217 @@ const App = {
       ${live?'<div class="mc-livebar"></div>':''}
     </div>`;
   },
-  openMatch(id){ /* تفاصيل المباراة لاحقاً */ },
+  // ═══ تفاصيل المباراة (نافذة كاملة بتبويبات) ═══
+  async openMatch(id){
+    if(!id) return;
+    const T=window.TEXTS[this.lang];
+    this.openSheet(`<div class="ms-load">${this.spinner()}</div>`);
+    const r=await this.api('sport',{ view:'match', event_id:id, lang:this.lang });
+    const sheet=document.getElementById('sheet');
+    if(!r || r.error || !r.match || !r.match.core){
+      sheet.innerHTML=`<div class="sheet-grip"></div><div class="sport-empty">${this.sportEmptyIcon()}<span>${T.sport_unavailable}</span></div>`;
+      return;
+    }
+    this._matchData=r.match;
+    // التبويب الافتراضي بحسب توفر البيانات
+    const tabs=this.matchTabs(r.match);
+    this._mTab=tabs.includes('overview')?'overview':(tabs[0]||'overview');
+    sheet.innerHTML=`<div class="sheet-grip"></div>`+this.matchSheet(r.match,tabs);
+    this.matchTab(this._mTab);
+  },
+  matchTabs(m){
+    const T=window.TEXTS[this.lang];
+    const t=[];
+    if(m.prediction||m.referee||m.venue||m.core) t.push('overview');
+    if(m.stats&&m.stats.length) t.push('stats');
+    if(m.incidents&&m.incidents.length) t.push('timeline');
+    if(m.lineups&&(m.lineups.home||m.lineups.away)) t.push('lineups');
+    if(m.odds) t.push('odds');
+    if((m.facts&&m.facts.length)||m.preview) t.push('facts');
+    return t;
+  },
+  matchTabLabel(k){
+    const T=window.TEXTS[this.lang];
+    return {overview:T.m_overview,stats:T.m_stats,timeline:T.m_timeline,lineups:T.m_lineups,odds:T.m_odds,facts:T.m_facts}[k]||k;
+  },
+  matchStatusLine(c){
+    const T=window.TEXTS[this.lang];
+    const live=/inprogress|penalties|1st|2nd|halftime|extra/i.test(c.status);
+    const done=/finished|ft/i.test(c.status);
+    if(live){ const lbl=c.minute?c.minute+"'":(c.period==='halftime'?(T.sport_ht||'HT'):T.sport_live); return `<span class="ms-live">● ${lbl}</span>`; }
+    if(done) return `<span class="ms-done">${T.sport_ft||'انتهت'}</span>`;
+    let when=''; try{ when=c.date?new Date(c.date).toLocaleString(this.lang==='fr'?'fr':'ar-u-nu-latn',{weekday:'short',day:'numeric',month:'short',hour:'2-digit',minute:'2-digit'}):''; }catch{}
+    return `<span class="ms-time">${when}</span>`;
+  },
+  matchSheet(m,tabs){
+    const c=m.core, T=window.TEXTS[this.lang];
+    const hasScore=(c.score_home!=null);
+    const live=/inprogress|penalties|1st|2nd|halftime|extra/i.test(c.status);
+    const center=hasScore
+      ? `<div class="ms-score ${live?'live':''}">${c.score_home}<em>-</em>${c.score_away}</div>${(c.score_home_ht!=null)?`<div class="ms-ht">(${c.score_home_ht}-${c.score_away_ht})</div>`:''}`
+      : `<div class="ms-vs">${T.sport_vs}</div>`;
+    return `<div class="ms">
+      <div class="ms-top">
+        <div class="ms-league"><img src="${c.league_logo||''}" onerror="this.style.display='none'"><span>${this.esc(c.league)}</span>${c.round!=null?`<em>· ${T.m_round} ${c.round}</em>`:''}</div>
+        <div class="ms-hero">
+          <div class="ms-team"><img src="${c.home_logo||''}" onerror="this.style.visibility='hidden'"><span>${this.esc(c.home)}</span></div>
+          <div class="ms-center">${center}<div class="ms-status">${this.matchStatusLine(c)}</div></div>
+          <div class="ms-team"><img src="${c.away_logo||''}" onerror="this.style.visibility='hidden'"><span>${this.esc(c.away)}</span></div>
+        </div>
+        ${c.derby||c.neutral||c.live_ws?`<div class="ms-tags">${c.derby?`<span class="ms-tag derby">${T.m_derby}</span>`:''}${c.neutral?`<span class="ms-tag">${T.m_neutral}</span>`:''}${c.live_ws&&!hasScore?`<span class="ms-tag ws">${T.m_live_ws}</span>`:''}</div>`:''}
+      </div>
+      <div class="ms-tabs">${tabs.map(t=>`<button class="ms-tab ${t===this._mTab?'on':''}" data-mt="${t}" onclick="App.matchTab('${t}')">${this.matchTabLabel(t)}</button>`).join('')}</div>
+      <div class="ms-body" id="msBody"></div>
+    </div>`;
+  },
+  matchTab(name){
+    this._mTab=name;
+    document.querySelectorAll('.ms-tab').forEach(t=>t.classList.toggle('on',t.dataset.mt===name));
+    const box=document.getElementById('msBody'); if(!box) return;
+    const m=this._matchData; if(!m){ box.innerHTML=''; return; }
+    let html='';
+    if(name==='overview') html=this.mOverview(m);
+    else if(name==='stats') html=this.mStats(m);
+    else if(name==='timeline') html=this.mTimeline(m);
+    else if(name==='lineups') html=this.mLineups(m);
+    else if(name==='odds') html=this.mOdds(m);
+    else if(name==='facts') html=this.mFacts(m);
+    box.innerHTML=html||`<div class="ms-empty">${window.TEXTS[this.lang].m_no_data}</div>`;
+  },
+  // ── نظرة عامة: التوقع + معلومات المباراة ──
+  mOverview(m){
+    const T=window.TEXTS[this.lang]; const c=m.core; const p=m.prediction;
+    let html='';
+    if(p){
+      const conf=p.confidence||50, cc=conf>=70?'high':conf>=60?'mid':'low';
+      html+=`<div class="mo-pred">
+        <div class="mo-pred-head"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 3v18h18"/><path d="M7 14l4-4 3 3 5-6"/></svg><b>${T.m_ai_pred}</b>${p.model_version?`<em>${this.esc(p.model_version)}</em>`:''}</div>
+        <div class="mo-prob">
+          <div class="pp"><span>1</span><div class="pp-bar"><i style="width:${p.prob_home}%"></i></div><em>${p.prob_home}%</em></div>
+          <div class="pp"><span>X</span><div class="pp-bar draw"><i style="width:${p.prob_draw}%"></i></div><em>${p.prob_draw}%</em></div>
+          <div class="pp"><span>2</span><div class="pp-bar"><i style="width:${p.prob_away}%"></i></div><em>${p.prob_away}%</em></div>
+        </div>
+        <div class="mo-pick"><div><span>${T.sport_pick}</span><b>${this.esc(p.tip)}</b></div><div class="mo-conf ${cc}">${conf}%</div></div>
+        <div class="mo-markets">
+          ${p.score?`<div class="mo-mk"><span>${T.sport_score}</span><b>${this.esc(p.score)}</b></div>`:''}
+          ${p.eg_home!=null?`<div class="mo-mk"><span>xG</span><b>${p.eg_home.toFixed(1)} - ${p.eg_away.toFixed(1)}</b></div>`:''}
+          ${p.over15!=null?`<div class="mo-mk"><span>+1.5</span><b>${p.over15}%</b></div>`:''}
+          ${p.over25!=null?`<div class="mo-mk"><span>+2.5</span><b>${p.over25}%</b></div>`:''}
+          ${p.over35!=null?`<div class="mo-mk"><span>+3.5</span><b>${p.over35}%</b></div>`:''}
+          ${p.btts_yes!=null?`<div class="mo-mk"><span>BTTS</span><b>${p.btts_yes}%</b></div>`:''}
+          ${p.dc_key?`<div class="mo-mk"><span>${T.sport_dc}</span><b>${p.dc_key} · ${p.dc_prob}%</b></div>`:''}
+        </div>
+      </div>`;
+    }
+    // شريحة معلومات
+    const info=[];
+    if(m.venue&&m.venue.name) info.push([T.m_venue,`${this.esc(m.venue.name)}${m.venue.city?' · '+this.esc(m.venue.city):''}`,'pin']);
+    if(m.venue&&m.venue.capacity) info.push([T.m_capacity,Number(m.venue.capacity).toLocaleString(),'seat']);
+    if(m.referee&&m.referee.name){ const ry=m.referee.avg_yellow!=null?` · ${m.referee.avg_yellow} ${T.m_yc_pm}`:''; info.push([T.m_referee,this.esc(m.referee.name)+ry,'whistle']); }
+    if(c.weather) info.push([T.m_weather,this.esc(c.weather.desc)+(c.weather.temp!=null?` · ${c.weather.temp}°`:''),'cloud']);
+    if(c.attendance) info.push([T.m_attendance,Number(c.attendance).toLocaleString(),'people']);
+    if(c.travel_km) info.push([T.m_travel,`${c.travel_km} ${T.m_km}`,'route']);
+    if(info.length){
+      html+=`<div class="mo-info">${info.map(x=>`<div class="mo-info-row"><span class="mo-ik">${x[0]}</span><span class="mo-iv">${x[1]}</span></div>`).join('')}</div>`;
+    }
+    if(m.facts&&m.facts.length){
+      html+=`<div class="mo-fact"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><path d="M12 16v-4M12 8h.01"/></svg><span>${this.esc(m.facts[0])}</span></div>`;
+    }
+    return html;
+  },
+  // ── الإحصائيات: أشرطة مقارنة ──
+  mStats(m){
+    const T=window.TEXTS[this.lang];
+    let html='';
+    if(m.xg){
+      const t=(m.xg.home+m.xg.away)||1, hp=Math.round(m.xg.home/t*100);
+      html+=`<div class="mst-row mst-xg">
+        <div class="mst-v">${m.xg.home.toFixed(2)}</div>
+        <div class="mst-mid"><span>xG</span><div class="mst-bar"><i class="h" style="width:${hp}%"></i><i class="a" style="width:${100-hp}%"></i></div></div>
+        <div class="mst-v">${m.xg.away.toFixed(2)}</div>
+      </div>`;
+    }
+    html+=m.stats.map(s=>{
+      const t=(s.hn+s.an)||1, hp=Math.round(s.hn/t*100);
+      return `<div class="mst-row">
+        <div class="mst-v">${this.esc(String(s.home))}</div>
+        <div class="mst-mid"><span>${T[s.label]||s.label}</span><div class="mst-bar"><i class="h" style="width:${hp}%"></i><i class="a" style="width:${100-hp}%"></i></div></div>
+        <div class="mst-v">${this.esc(String(s.away))}</div>
+      </div>`;
+    }).join('');
+    return html;
+  },
+  // ── الأحداث: الخط الزمني ──
+  mTimeline(m){
+    const T=window.TEXTS[this.lang];
+    const ico={
+      goal:`<svg viewBox="0 0 24 24" fill="currentColor"><circle cx="12" cy="12" r="9" fill="none" stroke="currentColor" stroke-width="2"/><path d="M12 7l1.5 3 3 .2-2.3 2 .8 3-3-1.8-3 1.8.8-3-2.3-2 3-.2z"/></svg>`,
+      substitution:`<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M16 3l4 4-4 4M20 7H9M8 21l-4-4 4-4M4 17h11"/></svg>`,
+      varDecision:`<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="6" width="18" height="12" rx="2"/><path d="M8 10l2 2 6-4"/></svg>`,
+    };
+    return `<div class="mtl">${m.incidents.map(i=>{
+      const side=i.is_home===false?'away':'home';
+      let icon, label;
+      if(i.type==='card'){ const red=/red/i.test(i.card_type); icon=`<span class="mtl-card ${red?'red':'yellow'}"></span>`; label=this.esc(i.player); }
+      else if(i.type==='substitution'){ icon=ico.substitution; label=`${this.esc(i.player)} <em>↔ ${this.esc(i.player_out)}</em>`; }
+      else if(i.type==='goal'){ icon=ico.goal; label=`<b>${this.esc(i.player)}</b>`; }
+      else { icon=ico.varDecision; label=this.esc(i.detail||'VAR'); }
+      return `<div class="mtl-row ${side}">
+        <div class="mtl-min">${i.minute!=null?i.minute+"'":''}</div>
+        <div class="mtl-dot ${i.type}">${icon}</div>
+        <div class="mtl-txt">${label}</div>
+      </div>`;
+    }).join('')}</div>`;
+  },
+  // ── التشكيلات ──
+  mLineups(m){
+    const T=window.TEXTS[this.lang]; const L=m.lineups;
+    let badge='';
+    if(L.status==='confirmed') badge=`<span class="lu-badge ok">${T.m_lineup_confirmed}</span>`;
+    else if(L.status==='predicted') badge=`<span class="lu-badge pred">${T.m_lineup_predicted}${L.beta?' · beta':''}</span>`;
+    else return `<div class="ms-empty">${T.m_lineup_unavailable}</div>`;
+    const col=(s)=>{
+      if(!s) return '';
+      return `<div class="lu-col">
+        <div class="lu-team">${this.esc(s.team)}</div>
+        ${s.formation?`<div class="lu-form">${this.esc(s.formation)}${s.confidence!=null?` · ${s.confidence}%`:''}</div>`:''}
+        <div class="lu-players">${s.players.map(pl=>`<div class="lu-p"><span class="lu-num">${pl.jersey!=null?pl.jersey:''}</span><span class="lu-name">${this.esc(pl.name)}</span>${pl.ai!=null?`<span class="lu-ai">${pl.ai}%</span>`:''}</div>`).join('')}</div>
+        ${s.subs&&s.subs.length?`<div class="lu-sub-h">${T.m_subs}</div><div class="lu-players sub">${s.subs.slice(0,9).map(pl=>`<div class="lu-p"><span class="lu-num">${pl.jersey!=null?pl.jersey:''}</span><span class="lu-name">${this.esc(pl.name)}</span></div>`).join('')}</div>`:''}
+      </div>`;
+    };
+    let inj='';
+    if(L.injuries&&(L.injuries.home&&L.injuries.home.length||L.injuries.away&&L.injuries.away.length)){
+      const row=(arr)=>(arr||[]).map(x=>`<div class="lu-inj"><span>${this.esc(x.name)}</span><em>${this.esc(x.reason||x.status||'')}</em></div>`).join('');
+      inj=`<div class="lu-injuries"><div class="lu-inj-h">${T.m_injuries}</div><div class="lu-inj-cols"><div>${row(L.injuries.home)}</div><div>${row(L.injuries.away)}</div></div></div>`;
+    }
+    return `<div class="lu-top">${badge}</div><div class="lu-cols">${col(L.home)}${col(L.away)}</div>${inj}`;
+  },
+  // ── الاحتمالات (Odds) ──
+  mOdds(m){
+    const T=window.TEXTS[this.lang]; const o=m.odds; if(!o) return '';
+    const fmt=(v)=>v!=null?Number(v).toFixed(2):'—';
+    const grp=(title,items)=>`<div class="od-grp"><div class="od-h">${title}</div><div class="od-row">${items.map(it=>`<div class="od-cell"><span>${it[0]}</span><b>${fmt(it[1])}</b></div>`).join('')}</div></div>`;
+    let html='';
+    html+=grp('1X2',[['1',o.home_win],['X',o.draw],['2',o.away_win]]);
+    html+=grp(T.m_over_under+' 2.5',[[T.m_over,o.over_25_goals],[T.m_under,o.under_25_goals]]);
+    html+=grp(T.m_over_under+' 1.5',[[T.m_over,o.over_15_goals],[T.m_under,o.under_15_goals]]);
+    html+=grp(T.m_over_under+' 3.5',[[T.m_over,o.over_35_goals],[T.m_under,o.under_35_goals]]);
+    html+=grp('BTTS',[[T.m_yes,o.btts_yes],[T.m_no,o.btts_no]]);
+    return `<div class="od-wrap">${html}</div><div class="od-note">${T.m_odds_note}</div>`;
+  },
+  // ── الحقائق + المعاينة ──
+  mFacts(m){
+    const T=window.TEXTS[this.lang];
+    let html='';
+    if(m.facts&&m.facts.length){
+      html+=`<div class="mf-list">${m.facts.map(f=>`<div class="mf-item"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 11l3 3L22 4"/><path d="M21 12v7a2 2 0 01-2 2H5a2 2 0 01-2-2V5a2 2 0 012-2h11"/></svg><span>${this.esc(f)}</span></div>`).join('')}</div>`;
+    }
+    if(m.preview){
+      const txt=String(m.preview).replace(/[#*_>`]/g,'').trim();
+      html+=`<div class="mf-preview"><div class="mf-pv-h">${T.m_preview}</div><p>${this.esc(txt)}</p></div>`;
+    }
+    return html;
+  },
   renderStandings(s){
     const body=document.getElementById('sportBody');
     const T=window.TEXTS[this.lang];

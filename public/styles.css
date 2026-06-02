@@ -871,3 +871,184 @@ html[dir="rtl"] .dev-card-arrow{transform:scaleX(-1)}
 .std-lg.on{background:var(--accent);color:#fff;border-color:var(--accent)}
 .std-header{font-size:10.5px!important;color:var(--txt-3)!important;font-weight:700;border-bottom:1.5px solid var(--line)!important}
 .std-header .std-pos,.std-header .std-name{color:var(--txt-3)}
+
+/* ═══════════════════════════════════════════════════════════════
+   توقعات — ترقيات: بطاقة البطل · حلقة الثقة · تفاصيل المباراة
+   ═══════════════════════════════════════════════════════════════ */
+
+/* ── بطاقة "أفضل توقع" (Hero) ── */
+.hero-pick{background:linear-gradient(135deg,var(--accent),var(--accent-2));border-radius:22px;
+  padding:1px;box-shadow:var(--shadow-blue);margin-bottom:16px;cursor:pointer;overflow:hidden;position:relative}
+.hero-pick:active{transform:scale(.992)}
+.hp-head{display:flex;align-items:center;justify-content:space-between;padding:13px 16px 11px;color:#fff}
+.hp-badge{display:inline-flex;align-items:center;gap:6px;font-size:12px;font-weight:800;letter-spacing:.2px}
+.hp-badge svg{width:17px;height:17px}
+.hp-league{display:inline-flex;align-items:center;gap:6px;font-size:11px;font-weight:700;opacity:.92;max-width:48%;overflow:hidden;white-space:nowrap;text-overflow:ellipsis}
+.hp-league img{width:15px;height:15px;object-fit:contain;border-radius:3px;background:rgba(255,255,255,.18)}
+.hp-body{background:var(--surface);border-radius:21px;margin:0 1px 1px;padding:16px 16px 15px}
+.hp-teams{display:flex;align-items:center;gap:8px;margin-bottom:14px}
+.hp-team{flex:1;display:flex;flex-direction:column;align-items:center;gap:7px;text-align:center;min-width:0}
+.hp-team img{width:46px;height:46px;object-fit:contain}
+.hp-team span{font-size:13px;font-weight:700;line-height:1.25;max-width:100%}
+.hp-mid{display:flex;flex-direction:column;align-items:center;gap:4px;flex-shrink:0}
+.hp-mid small{font-size:9.5px;color:var(--txt-3);font-weight:700}
+.hp-pick{display:flex;align-items:center;justify-content:space-between;background:var(--accent-soft);
+  border-radius:13px;padding:11px 14px}
+.hp-pick span{font-size:11px;color:var(--txt-3);font-weight:700}
+.hp-pick b{font-size:15px;font-weight:800;color:var(--accent)}
+.hp-chips{display:flex;gap:7px;flex-wrap:wrap;margin-top:11px}
+.hp-chip{flex:1;min-width:68px;background:var(--surface-2);border:1px solid var(--line);border-radius:11px;padding:7px 6px;text-align:center}
+.hp-chip i{display:block;font-size:9.5px;color:var(--txt-3);font-weight:700;font-style:normal}
+.hp-chip b{display:block;font-size:13px;font-weight:800;color:var(--txt);margin-top:2px}
+
+/* ── حلقة الثقة الدائرية ── */
+.conf-ring{position:relative;width:58px;height:58px}
+.conf-ring svg{width:58px;height:58px;transform:rotate(-90deg)}
+.conf-ring .cr-bg{fill:none;stroke:var(--line-2);stroke-width:4}
+.conf-ring .cr-fg{fill:none;stroke:var(--accent);stroke-width:4;stroke-linecap:round;transition:stroke-dashoffset .6s var(--ease)}
+.conf-ring.high .cr-fg{stroke:#16a34a}
+.conf-ring.mid .cr-fg{stroke:var(--accent)}
+.conf-ring.low .cr-fg{stroke:#d97706}
+.conf-ring b{position:absolute;inset:0;display:flex;align-items:center;justify-content:center;
+  font-size:16px;font-weight:800;color:var(--txt)}
+.conf-ring b small{font-size:9px;font-weight:700;color:var(--txt-3);margin-inline-start:1px}
+
+.pred-when{margin-inline-start:auto;font-size:10px;color:var(--txt-3);font-weight:600;font-style:normal}
+.pred-card .pred-rec{margin-inline-start:8px}
+.sport-sec-title small{display:block;font-size:11px;font-weight:600;color:var(--txt-3);margin-top:3px}
+
+/* ── نافذة تفاصيل المباراة ── */
+.ms-load{display:grid;place-items:center;padding:50px 0}
+.ms-top{text-align:center;padding:2px 2px 4px}
+.ms-league{display:flex;align-items:center;justify-content:center;gap:7px;font-size:12px;font-weight:700;color:var(--txt-2);margin-bottom:14px}
+.ms-league img{width:18px;height:18px;object-fit:contain}
+.ms-league em{font-style:normal;color:var(--txt-3);font-weight:600}
+.ms-hero{display:flex;align-items:flex-start;gap:8px}
+.ms-team{flex:1;display:flex;flex-direction:column;align-items:center;gap:8px;min-width:0}
+.ms-team img{width:54px;height:54px;object-fit:contain}
+.ms-team span{font-size:13.5px;font-weight:700;text-align:center;line-height:1.25}
+.ms-center{flex-shrink:0;display:flex;flex-direction:column;align-items:center;gap:5px;padding-top:8px;min-width:74px}
+.ms-score{font-size:30px;font-weight:800;letter-spacing:-1px;display:flex;align-items:center;gap:4px;color:var(--txt)}
+.ms-score em{font-style:normal;color:var(--txt-3);font-weight:600}
+.ms-score.live{color:var(--danger)}
+.ms-ht{font-size:11px;color:var(--txt-3);font-weight:600;margin-top:-4px}
+.ms-vs{font-size:13px;font-weight:800;color:var(--txt-3);background:var(--bg-2);padding:7px 12px;border-radius:10px}
+.ms-status{font-size:11px;font-weight:700}
+.ms-live{color:var(--danger);animation:livePulse 1.6s infinite}
+.ms-done{color:var(--txt-3)}
+.ms-time{color:var(--txt-2)}
+.ms-tags{display:flex;gap:6px;justify-content:center;flex-wrap:wrap;margin-top:12px}
+.ms-tag{font-size:10px;font-weight:700;color:var(--txt-2);background:var(--bg-2);border:1px solid var(--line);padding:4px 9px;border-radius:8px}
+.ms-tag.derby{color:#d97706;background:rgba(245,158,11,.12);border-color:transparent}
+.ms-tag.ws{color:var(--danger);background:rgba(226,59,78,.1);border-color:transparent}
+
+.ms-tabs{display:flex;gap:6px;overflow-x:auto;scrollbar-width:none;margin:18px -2px 4px;padding-bottom:2px}
+.ms-tabs::-webkit-scrollbar{display:none}
+.ms-tab{flex-shrink:0;padding:8px 14px;border-radius:100px;background:var(--surface);border:1px solid var(--line);
+  font-size:12.5px;font-weight:700;color:var(--txt-2);white-space:nowrap;transition:all .15s}
+.ms-tab.on{background:var(--accent);color:#fff;border-color:var(--accent)}
+.ms-body{padding:16px 0 4px;min-height:80px}
+.ms-empty{text-align:center;color:var(--txt-3);font-size:13px;padding:36px 10px}
+
+/* نظرة عامة */
+.mo-pred{background:var(--surface);border:1px solid var(--line);border-radius:16px;padding:15px;margin-bottom:14px;box-shadow:var(--shadow-card)}
+.mo-pred-head{display:flex;align-items:center;gap:8px;font-size:13px;font-weight:800;margin-bottom:13px}
+.mo-pred-head svg{width:18px;height:18px;color:var(--accent)}
+.mo-pred-head em{margin-inline-start:auto;font-style:normal;font-size:10px;font-weight:700;color:var(--txt-3);background:var(--accent-soft);padding:3px 8px;border-radius:7px}
+.mo-prob{display:flex;flex-direction:column;gap:7px;padding-bottom:13px;border-bottom:1px solid var(--line)}
+.mo-prob .pp>span{width:20px;text-align:center;font-weight:800;color:var(--txt-2)}
+.mo-pick{display:flex;align-items:center;justify-content:space-between;padding:13px 0 4px}
+.mo-pick span{font-size:11px;color:var(--txt-3);font-weight:700;display:block}
+.mo-pick b{font-size:16px;font-weight:800;color:var(--txt)}
+.mo-conf{font-size:17px;font-weight:800;padding:7px 13px;border-radius:11px}
+.mo-conf.high{background:rgba(34,197,94,.14);color:#16a34a}
+.mo-conf.mid{background:var(--accent-soft);color:var(--accent)}
+.mo-conf.low{background:rgba(245,158,11,.14);color:#d97706}
+.mo-markets{display:flex;gap:8px;flex-wrap:wrap;margin-top:12px}
+.mo-mk{flex:1;min-width:64px;background:var(--surface-2);border:1px solid var(--line);border-radius:11px;padding:8px 6px;text-align:center}
+.mo-mk span{display:block;font-size:10px;color:var(--txt-3);font-weight:700}
+.mo-mk b{display:block;font-size:13.5px;font-weight:800;color:var(--accent);margin-top:3px}
+.mo-info{background:var(--surface);border:1px solid var(--line);border-radius:16px;overflow:hidden;box-shadow:var(--shadow-card)}
+.mo-info-row{display:flex;align-items:center;justify-content:space-between;gap:10px;padding:12px 15px;border-bottom:1px solid var(--line);font-size:13px}
+.mo-info-row:last-child{border-bottom:none}
+.mo-ik{color:var(--txt-3);font-weight:700;flex-shrink:0}
+.mo-iv{color:var(--txt);font-weight:600;text-align:end}
+.mo-fact{display:flex;align-items:flex-start;gap:10px;background:var(--accent-soft);border-radius:14px;padding:13px 15px;margin-top:12px;font-size:13px;line-height:1.5;color:var(--txt)}
+.mo-fact svg{width:18px;height:18px;color:var(--accent);flex-shrink:0;margin-top:1px}
+
+/* إحصائيات — أشرطة مقارنة */
+.mst-row{display:flex;align-items:center;gap:10px;padding:8px 0}
+.mst-v{width:46px;flex-shrink:0;font-size:14px;font-weight:800;color:var(--txt);text-align:center}
+.mst-mid{flex:1;min-width:0}
+.mst-mid>span{display:block;text-align:center;font-size:11px;font-weight:700;color:var(--txt-3);margin-bottom:5px}
+.mst-bar{display:flex;height:7px;border-radius:5px;overflow:hidden;background:var(--line-2);gap:2px}
+.mst-bar i{display:block;height:100%}
+.mst-bar i.h{background:var(--accent);border-radius:5px 0 0 5px}
+.mst-bar i.a{background:var(--txt-3);opacity:.55;border-radius:0 5px 5px 0}
+.mst-xg .mst-v{color:var(--accent)}
+.mst-xg .mst-mid>span{color:var(--accent);font-weight:800}
+
+/* الخط الزمني */
+.mtl{position:relative;padding:4px 0}
+.mtl::before{content:'';position:absolute;top:0;bottom:0;inset-inline-start:50%;width:2px;background:var(--line);transform:translateX(-50%)}
+.mtl-row{display:flex;align-items:center;gap:10px;padding:9px 0;position:relative}
+.mtl-row.home{flex-direction:row}
+.mtl-row.away{flex-direction:row-reverse}
+.mtl-row .mtl-txt{flex:1;font-size:13px;color:var(--txt);font-weight:600}
+.mtl-row.away .mtl-txt{text-align:end}
+.mtl-row.home .mtl-txt{text-align:start}
+.mtl-txt b{font-weight:800}
+.mtl-txt em{font-style:normal;color:var(--txt-3);font-size:11.5px;font-weight:600}
+.mtl-min{width:30px;flex-shrink:0;font-size:11px;font-weight:800;color:var(--txt-3);text-align:center}
+.mtl-row.away .mtl-min{order:3}
+.mtl-dot{width:30px;height:30px;flex-shrink:0;border-radius:50%;background:var(--surface);border:2px solid var(--line);
+  display:grid;place-items:center;z-index:1}
+.mtl-dot svg{width:16px;height:16px;color:var(--txt-2)}
+.mtl-dot.goal{border-color:var(--accent);background:var(--accent-soft)}
+.mtl-dot.goal svg{color:var(--accent)}
+.mtl-dot.substitution svg{color:#16a34a}
+.mtl-card{width:11px;height:15px;border-radius:2px;display:block}
+.mtl-card.yellow{background:#f5b50a}
+.mtl-card.red{background:var(--danger)}
+
+/* التشكيلات */
+.lu-top{text-align:center;margin-bottom:14px}
+.lu-badge{display:inline-block;font-size:11px;font-weight:800;padding:6px 14px;border-radius:100px}
+.lu-badge.ok{background:rgba(34,197,94,.14);color:#16a34a}
+.lu-badge.pred{background:var(--accent-soft);color:var(--accent)}
+.lu-cols{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+.lu-col{background:var(--surface);border:1px solid var(--line);border-radius:14px;padding:12px 10px;box-shadow:var(--shadow-card)}
+.lu-team{font-size:12.5px;font-weight:800;text-align:center;margin-bottom:3px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.lu-form{font-size:11px;font-weight:700;color:var(--accent);text-align:center;margin-bottom:10px}
+.lu-players{display:flex;flex-direction:column;gap:2px}
+.lu-players.sub{opacity:.72}
+.lu-p{display:flex;align-items:center;gap:8px;padding:5px 4px;border-radius:7px;font-size:12px}
+.lu-num{width:20px;flex-shrink:0;text-align:center;font-weight:800;color:var(--txt-3);font-size:11px}
+.lu-name{flex:1;font-weight:600;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.lu-ai{font-size:10px;font-weight:800;color:var(--accent);background:var(--accent-soft);padding:2px 6px;border-radius:6px;flex-shrink:0}
+.lu-sub-h{font-size:10.5px;font-weight:800;color:var(--txt-3);text-align:center;margin:11px 0 6px;padding-top:9px;border-top:1px solid var(--line)}
+.lu-injuries{margin-top:14px;background:var(--surface);border:1px solid var(--line);border-radius:14px;padding:12px}
+.lu-inj-h{font-size:12px;font-weight:800;color:var(--danger);margin-bottom:9px}
+.lu-inj-cols{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+.lu-inj{display:flex;flex-direction:column;gap:1px;padding:5px 0;font-size:12px}
+.lu-inj span{font-weight:700}
+.lu-inj em{font-style:normal;font-size:10.5px;color:var(--txt-3)}
+
+/* الاحتمالات */
+.od-wrap{display:flex;flex-direction:column;gap:11px}
+.od-grp{background:var(--surface);border:1px solid var(--line);border-radius:14px;padding:13px 14px;box-shadow:var(--shadow-card)}
+.od-h{font-size:11.5px;font-weight:800;color:var(--txt-3);margin-bottom:10px}
+.od-row{display:flex;gap:8px}
+.od-cell{flex:1;background:var(--surface-2);border:1px solid var(--line);border-radius:11px;padding:9px 6px;text-align:center}
+.od-cell span{display:block;font-size:11px;color:var(--txt-3);font-weight:700}
+.od-cell b{display:block;font-size:16px;font-weight:800;color:var(--accent);margin-top:3px}
+.od-note{font-size:11px;color:var(--txt-3);text-align:center;margin-top:12px;opacity:.85;line-height:1.5}
+
+/* حقائق + معاينة */
+.mf-list{display:flex;flex-direction:column;gap:10px}
+.mf-item{display:flex;align-items:flex-start;gap:10px;background:var(--surface);border:1px solid var(--line);
+  border-radius:13px;padding:12px 14px;font-size:13px;line-height:1.5;color:var(--txt);box-shadow:var(--shadow-card)}
+.mf-item svg{width:17px;height:17px;color:var(--accent);flex-shrink:0;margin-top:2px}
+.mf-preview{margin-top:14px;background:var(--accent-soft);border-radius:14px;padding:14px 15px}
+.mf-pv-h{font-size:12px;font-weight:800;color:var(--accent);margin-bottom:8px}
+.mf-preview p{font-size:13px;line-height:1.65;color:var(--txt-2)}
