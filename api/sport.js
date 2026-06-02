@@ -1,150 +1,160 @@
-// api/sport.js — قسم الرياضة (football-data.org)
-// يعرض: مباريات أمس/اليوم/غداً/مباشر + ترتيب + 5 توقعات مبنية على بيانات حقيقية
-// المفتاح في بيئة Vercel: FOOTBALL_API_KEY (لا يظهر أبداً في GitHub)
+// api/sport.js — قسم الرياضة الاحترافي عبر BSD API (sports.bzzoiro.com)
+// مجاني بالكامل لكرة القدم · المفتاح في Vercel: BSD_API_TOKEN
+// يعرض: مباريات (مباشر/اليوم/غداً/أمس) · دوريات · ترتيب · توقعات · قسيمة اليوم
 const { json, readBody } = require('../lib/core');
 
-const FB_KEY = process.env.FOOTBALL_API_KEY || '';
-const FB_BASE = 'https://api.football-data.org/v4';
-// الدوريات الكبرى المتاحة في الخطة المجانية
-const COMPETITIONS = 'PL,PD,SA,BL1,FL1,CL';
+const TOKEN = process.env.BSD_API_TOKEN || process.env.FOOTBALL_API_KEY || '';
+const BASE = 'https://sports.bzzoiro.com/api';
 
-// كاش بسيط بالذاكرة (الخطة المجانية محدودة: 10 طلبات/دقيقة)
+// كاش بالذاكرة لتقليل الطلبات
 const cache = {};
-function getCache(k, ttlMs) { const e = cache[k]; return e && Date.now() - e.t < ttlMs ? e.v : null; }
-function setCache(k, v) { cache[k] = { v, t: Date.now() }; }
+function getCache(k, ttl) { const e = cache[k]; return e && Date.now() - e.t < ttl ? e.v : null; }
+function setCache(k, v) { cache[k] = { v, t: Date.now() }; return v; }
 
-async function fb(path) {
-  const r = await fetch(FB_BASE + path, {
-    headers: { 'X-Auth-Token': FB_KEY },
+async function bsd(path) {
+  const url = BASE + path;
+  const r = await fetch(url, {
+    headers: { Authorization: 'Token ' + TOKEN, Accept: 'application/json' },
     signal: AbortSignal.timeout(9000),
   });
-  if (!r.ok) throw new Error('fb_' + r.status);
+  if (!r.ok) throw new Error('bsd_' + r.status);
   return r.json();
 }
 
-function ymd(d) { return d.toISOString().slice(0, 10); }
+// استخراج مصفوفة من أي شكل استجابة (results / data / array مباشرة)
+function arr(d) {
+  if (Array.isArray(d)) return d;
+  if (d && Array.isArray(d.results)) return d.results;
+  if (d && Array.isArray(d.data)) return d.data;
+  if (d && Array.isArray(d.matches)) return d.matches;
+  if (d && Array.isArray(d.fixtures)) return d.fixtures;
+  return [];
+}
+function pick(o, keys, def = '') {
+  for (const k of keys) {
+    const parts = k.split('.'); let v = o;
+    for (const p of parts) { v = v && typeof v === 'object' ? v[p] : undefined; }
+    if (v !== undefined && v !== null && v !== '') return v;
+  }
+  return def;
+}
+
+// تبسيط مباراة لأي شكل بيانات قادم من BSD
 function simplifyMatch(m) {
+  const home = pick(m, ['home_team.name', 'home.name', 'homeTeam.name', 'home_name', 'home', 'teams.home.name'], '');
+  const away = pick(m, ['away_team.name', 'away.name', 'awayTeam.name', 'away_name', 'away', 'teams.away.name'], '');
   return {
-    id: m.id,
-    comp: m.competition ? m.competition.name : '',
-    comp_emblem: m.competition ? m.competition.emblem : '',
-    utcDate: m.utcDate,
-    status: m.status, // SCHEDULED | LIVE | IN_PLAY | PAUSED | FINISHED
-    home: m.homeTeam ? m.homeTeam.shortName || m.homeTeam.name : '',
-    home_crest: m.homeTeam ? m.homeTeam.crest : '',
-    away: m.awayTeam ? m.awayTeam.shortName || m.awayTeam.name : '',
-    away_crest: m.awayTeam ? m.awayTeam.crest : '',
-    score_home: m.score && m.score.fullTime ? m.score.fullTime.home : null,
-    score_away: m.score && m.score.fullTime ? m.score.fullTime.away : null,
+    id: pick(m, ['id', 'match_id', 'fixture_id'], ''),
+    league: pick(m, ['league.name', 'competition.name', 'league_name', 'tournament.name'], ''),
+    league_logo: pick(m, ['league.logo', 'competition.logo', 'league.image', 'tournament.logo'], ''),
+    date: pick(m, ['date', 'start_time', 'datetime', 'utcDate', 'kickoff', 'scheduled'], ''),
+    status: String(pick(m, ['status', 'state', 'status.type', 'status.long'], 'SCHEDULED')).toUpperCase(),
+    home,
+    away,
+    home_logo: pick(m, ['home_team.logo', 'home.logo', 'homeTeam.crest', 'home_logo', 'teams.home.logo'], ''),
+    away_logo: pick(m, ['away_team.logo', 'away.logo', 'awayTeam.crest', 'away_logo', 'teams.away.logo'], ''),
+    score_home: pick(m, ['home_score', 'score.home', 'goals.home', 'home_goals', 'scores.home'], null),
+    score_away: pick(m, ['away_score', 'score.away', 'goals.away', 'away_goals', 'scores.away'], null),
+    minute: pick(m, ['minute', 'time.elapsed', 'clock', 'live_minute'], null),
   };
 }
 
-// ── توقع مبني على بيانات حقيقية: ترتيب الفريقين + فارق النقاط + الأرضية ──
-//    شفّاف: نعرض نسبة ثقة محسوبة من فجوة الترتيب، لا وعود كاذبة
-async function buildPredictions(matchList, standingsCache) {
-  const upcoming = (matchList || []).slice(0, 5);
-  const preds = [];
-  for (const m of upcoming) {
-    const pos = standingsCache[m.comp] || {}; // standingsCache keyed by competition name
-    const hp = pos[m.home], ap = pos[m.away];
-    let pick, confidence, reason;
-    if (hp && ap) {
-      const gap = ap.position - hp.position; // موجب = المضيف أعلى
-      const homeAdv = 3; // ميزة الأرض
-      const eff = gap + homeAdv;
-      if (eff > 6) { pick = m.home; confidence = Math.min(78, 52 + eff); reason = 'home_higher'; }
-      else if (eff < -4) { pick = m.away; confidence = Math.min(74, 50 + Math.abs(eff)); reason = 'away_higher'; }
-      else { pick = 'draw'; confidence = 46 + Math.floor(Math.random() * 6); reason = 'close'; }
-    } else {
-      pick = m.home; confidence = 50; reason = 'home_adv';
-    }
-    preds.push({
-      ...m,
-      pick, confidence,
-      home_pos: hp ? hp.position : null,
-      away_pos: ap ? ap.position : null,
-      reason,
-    });
+function isLive(s) { return /LIVE|IN_PLAY|PLAYING|1ST|2ND|HALF|ET|PEN/.test(s); }
+function isFinished(s) { return /FINISH|FT|ENDED|COMPLETE|AET|FULL/.test(s); }
+
+// قسيمة اليوم: أفضل التوقعات موثوقية (الفريق + التوقع + نسبة الثقة)
+function buildCoupon(predictions) {
+  return (predictions || [])
+    .filter((p) => p.confidence >= 60)
+    .sort((a, b) => b.confidence - a.confidence)
+    .slice(0, 5);
+}
+
+// تبسيط توقع
+function simplifyPrediction(p) {
+  const home = pick(p, ['home_team.name', 'home.name', 'match.home_team.name', 'home'], '');
+  const away = pick(p, ['away_team.name', 'away.name', 'match.away_team.name', 'away'], '');
+  // الفائز المتوقع + نسبة الثقة من الاحتمالات
+  const pHome = parseFloat(pick(p, ['home_win', 'probabilities.home', 'prediction.home', 'percent.home'], 0)) || 0;
+  const pDraw = parseFloat(pick(p, ['draw', 'probabilities.draw', 'prediction.draw', 'percent.draw'], 0)) || 0;
+  const pAway = parseFloat(pick(p, ['away_win', 'probabilities.away', 'prediction.away', 'percent.away'], 0)) || 0;
+  let tip = pick(p, ['advice', 'tip', 'prediction.advice', 'recommendation'], '');
+  let confidence = Math.round(Math.max(pHome, pDraw, pAway));
+  if (confidence > 0 && confidence <= 1) confidence = Math.round(confidence * 100); // لو كان 0-1
+  if (!tip) {
+    if (pHome >= pDraw && pHome >= pAway) tip = home;
+    else if (pAway >= pHome && pAway >= pDraw) tip = away;
+    else tip = 'تعادل';
   }
-  return preds;
+  return {
+    home, away, tip, confidence,
+    home_logo: pick(p, ['home_team.logo', 'home.logo'], ''),
+    away_logo: pick(p, ['away_team.logo', 'away.logo'], ''),
+    league: pick(p, ['league.name', 'competition.name'], ''),
+    date: pick(p, ['date', 'match.date', 'start_time'], ''),
+  };
 }
 
 module.exports = async (req, res) => {
   if (req.method !== 'POST') return json(res, 405, { error: 'method' });
-  if (!FB_KEY) return json(res, 200, { error: 'no_key', message: 'مفتاح كرة القدم غير مُعد' });
   try {
+    if (!TOKEN) return json(res, 200, { error: 'no_key', view: 'today', matches: [], predictions: [], coupon: [] });
     const body = await readBody(req);
     const view = body.view || 'today';
 
-    // الترتيب (لكل دوري) — يُستخدم للتوقعات، كاش 6 ساعات
-    async function standings() {
-      const ck = 'standings';
-      let s = getCache(ck, 6 * 36e5);
-      if (s) return s;
-      s = {};
-      for (const comp of ['PL', 'PD', 'SA', 'BL1', 'FL1']) {
-        try {
-          const d = await fb(`/competitions/${comp}/standings`);
-          const table = d.standings && d.standings[0] ? d.standings[0].table : [];
-          const map = {};
-          table.forEach((row) => {
-            const nm = row.team.shortName || row.team.name;
-            map[nm] = { position: row.position, points: row.points, won: row.won, lost: row.lost };
-          });
-          s[d.competition.name] = map;
-        } catch { /* تجاوز دوري غير متاح */ }
-      }
-      setCache(ck, s);
-      return s;
-    }
-
+    // ── الترتيب ──
     if (view === 'standings') {
-      const comp = body.competition || 'PL';
-      const ck = 'table_' + comp;
-      let t = getCache(ck, 3 * 36e5);
-      if (!t) { const d = await fb(`/competitions/${comp}/standings`); t = { name: d.competition.name, table: (d.standings[0] ? d.standings[0].table : []).map((r) => ({ position: r.position, team: r.team.shortName || r.team.name, crest: r.team.crest, points: r.points, played: r.playedGames, won: r.won, draw: r.draw, lost: r.lost })) }; setCache(ck, t); }
-      return json(res, 200, { standings: t });
-    }
-
-    // المباريات حسب التاريخ
-    let dateFrom, dateTo, statusFilter = null;
-    const now = new Date();
-    if (view === 'live') { statusFilter = 'LIVE'; }
-    else if (view === 'yesterday') { const y = new Date(now - 864e5); dateFrom = dateTo = ymd(y); }
-    else if (view === 'tomorrow') { const t = new Date(+now + 864e5); dateFrom = dateTo = ymd(t); }
-    else { dateFrom = dateTo = ymd(now); } // today
-
-    const ck = `matches_${view}`;
-    let matches = getCache(ck, view === 'live' ? 60e3 : 5 * 60e3);
-    if (!matches) {
-      let path = `/matches?competitions=${COMPETITIONS}`;
-      if (statusFilter) path += `&status=${statusFilter}`;
-      else path += `&dateFrom=${dateFrom}&dateTo=${dateTo}`;
-      const d = await fb(path);
-      matches = (d.matches || []).map(simplifyMatch);
-      setCache(ck, matches);
-    }
-
-    let predictions = null;
-    if (view === 'today' || view === 'tomorrow' || body.with_predictions) {
-      const pck = 'pred_upcoming';
-      let upcoming = getCache(pck, 30 * 60e3);
-      if (!upcoming) {
-        const from = ymd(now);
-        const to = ymd(new Date(+now + 7 * 864e5));
-        try {
-          const du = await fb(`/matches?competitions=${COMPETITIONS}&dateFrom=${from}&dateTo=${to}`);
-          upcoming = (du.matches || []).map(simplifyMatch).filter((m) => m.status === 'SCHEDULED' || m.status === 'TIMED');
-          setCache(pck, upcoming);
-        } catch { upcoming = []; }
+      const ck = 'standings';
+      let st = getCache(ck, 30 * 60e3);
+      if (!st) {
+        try { st = arr(await bsd('/standings/')); } catch { st = []; }
+        setCache(ck, st);
       }
-      const st = await standings();
-      predictions = await buildPredictions(upcoming, st);
+      return json(res, 200, { view, standings: st });
     }
 
-    return json(res, 200, { view, matches, predictions, count: matches.length });
+    // ── التوقعات + قسيمة اليوم ──
+    if (view === 'predictions') {
+      const ck = 'predictions';
+      let preds = getCache(ck, 30 * 60e3);
+      if (!preds) {
+        let raw = [];
+        try { raw = arr(await bsd('/odds/')); } catch {}
+        if (!raw.length) { try { raw = arr(await bsd('/predictions/')); } catch {} }
+        preds = raw.map(simplifyPrediction).filter((p) => p.home && p.away);
+        setCache(ck, preds);
+      }
+      const coupon = buildCoupon(preds);
+      return json(res, 200, { view, predictions: preds.slice(0, 12), coupon });
+    }
+
+    // ── المباريات (مباشر/اليوم/غداً/أمس) ──
+    const ck = 'matches_' + view;
+    let matches = getCache(ck, view === 'live' ? 45e3 : 4 * 60e3);
+    if (!matches) {
+      let raw = [];
+      try {
+        if (view === 'live') raw = arr(await bsd('/live/'));
+        else raw = arr(await bsd('/matches/'));
+      } catch { raw = []; }
+      let all = raw.map(simplifyMatch);
+
+      // تصفية حسب التبويب بالتاريخ
+      const today = new Date(); const ymd = (d) => d.toISOString().slice(0, 10);
+      const todayStr = ymd(today);
+      const tomStr = ymd(new Date(+today + 864e5));
+      const yesStr = ymd(new Date(+today - 864e5));
+      if (view === 'live') all = all.filter((m) => isLive(m.status));
+      else if (view === 'today') all = all.filter((m) => String(m.date).slice(0, 10) === todayStr);
+      else if (view === 'tomorrow') all = all.filter((m) => String(m.date).slice(0, 10) === tomStr);
+      else if (view === 'yesterday') all = all.filter((m) => String(m.date).slice(0, 10) === yesStr);
+
+      matches = setCache(ck, all);
+    }
+
+    return json(res, 200, { view, matches, count: matches.length });
   } catch (e) {
     console.error('sport error', e);
-    return json(res, 200, { error: 'fetch_failed', message: String(e.message || e).slice(0, 80) });
+    return json(res, 200, { error: 'unavailable', view: 'today', matches: [], predictions: [], coupon: [] });
   }
 };

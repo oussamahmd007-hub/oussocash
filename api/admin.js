@@ -318,12 +318,22 @@ async function processCSV(content, filename) {
       ? `تم تفعيل حسابك بنجاح ✅ مرحباً بك في OussoCash! حصلت على مكافأة ترحيب ${WELCOME_BONUS} UM. · Compte activé ! Bonus de ${WELCOME_BONUS} UM ajouté.`
       : 'تم تفعيل حسابك بنجاح ✅ مرحباً بك في OussoCash! يمكنك الآن الدخول والاستفادة من جميع الخدمات. · Votre compte est activé !');
 
-    if (a.referrer_code) { // عمولة الإحالة
-      const ref = await sbGet('accounts', `ref_code=eq.${a.referrer_code}&select=game_id,balance_um`);
-      if (ref) {
-        await sbUpdate('accounts', `game_id=eq.${ref.game_id}`, { balance_um: (ref.balance_um || 0) + REFERRAL_COMMISSION });
-        await sbUpdate('referrals', `referred_gid=eq.${gid}`, { commission_um: REFERRAL_COMMISSION, paid: true, activated_at: now });
-        await pushNotify(ref.game_id, 'OussoCash', `إحالة جديدة مُفعّلة · Parrainage activé · +${REFERRAL_COMMISSION} UM`);
+    if (a.referrer_code) { // عمولة الإحالة — مرة واحدة فقط (لا تكرار)
+      // تحقّق أن العمولة لم تُدفع من قبل لهذا المُحال (منع التضارب والازدواج)
+      const refRow = await sbGet('referrals', `referred_gid=eq.${gid}&select=id,paid`);
+      const alreadyPaid = refRow && refRow.paid === true;
+      if (!alreadyPaid) {
+        const ref = await sbGet('accounts', `ref_code=eq.${a.referrer_code}&select=game_id,balance_um`);
+        // لا تُدفع العمولة إلا لمُحيل موجود وفعّال ومختلف عن المُحال نفسه
+        if (ref && ref.game_id !== gid) {
+          await sbUpdate('accounts', `game_id=eq.${ref.game_id}`, { balance_um: (ref.balance_um || 0) + REFERRAL_COMMISSION });
+          if (refRow) {
+            await sbUpdate('referrals', `referred_gid=eq.${gid}`, { commission_um: REFERRAL_COMMISSION, paid: true, activated_at: now });
+          } else {
+            await sbInsert('referrals', { referrer_gid: ref.game_id, referred_gid: gid, commission_um: REFERRAL_COMMISSION, paid: true, activated_at: now }).catch(() => {});
+          }
+          await pushNotify(ref.game_id, 'OussoCash', `إحالة جديدة مُفعّلة · Parrainage activé · +${REFERRAL_COMMISSION} UM`);
+        }
       }
     }
   }
