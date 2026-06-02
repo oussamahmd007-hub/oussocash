@@ -516,57 +516,61 @@ html[dir="rtl"] .cb-arrow{transform:scaleX(-1)}
 .dash-logout svg{width:19px;height:19px}
 
 /* ─── Sport section ─── */
-.sport-tabs{display:flex;gap:8px;overflow-x:auto;padding:0 0 4px;margin-bottom:16px;scrollbar-width:none}
+/* ═══ SPORT / توقعات — FotMob-style ═══ */
+.sport-header{position:sticky;top:0;z-index:20;background:var(--bg);padding:18px 16px 0;
+  border-bottom:1px solid var(--line)}
+.sport-header-top{display:flex;align-items:baseline;justify-content:space-between;margin-bottom:14px}
+.sport-header-top h2{font-size:26px;font-weight:800;letter-spacing:-.6px}
+.sport-date{font-size:12px;color:var(--txt-3);font-weight:600}
+.sport-scroll{padding:16px}
+.sport-tabs{display:flex;gap:7px;overflow-x:auto;padding:0 0 12px;scrollbar-width:none}
 .sport-tabs::-webkit-scrollbar{display:none}
-.sport-tab{flex-shrink:0;padding:9px 16px;border-radius:100px;background:var(--surface);border:1px solid var(--line);
-  font-size:13px;font-weight:700;color:var(--txt-2);transition:.2s var(--ease)}
-.sport-tab.on{background:var(--accent);color:#fff;border-color:var(--accent)}
+.sport-tab{flex-shrink:0;padding:8px 15px;border-radius:100px;background:transparent;border:none;
+  font-size:13.5px;font-weight:700;color:var(--txt-3);transition:.2s var(--ease);position:relative}
+.sport-tab.on{color:var(--accent)}
+.sport-tab.on::after{content:'';position:absolute;bottom:-1px;left:15%;right:15%;height:3px;
+  background:var(--accent);border-radius:3px}
 .sport-pred-sub{font-size:12.5px;color:var(--txt-3);margin-bottom:14px}
 .sport-loading{display:grid;place-items:center;padding:60px}
 .spin svg{width:34px;height:34px;color:var(--accent);animation:spin 1s linear infinite}
 @keyframes spin{to{transform:rotate(360deg)}}
-.sport-empty{text-align:center;color:var(--txt-3);padding:50px 20px;font-size:14px}
-.sport-disclaimer{font-size:11px;color:var(--txt-3);text-align:center;margin-top:12px;line-height:1.5;opacity:.8}
+.sport-empty{display:flex;flex-direction:column;align-items:center;gap:14px;text-align:center;color:var(--txt-3);padding:60px 20px;font-size:14px}
+.sport-disclaimer{font-size:11px;color:var(--txt-3);text-align:center;margin-top:14px;line-height:1.5;opacity:.8}
+.sport-sec-title{font-size:15px;font-weight:800;margin:22px 2px 12px}
 
 /* prediction card */
-.pred-card{background:linear-gradient(150deg,rgba(19,34,64,.6),var(--surface));border:1px solid var(--line-2);
-  border-radius:var(--radius);padding:16px;margin-bottom:12px;box-shadow:var(--shadow-card)}
-.pred-comp{font-size:11px;color:var(--accent-lite);font-weight:700;margin-bottom:12px}
+.pred-grid{display:flex;flex-direction:column;gap:12px}
+.pred-card{background:var(--surface);border:1px solid var(--line);
+  border-radius:18px;padding:16px;box-shadow:var(--shadow-card)}
+.pred-comp{display:flex;align-items:center;font-size:11px;color:var(--txt-3);font-weight:700;margin-bottom:13px}
 .pred-teams{display:flex;align-items:center;gap:10px;margin-bottom:14px}
-.pred-team{flex:1;display:flex;flex-direction:column;align-items:center;gap:6px;text-align:center}
-.pred-team img{width:38px;height:38px;object-fit:contain}
+.pred-team{flex:1;display:flex;flex-direction:column;align-items:center;gap:7px;text-align:center}
+.pred-team img{width:42px;height:42px;object-fit:contain}
 .pred-team span{font-size:13px;font-weight:700}
-.pred-team em{font-style:normal;font-size:11px;color:var(--txt-3)}
-.pred-vs{font-size:11px;color:var(--txt-3);font-weight:600}
-.pred-foot{display:flex;align-items:center;justify-content:space-between;gap:14px;
-  border-top:1px solid var(--line);padding-top:13px}
-.pred-pick span{display:block;font-size:10.5px;color:var(--txt-3)}
-.pred-pick b{font-size:14px;font-weight:800;color:var(--accent-lite)}
-.pred-conf{display:flex;align-items:center;gap:8px;flex:1;max-width:130px}
-.conf-bar{flex:1;height:6px;background:var(--bg-2);border-radius:100px;overflow:hidden}
-.conf-bar i{display:block;height:100%;border-radius:100px;background:var(--accent)}
-.pred-conf.high .conf-bar i{background:linear-gradient(90deg,var(--accent),var(--accent-lite))}
-.pred-conf.mid .conf-bar i{background:var(--accent)}
-.pred-conf.low .conf-bar i{background:var(--txt-3)}
-.pred-conf span{font-size:13px;font-weight:800}
+.pred-vs{font-size:11px;color:var(--txt-3);font-weight:700;background:var(--bg-2);padding:5px 9px;border-radius:8px}
 
-/* match card */
-.match-card{background:var(--surface);border:1px solid var(--line);border-radius:var(--radius-sm);
-  padding:14px 16px;margin-bottom:10px}
-.match-comp{display:flex;align-items:center;gap:7px;margin-bottom:12px}
-.match-comp img{width:16px;height:16px;object-fit:contain}
-.match-comp span{font-size:11px;color:var(--txt-3);font-weight:600;flex:1}
-.live-dot{font-size:10px;font-weight:800;color:#fff;background:var(--accent);padding:2px 9px;border-radius:100px;
-  animation:livePulse 1.6s infinite}
-@keyframes livePulse{50%{opacity:.55}}
-.done-tag{font-size:10px;font-weight:700;color:var(--txt-3);background:var(--bg-2);padding:2px 9px;border-radius:100px}
-.match-row{display:flex;align-items:center;gap:12px}
-.match-team{flex:1;display:flex;align-items:center;gap:9px}
-.match-team.away{flex-direction:row-reverse;text-align:end}
-.match-team img{width:26px;height:26px;object-fit:contain;flex-shrink:0}
-.match-team span{font-size:13.5px;font-weight:700}
-.match-score{font-size:15px;font-weight:800;min-width:54px;text-align:center;color:var(--txt-2)}
-.match-score.live{color:var(--accent-lite)}
+/* match card — FotMob row style */
+.lg-group{margin-bottom:16px}
+.lg-group-head{display:flex;align-items:center;gap:9px;padding:8px 4px;margin-bottom:2px}
+.lg-group-head img{width:20px;height:20px;object-fit:contain}
+.lg-group-head span{font-size:13px;font-weight:800;color:var(--txt-2)}
+.lg-group-body{background:var(--surface);border:1px solid var(--line);border-radius:16px;overflow:hidden;box-shadow:var(--shadow-card)}
+.mc{display:flex;align-items:stretch;gap:12px;padding:12px 14px;border-bottom:1px solid var(--line);position:relative;cursor:pointer;transition:background .15s}
+.mc:last-child{border-bottom:none}
+.mc:active{background:var(--bg-2)}
+.mc-status-wrap{display:flex;align-items:center;min-width:46px}
+.mc-status{font-size:13px;font-weight:700;color:var(--txt-3);text-align:center;width:100%}
+.mc-status.time{font-size:13px;color:var(--txt-2)}
+.mc-status.live{color:#fff;background:var(--danger);padding:3px 7px;border-radius:7px;font-size:11px;font-weight:800;animation:livePulse 1.6s infinite}
+@keyframes livePulse{50%{opacity:.6}}
+.mc-teams{flex:1;display:flex;flex-direction:column;gap:9px;border-inline-start:1px solid var(--line);padding-inline-start:12px}
+.mc-team{display:flex;align-items:center;gap:9px}
+.mc-team img{width:22px;height:22px;object-fit:contain;flex-shrink:0}
+.mc-team span{flex:1;font-size:13.5px;font-weight:600;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.mc-team b{font-size:14.5px;font-weight:800;color:var(--txt);min-width:18px;text-align:center}
+.mc-team b.live{color:var(--danger)}
+.mc-livebar{position:absolute;bottom:0;inset-inline-start:0;width:100%;height:2px;background:linear-gradient(90deg,var(--danger),transparent);animation:liveSlide 2s linear infinite}
+@keyframes liveSlide{0%{opacity:.3}50%{opacity:1}100%{opacity:.3}}
 
 /* standings */
 .std-row{display:flex;align-items:center;gap:11px;padding:11px 2px;border-bottom:1px solid var(--line);font-size:13px}
@@ -812,20 +816,27 @@ html[dir="rtl"] .pay-track{animation-name:payScrollRtl}
 html[dir="rtl"] .dev-card-arrow{transform:scaleX(-1)}
 
 /* ─── Coupon (قسيمة اليوم) ─── */
-.coupon-head{display:flex;align-items:center;gap:13px;margin:6px 0 12px;padding:16px;border-radius:18px;
-  background:linear-gradient(135deg,var(--accent),var(--accent-2));color:#fff;box-shadow:var(--shadow-blue)}
-.coupon-head svg{width:30px;height:30px;flex-shrink:0}
-.coupon-head b{display:block;font-size:17px;font-weight:800}
-.coupon-head span{font-size:12px;opacity:.9}
-.coupon-box{background:var(--surface);border:1px solid var(--line);border-radius:18px;overflow:hidden;box-shadow:var(--shadow-card)}
-.coupon-row{display:flex;align-items:center;gap:10px;padding:14px 16px;border-bottom:1px solid var(--line)}
+/* ─── Coupon (قسيمة اليوم) — FotMob style ─── */
+.coupon-card{background:linear-gradient(135deg,var(--accent),var(--accent-2));border-radius:20px;
+  padding:4px;box-shadow:var(--shadow-blue);margin-bottom:8px}
+.coupon-card-head{padding:14px 16px 12px;color:#fff}
+.coupon-card-title{display:flex;align-items:center;gap:10px}
+.coupon-card-title svg{width:24px;height:24px}
+.coupon-card-title b{font-size:18px;font-weight:800}
+.coupon-card-sub{display:block;font-size:11.5px;opacity:.9;margin-top:3px;margin-inline-start:34px}
+.coupon-list{background:var(--surface);border-radius:16px;overflow:hidden}
+.coupon-row{display:flex;align-items:center;gap:12px;padding:14px 15px;border-bottom:1px solid var(--line)}
 .coupon-row:last-child{border-bottom:none}
-.coupon-match{flex:1;min-width:0}
-.coupon-teams{display:block;font-size:13px;font-weight:700;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
-.coupon-teams em{color:var(--txt-3);font-style:normal;font-size:11px;margin:0 3px}
-.coupon-league{font-size:10.5px;color:var(--txt-3)}
-.coupon-tip{font-size:12.5px;font-weight:700;color:var(--accent);max-width:90px;text-align:center;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
-.coupon-conf{font-size:13px;font-weight:800;padding:4px 9px;border-radius:9px;flex-shrink:0}
+.coupon-rank{width:24px;height:24px;border-radius:8px;background:var(--accent-soft);color:var(--accent);
+  display:grid;place-items:center;font-weight:800;font-size:12px;flex-shrink:0}
+.coupon-mid{flex:1;min-width:0}
+.coupon-teams{font-size:13px;font-weight:700;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.coupon-teams em{color:var(--txt-3);font-style:normal;margin:0 4px}
+.coupon-pick{display:flex;align-items:center;gap:4px;font-size:12px;font-weight:700;color:#16a34a;margin-top:3px}
+.coupon-pick svg{width:13px;height:13px}
+.coupon-conf{text-align:center;flex-shrink:0;padding:5px 11px;border-radius:11px}
+.coupon-conf b{display:block;font-size:15px;font-weight:800;line-height:1}
+.coupon-conf span{font-size:9px;opacity:.8}
 .coupon-conf.high{background:rgba(34,197,94,.14);color:#16a34a}
 .coupon-conf.mid{background:var(--accent-soft);color:var(--accent)}
 .coupon-conf.low{background:rgba(245,158,11,.14);color:#d97706}

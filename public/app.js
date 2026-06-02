@@ -719,51 +719,72 @@ const App = {
     document.querySelectorAll('.sport-tab').forEach(t=>t.classList.toggle('on', t.dataset.sv===v));
     const body=document.getElementById('sportBody');
     const T=window.TEXTS[this.lang];
+    // تاريخ الرأس
+    const dateEl=document.getElementById('sportDate');
+    if(dateEl){
+      const now=new Date();
+      let d=now;
+      if(v==='tomorrow') d=new Date(+now+864e5);
+      else if(v==='yesterday') d=new Date(+now-864e5);
+      try{ dateEl.textContent=d.toLocaleDateString(this.lang==='fr'?'fr-FR':'ar',{weekday:'long',day:'numeric',month:'long'}); }catch{}
+      dateEl.style.display=(v==='standings'||v==='predictions')?'none':'block';
+    }
     body.innerHTML=`<div class="sport-loading">${this.spinner()}</div>`;
     const r=await this.api('sport',{ view:v, lang:this.lang });
-    if(r.error){ body.innerHTML=`<div class="sport-empty">${T.sport_unavailable}</div>`; return; }
+    if(r.error){ body.innerHTML=`<div class="sport-empty">${this.sportEmptyIcon()}<span>${T.sport_unavailable}</span></div>`; return; }
 
     if(v==='standings'){ this.renderStandings(r.standings); return; }
 
     if(v==='predictions'){
       let html='';
-      // قسيمة اليوم: أفضل التوقعات
       if(r.coupon && r.coupon.length){
-        html+=`<div class="coupon-head"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 4h16v5a2 2 0 000 6v5H4v-5a2 2 0 000-6z"/><path d="M9 9l6 6M15 9l-6 6"/></svg><div><b>${T.sport_coupon}</b><span>${T.sport_coupon_sub}</span></div></div>`;
-        html+=`<div class="coupon-box">`;
-        html+=r.coupon.map(p=>this.couponRow(p)).join('');
-        html+=`</div>`;
+        html+=`<div class="coupon-card">
+          <div class="coupon-card-head">
+            <div class="coupon-card-title"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 4h16v5a2 2 0 000 6v5H4v-5a2 2 0 000-6z"/><path d="M9 9l6 6M15 9l-6 6"/></svg><b>${T.sport_coupon}</b></div>
+            <span class="coupon-card-sub">${T.sport_coupon_sub}</span>
+          </div>
+          <div class="coupon-list">${r.coupon.map((p,i)=>this.couponRow(p,i+1)).join('')}</div>
+        </div>`;
       }
-      // كل التوقعات
       if(r.predictions && r.predictions.length){
-        html+=`<div class="section-h" style="padding:0;margin:20px 0 6px">${T.sport_predictions}</div>`;
-        html+=r.predictions.map(p=>this.predCard(p)).join('');
+        html+=`<div class="sport-sec-title">${T.sport_predictions}</div>`;
+        html+=`<div class="pred-grid">${r.predictions.map(p=>this.predCard(p)).join('')}</div>`;
         html+=`<div class="sport-disclaimer">${T.sport_disclaimer}</div>`;
       }
-      if(!html) html=`<div class="sport-empty">${T.sport_no_matches}</div>`;
+      if(!html) html=`<div class="sport-empty">${this.sportEmptyIcon()}<span>${T.sport_no_matches}</span></div>`;
       body.innerHTML=html;
       return;
     }
 
-    // المباريات
-    let html='';
+    // المباريات — مجمّعة حسب الدوري (طراز FotMob)
     if(r.matches && r.matches.length){
-      html+=r.matches.map(m=>this.matchCard(m)).join('');
+      const groups={};
+      r.matches.forEach(m=>{ const k=m.league||'—'; (groups[k]=groups[k]||{league:m.league,logo:m.league_logo,items:[]}).items.push(m); });
+      let html='';
+      Object.values(groups).forEach(g=>{
+        html+=`<div class="lg-group">
+          <div class="lg-group-head"><img src="${g.logo||''}" onerror="this.style.display='none'"><span>${this.esc(g.league)}</span></div>
+          <div class="lg-group-body">${g.items.map(m=>this.matchCard(m)).join('')}</div>
+        </div>`;
+      });
+      body.innerHTML=html;
     } else {
-      html+=`<div class="sport-empty">${T.sport_no_matches}</div>`;
+      body.innerHTML=`<div class="sport-empty">${this.sportEmptyIcon()}<span>${T.sport_no_matches}</span></div>`;
     }
-    body.innerHTML=html;
   },
-  couponRow(p){
+  sportEmptyIcon(){
+    return `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" style="width:48px;height:48px;opacity:.3"><circle cx="12" cy="12" r="10"/><path d="M12 2a15 15 0 010 20M12 2a15 15 0 000 20M2 12h20"/></svg>`;
+  },
+  couponRow(p,rank){
     const conf=p.confidence||0;
     const cc=conf>=70?'high':conf>=60?'mid':'low';
     return `<div class="coupon-row">
-      <div class="coupon-match">
-        <span class="coupon-teams">${this.esc(p.home)} <em>vs</em> ${this.esc(p.away)}</span>
-        ${p.league?`<span class="coupon-league">${this.esc(p.league)}</span>`:''}
+      <div class="coupon-rank">${rank||''}</div>
+      <div class="coupon-mid">
+        <div class="coupon-teams">${this.esc(p.home)} <em>—</em> ${this.esc(p.away)}</div>
+        <div class="coupon-pick"><svg viewBox="0 0 24 24" fill="currentColor"><path d="M9 16.2l-3.5-3.5L4 14.2 9 19l11-11-1.5-1.4z"/></svg>${this.esc(p.tip)}</div>
       </div>
-      <div class="coupon-tip"><span>${this.esc(p.tip)}</span></div>
-      <div class="coupon-conf ${cc}">${conf}%</div>
+      <div class="coupon-conf ${cc}"><b>${conf}%</b><span>${this.lang==='fr'?'conf.':'ثقة'}</span></div>
     </div>`;
   },
   predCard(p){
@@ -801,20 +822,26 @@ const App = {
     const live=/inprogress|penalties|1st|2nd|halftime|extra/i.test(m.status);
     const done=/finished|ft/i.test(m.status);
     let when='';
-    try{ when=m.date?new Date(m.date).toLocaleTimeString(this.lang==='fr'?'fr':'ar',{hour:'2-digit',minute:'2-digit'}):''; }catch{}
+    try{ when=m.date?new Date(m.date).toLocaleTimeString(this.lang==='fr'?'fr':'ar-u-nu-latn',{hour:'2-digit',minute:'2-digit'}):''; }catch{}
     const hasScore=(m.score_home!=null && m.score_home!=='');
-    const score=hasScore?`${m.score_home} - ${m.score_away}`:when;
-    const liveLabel=m.minute?m.minute+"'":(m.period==='halftime'?T.sport_ht||'HT':T.sport_live);
-    return `<div class="match-card">
-      <div class="match-comp"><img src="${m.league_logo||''}" onerror="this.style.display='none'"><span>${this.esc(m.league)}</span>
-        ${live?`<span class="live-dot">${liveLabel}</span>`:done?`<span class="done-tag">${T.sport_finished}</span>`:''}</div>
-      <div class="match-row">
-        <div class="match-team"><img src="${m.home_logo||''}" onerror="this.style.visibility='hidden'"><span>${this.esc(m.home)}</span></div>
-        <div class="match-score ${live?'live':''}">${score}</div>
-        <div class="match-team away"><span>${this.esc(m.away)}</span><img src="${m.away_logo||''}" onerror="this.style.visibility='hidden'"></div>
+    const liveLabel=m.minute?m.minute+"'":(m.period==='halftime'?(T.sport_ht||'HT'):T.sport_live);
+    // عمود الحالة: مباشر بالدقيقة / النتيجة / وقت البدء
+    let statusCol;
+    if(live) statusCol=`<div class="mc-status live">${liveLabel}</div>`;
+    else if(done) statusCol=`<div class="mc-status">${T.sport_ft||'انتهت'}</div>`;
+    else statusCol=`<div class="mc-status time">${when}</div>`;
+    const sH=hasScore?m.score_home:'';
+    const sA=hasScore?m.score_away:'';
+    return `<div class="mc" onclick="App.openMatch(${m.id})">
+      <div class="mc-status-wrap">${statusCol}</div>
+      <div class="mc-teams">
+        <div class="mc-team"><img src="${m.home_logo||''}" onerror="this.style.visibility='hidden'"><span>${this.esc(m.home)}</span><b class="${live?'live':''}">${sH}</b></div>
+        <div class="mc-team"><img src="${m.away_logo||''}" onerror="this.style.visibility='hidden'"><span>${this.esc(m.away)}</span><b class="${live?'live':''}">${sA}</b></div>
       </div>
+      ${live?'<div class="mc-livebar"></div>':''}
     </div>`;
   },
+  openMatch(id){ /* تفاصيل المباراة لاحقاً */ },
   renderStandings(s){
     const body=document.getElementById('sportBody');
     const T=window.TEXTS[this.lang];

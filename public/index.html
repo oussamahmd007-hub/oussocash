@@ -321,27 +321,30 @@
       <div id="contestBody"></div>
     </div>
 
-    <!-- ── SPORT ── -->
-    <div id="view-sport" class="view hidden pad">
-      <div style="padding:22px 4px 12px">
-        <h2 style="font-size:23px;font-weight:800;letter-spacing:-.4px" id="t-sport_title"></h2>
+    <!-- ── SPORT / توقعات ── -->
+    <div id="view-sport" class="view hidden">
+      <div class="sport-header">
+        <div class="sport-header-top">
+          <h2 id="t-sport_title"></h2>
+          <div class="sport-date" id="sportDate"></div>
+        </div>
+        <div class="sport-tabs" id="sportTabs">
+          <button class="sport-tab on" data-sv="predictions" onclick="App.sportView('predictions')" id="t-sport_predictions_tab"></button>
+          <button class="sport-tab" data-sv="live" onclick="App.sportView('live')" id="t-sport_live"></button>
+          <button class="sport-tab" data-sv="today" onclick="App.sportView('today')" id="t-sport_today"></button>
+          <button class="sport-tab" data-sv="tomorrow" onclick="App.sportView('tomorrow')" id="t-sport_tomorrow"></button>
+          <button class="sport-tab" data-sv="yesterday" onclick="App.sportView('yesterday')" id="t-sport_yesterday"></button>
+          <button class="sport-tab" data-sv="standings" onclick="App.sportView('standings')" id="t-sport_standings"></button>
+        </div>
       </div>
-      <div class="sport-tabs" id="sportTabs">
-        <button class="sport-tab on" data-sv="today" onclick="App.sportView('today')" id="t-sport_today"></button>
-        <button class="sport-tab" data-sv="live" onclick="App.sportView('live')" id="t-sport_live"></button>
-        <button class="sport-tab" data-sv="predictions" onclick="App.sportView('predictions')" id="t-sport_predictions_tab"></button>
-        <button class="sport-tab" data-sv="tomorrow" onclick="App.sportView('tomorrow')" id="t-sport_tomorrow"></button>
-        <button class="sport-tab" data-sv="yesterday" onclick="App.sportView('yesterday')" id="t-sport_yesterday"></button>
-        <button class="sport-tab" data-sv="standings" onclick="App.sportView('standings')" id="t-sport_standings"></button>
+      <div class="sport-scroll">
+        <div id="sportBody"></div>
+        <a class="sport-news-btn" href="https://koorahgoalnet.com" target="_blank" rel="noopener">
+          <div class="sl-ic sl-ar"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 19.5A2.5 2.5 0 016.5 17H20M4 19.5A2.5 2.5 0 006.5 22H20V2H6.5A2.5 2.5 0 004 4.5z"/></svg></div>
+          <span id="t-sport_news_btn"></span>
+          <svg class="sl-arrow" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 18l6-6-6-6"/></svg>
+        </a>
       </div>
-      <div id="sportBody"></div>
-
-      <!-- زر أخبار الرياضة -->
-      <a class="sport-news-btn" href="https://koorahgoalnet.com" target="_blank" rel="noopener">
-        <div class="sl-ic sl-ar"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 19.5A2.5 2.5 0 016.5 17H20M4 19.5A2.5 2.5 0 006.5 22H20V2H6.5A2.5 2.5 0 004 4.5z"/></svg></div>
-        <span id="t-sport_news_btn"></span>
-        <svg class="sl-arrow" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 18l6-6-6-6"/></svg>
-      </a>
     </div>
 
     <!-- ── SUPPORT CHAT ── -->

@@ -180,8 +180,8 @@ window.TEXTS = {
     contest_banner: 'مسابقة جارية — شارك واربح',
 
     // Sport
-    sport_nav: 'الرياضة',
-    sport_title: 'المباريات والتوقعات',
+    sport_nav: 'توقعات',
+    sport_title: 'توقعات',
     sport_live: 'مباشر', sport_today: 'اليوم', sport_tomorrow: 'غداً', sport_yesterday: 'أمس',
     sport_predictions: 'أفضل 5 توقعات',
     sport_pred_sub: 'توقعات مبنية على ترتيب الفرق وبياناتهم الحقيقية',
@@ -202,7 +202,7 @@ window.TEXTS = {
     sport_score: 'النتيجة المتوقعة',
     sport_played: 'لعب',
     sport_pts: 'نقاط',
-    sport_ht: 'الشوط 1',
+    sport_ht: 'الشوط 1', sport_ft: 'انتهت',
     sport_leagues_tab: 'الدوريات',
     sport_link_pred: 'توقعات ونصائح',
     sport_link_fotmob: 'أخبار ومباريات مباشرة',
@@ -482,8 +482,8 @@ window.TEXTS = {
     contest_banner: 'Concours en cours — partagez et gagnez',
 
     // Sport
-    sport_nav: 'Sport',
-    sport_title: 'Matchs et pronostics',
+    sport_nav: 'Pronostics',
+    sport_title: 'Pronostics',
     sport_live: 'En direct', sport_today: 'Aujourd\'hui', sport_tomorrow: 'Demain', sport_yesterday: 'Hier',
     sport_predictions: 'Top 5 pronostics',
     sport_pred_sub: 'Pronostics basés sur le classement et les données réelles',
@@ -504,7 +504,7 @@ window.TEXTS = {
     sport_score: 'Score prévu',
     sport_played: 'J',
     sport_pts: 'Pts',
-    sport_ht: 'MT',
+    sport_ht: 'MT', sport_ft: 'Terminé',
     sport_leagues_tab: 'Ligues',
     sport_link_pred: 'Pronostics et conseils',
     sport_link_fotmob: 'Actus et matchs en direct',
