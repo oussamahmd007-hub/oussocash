@@ -231,8 +231,10 @@ window.TEXTS = {
     st_long_balls: 'الكرات الطويلة', st_aerial: 'الكرات الهوائية',
     st_attacks: 'الهجمات', st_dangerous: 'هجمات خطيرة',
     sport_form: 'آخر 5',
+    sport_team: 'الفريق', sport_w: 'ف', sport_d: 'ت', sport_l: 'خ', sport_pl_short: 'لعب',
     // قسيمة الرهان
     slip_title: 'قسيمة الرهان',
+    slip_btn: 'القسيمة',
     slip_sub: 'مباريات اليوم · اختر توقعاتك واحسب أرباحك',
     slip_picks: 'التوقعات', slip_total_odds: 'مجموع odds',
     slip_stake: 'مبلغ الرهان', slip_return: 'الأرباح المحتملة',
@@ -566,8 +568,10 @@ window.TEXTS = {
     st_long_balls: 'Longs ballons', st_aerial: 'Duels aériens',
     st_attacks: 'Attaques', st_dangerous: 'Attaques dang.',
     sport_form: '5 derniers',
+    sport_team: 'Équipe', sport_w: 'V', sport_d: 'N', sport_l: 'D', sport_pl_short: 'J',
     // Coupon de paris
     slip_title: 'Coupon de paris',
+    slip_btn: 'Coupon',
     slip_sub: 'Matchs du jour · choisissez vos pronostics et calculez vos gains',
     slip_picks: 'Pronostics', slip_total_odds: 'Cote totale',
     slip_stake: 'Mise', slip_return: 'Gains potentiels',

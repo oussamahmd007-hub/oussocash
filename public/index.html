@@ -326,7 +326,14 @@
       <div class="sport-header">
         <div class="sport-header-top">
           <h2 id="t-sport_title"></h2>
-          <div class="sport-date" id="sportDate"></div>
+          <div class="sport-head-actions">
+            <div class="sport-date" id="sportDate"></div>
+            <button class="slip-pill hidden" id="slipFab" onclick="App.openSlip()" aria-label="bet slip">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 4h16v5a2 2 0 000 6v5H4v-5a2 2 0 000-6z"/><path d="M9 9h6M9 13h6"/></svg>
+              <span id="t-slip_btn"></span>
+              <span class="slip-pill-count" id="slipFabCount">0</span>
+            </button>
+          </div>
         </div>
         <div class="sport-tabs" id="sportTabs">
           <button class="sport-tab on" data-sv="predictions" onclick="App.sportView('predictions')" id="t-sport_predictions_tab"></button>
@@ -341,13 +348,7 @@
         <div id="sportBody"></div>
       </div>
 
-      <!-- ── زر القسيمة الجانبي (يفتح خانة الرهان) ── -->
-      <button class="slip-fab hidden" id="slipFab" onclick="App.openSlip()" aria-label="bet slip">
-        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 4h16v5a2 2 0 000 6v5H4v-5a2 2 0 000-6z"/><path d="M9 9h6M9 13h6"/></svg>
-        <span class="slip-fab-count" id="slipFabCount">0</span>
-      </button>
-
-      <!-- ── خانة قسيمة الرهان الجانبية ── -->
+      <!-- ── خانة قسيمة الرهان (ملء الشاشة) ── -->
       <div class="slip-drawer-bg" id="slipDrawerBg" onclick="App.closeSlipBg(event)">
         <aside class="slip-drawer" id="slipDrawer" onclick="event.stopPropagation()">
           <div class="slip-head">

@@ -88,7 +88,7 @@ const App = {
   nav(v){
     if (v==='dash'||v==='ref') this.show(v);
     else if(v==='contest'){ this.show('contest'); this.loadContest(); }
-    else if(v==='sport'){ this.show('sport'); this.sportView(this._sportView||'today'); }
+    else if(v==='sport'){ this.show('sport'); this.sportView(this._sportView||'predictions'); }
     else if(v==='support'){ this.show('support'); this.initChat(); }
     else if(v==='agency'){ this.show('agency'); this.renderPayStrip(); }
   },
@@ -733,10 +733,9 @@ const App = {
       dateEl.style.display=(v==='standings'||v==='predictions')?'none':'block';
     }
     body.innerHTML=this.sportSkeleton(v);
+    if(v==='standings'){ await this.renderStandingsHub(); this.updateSlipFab(); return; }
     const r=await this.api('sport',{ view:v, lang:this.lang });
     if(r.error){ body.innerHTML=`<div class="sport-empty">${this.sportEmptyIcon()}<span>${T.sport_unavailable}</span></div>`; this.updateSlipFab(); return; }
-
-    if(v==='standings'){ this.renderStandings(r.standings); return; }
 
     if(v==='predictions'){
       // تجهيز قسيمة الرهان
@@ -1179,34 +1178,55 @@ const App = {
     if(v==='predictions') return `<div class="sk-wrap">${card}${card}${card}</div>`;
     return `<div class="sk-wrap">${Array(6).fill(row).join('')}</div>`;
   },
-  renderStandings(s){
+  // ═══ الترتيب: جميع الدوريات (أكورديون) ═══
+  async renderStandingsHub(){
     const body=document.getElementById('sportBody');
     const T=window.TEXTS[this.lang];
-    const table=(s&&s.table)?s.table:[];
-    // أزرار اختيار الدوري
-    const leagues=[[17,'Premier League'],[8,'La Liga'],[23,'Serie A'],[35,'Bundesliga'],[34,'Ligue 1']];
-    let head=`<div class="std-leagues">${leagues.map(l=>`<button class="std-lg ${this._stLeague==l[0]?'on':''}" onclick="App.loadStandings(${l[0]})">${l[1]}</button>`).join('')}</div>`;
-    if(!table.length){ body.innerHTML=head+`<div class="sport-empty">${T.sport_no_matches}</div>`; return; }
+    let lr=this._leaguesList;
+    if(!lr){ const r=await this.api('sport',{ view:'leagues', lang:this.lang }); lr=(r&&r.leagues)?r.leagues:[]; this._leaguesList=lr; }
+    if(!lr.length){ body.innerHTML=`<div class="sport-empty">${this.sportEmptyIcon()}<span>${T.sport_unavailable}</span></div>`; return; }
+    body.innerHTML=`<div class="std-hub">${lr.map((l,i)=>`
+      <div class="lg-acc${i===0?' open':''}" data-lg="${l.id}">
+        <button class="lg-acc-head" onclick="App.toggleLeague(${l.id})">
+          <img class="lg-acc-logo" src="${l.logo||''}" onerror="this.style.visibility='hidden'" alt="">
+          <div class="lg-acc-info"><b>${this.esc(l.name)}</b>${l.country?`<span>${this.esc(l.country)}</span>`:''}</div>
+          <svg class="lg-acc-chev" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4"><path d="M6 9l6 6 6-6"/></svg>
+        </button>
+        <div class="lg-acc-body" id="lgBody-${l.id}"></div>
+      </div>`).join('')}</div>`;
+    if(lr[0]) this.loadLeagueTable(lr[0].id);
+  },
+  toggleLeague(id){
+    const acc=document.querySelector(`.lg-acc[data-lg="${id}"]`); if(!acc) return;
+    const willOpen=!acc.classList.contains('open');
+    acc.classList.toggle('open', willOpen);
+    if(willOpen) this.loadLeagueTable(id);
+  },
+  async loadLeagueTable(id){
+    const box=document.getElementById('lgBody-'+id); if(!box || box.dataset.loaded==='1') return;
+    const T=window.TEXTS[this.lang];
+    box.innerHTML=`<div class="lg-acc-load">${this.spinner()}</div>`;
+    const r=await this.api('sport',{ view:'standings', league_id:id, lang:this.lang });
+    box.dataset.loaded='1';
+    const table=(r&&r.standings&&r.standings.table)?r.standings.table:[];
+    box.innerHTML=table.length?this.standingsTable(table):`<div class="lg-acc-empty">${T.sport_no_matches}</div>`;
+  },
+  standingsTable(table){
+    const T=window.TEXTS[this.lang];
     const formDots=(f)=>{ if(!f) return ''; return `<div class="std-form">${String(f).slice(-5).split('').map(ch=>{const c=/w/i.test(ch)?'w':/l/i.test(ch)?'l':'d';return `<i class="${c}"></i>`;}).join('')}</div>`; };
-    body.innerHTML=head+`<div class="card" style="padding:6px 12px;margin-top:12px">
-      <div class="std-row std-header"><div class="std-pos">#</div><div class="std-crest"></div><div class="std-name"></div><div class="std-form-h">${T.sport_form||'آخر 5'}</div><div class="std-pl">${T.sport_played||'لعب'}</div><div class="std-gd">+/-</div><div class="std-pts">${T.sport_pts||'نقاط'}</div></div>
+    return `<div class="std-scroll"><div class="std-tbl">
+      <div class="std-row std-header">
+        <div class="std-pos">#</div><div class="std-team">${T.sport_team||'الفريق'}</div>
+        <div class="std-c">${T.sport_pl_short||'ل'}</div><div class="std-c">${T.sport_w||'ف'}</div><div class="std-c">${T.sport_d||'ت'}</div><div class="std-c">${T.sport_l||'خ'}</div>
+        <div class="std-c gd">+/-</div><div class="std-c pts">${T.sport_pts||'نقاط'}</div>
+      </div>
       ${table.slice(0,30).map(r=>`<div class="std-row">
         <div class="std-pos ${r.position<=4?'top':r.position>=18?'rel':''}">${r.position}</div>
-        <img class="std-crest" src="${r.crest||''}" onerror="this.style.visibility='hidden'">
-        <div class="std-name">${this.esc(r.team)}</div>
-        ${formDots(r.form)}
-        <div class="std-pl">${r.played}</div>
-        <div class="std-gd">${r.gd>0?'+':''}${r.gd}</div>
-        <div class="std-pts">${r.points}</div>
+        <div class="std-team"><img src="${r.crest||''}" onerror="this.style.visibility='hidden'"><div class="std-tn"><span>${this.esc(r.team)}</span>${formDots(r.form)}</div></div>
+        <div class="std-c">${r.played}</div><div class="std-c">${r.won}</div><div class="std-c">${r.drawn}</div><div class="std-c">${r.lost}</div>
+        <div class="std-c gd">${r.gd>0?'+':''}${r.gd}</div><div class="std-c pts">${r.points}</div>
       </div>`).join('')}
-      </div>`;
-  },
-  async loadStandings(leagueId){
-    this._stLeague=leagueId;
-    const body=document.getElementById('sportBody');
-    body.innerHTML=this.sportSkeleton('standings');
-    const r=await this.api('sport',{ view:'standings', league_id:leagueId, lang:this.lang });
-    this.renderStandings(r.standings);
+    </div></div>`;
   },
 
   // ═══ SMART SUPPORT CHAT ═══

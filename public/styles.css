@@ -1153,3 +1153,60 @@ html[dir="rtl"] .slip-stake-field input{padding:14px 16px 14px 58px}
 .std-form-h{width:54px;flex-shrink:0;text-align:center;font-size:10.5px;color:var(--txt-3);font-weight:700}
 .std-gd{width:32px;flex-shrink:0;text-align:center;font-size:12px;color:var(--txt-2);font-weight:700}
 @media(max-width:400px){.std-form,.std-form-h{display:none}}
+
+/* ═══════════════════════════════════════════════════════════════
+   تحديث: زر القسيمة العلوي + القسيمة ملء الشاشة + ترتيب كل الدوريات
+   ═══════════════════════════════════════════════════════════════ */
+
+/* زر القسيمة في رأس القسم (علوي · ظاهر دائماً) */
+.sport-head-actions{display:flex;align-items:center;gap:10px}
+.slip-pill{display:inline-flex;align-items:center;gap:7px;height:34px;padding:0 13px;border:none;border-radius:100px;
+  background:linear-gradient(135deg,var(--accent),var(--accent-2));color:#fff;font-family:var(--font);
+  font-size:13px;font-weight:800;cursor:pointer;box-shadow:var(--shadow-blue);transition:transform .15s var(--ease);
+  animation:slipPulse 2.6s ease-in-out infinite}
+.slip-pill:active{transform:scale(.94)}
+.slip-pill svg{width:17px;height:17px}
+.slip-pill-count{min-width:20px;height:20px;padding:0 5px;border-radius:10px;background:rgba(255,255,255,.26);
+  display:grid;place-items:center;font-size:11px;font-weight:800}
+@keyframes slipPulse{0%,100%{box-shadow:0 6px 18px rgba(37,99,235,.32)}50%{box-shadow:0 8px 26px rgba(37,99,235,.5)}}
+
+/* القسيمة تغطي الشاشة بالكامل عند الفتح */
+.slip-drawer-bg{justify-content:center;align-items:stretch}
+.slip-drawer{width:100%;max-width:var(--maxw);height:100dvh;border:none;border-inline-start:none;
+  box-shadow:none;animation:slipUp .32s var(--ease)}
+@keyframes slipUp{from{transform:translateY(28px);opacity:.35}to{transform:none;opacity:1}}
+.slip-head{padding-top:calc(18px + env(safe-area-inset-top))}
+
+/* ترتيب — أكورديون كل الدوريات */
+.std-hub{display:flex;flex-direction:column;gap:10px;padding-top:4px}
+.lg-acc{background:var(--surface);border:1px solid var(--line);border-radius:16px;overflow:hidden;box-shadow:var(--shadow-card)}
+.lg-acc-head{display:flex;align-items:center;gap:11px;width:100%;padding:13px 14px;background:none;border:none;cursor:pointer;text-align:start}
+.lg-acc-logo{width:30px;height:30px;object-fit:contain;flex-shrink:0}
+.lg-acc-info{flex:1;min-width:0}
+.lg-acc-info b{display:block;font-size:14px;font-weight:800;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.lg-acc-info span{display:block;font-size:11px;color:var(--txt-3);font-weight:600;margin-top:1px}
+.lg-acc-chev{width:20px;height:20px;color:var(--txt-3);flex-shrink:0;transition:transform .25s var(--ease)}
+.lg-acc.open .lg-acc-chev{transform:rotate(180deg)}
+.lg-acc.open .lg-acc-head{border-bottom:1px solid var(--line)}
+.lg-acc-body{display:none;padding:2px 8px 8px}
+.lg-acc.open .lg-acc-body{display:block;animation:fade .3s}
+.lg-acc-load{display:grid;place-items:center;padding:26px}
+.lg-acc-empty{text-align:center;color:var(--txt-3);font-size:12.5px;padding:20px}
+
+/* الجدول المفصّل */
+.std-scroll{overflow-x:auto;scrollbar-width:none}
+.std-scroll::-webkit-scrollbar{display:none}
+.std-tbl{min-width:332px}
+.std-tbl .std-row{display:flex;align-items:center;gap:6px;padding:9px 4px;border-bottom:1px solid var(--line);font-size:12px}
+.std-tbl .std-row:last-child{border-bottom:none}
+.std-team{flex:1;min-width:0;display:flex;align-items:center;gap:8px}
+.std-team img{width:21px;height:21px;object-fit:contain;flex-shrink:0}
+.std-tn{min-width:0;display:flex;flex-direction:column;gap:3px}
+.std-tn span{font-weight:600;font-size:12.5px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.std-c{width:22px;flex-shrink:0;text-align:center;color:var(--txt-2);font-weight:600}
+.std-c.gd{width:30px}
+.std-c.pts{width:32px;font-weight:800;color:var(--accent)}
+.std-tbl .std-header{font-size:10px;color:var(--txt-3);font-weight:700;border-bottom:1.5px solid var(--line)}
+.std-tbl .std-header .std-c,.std-tbl .std-header .std-team{color:var(--txt-3);font-weight:700}
+.std-tbl .std-form{display:flex;gap:3px;justify-content:flex-start;width:auto}
+.std-tbl .std-form i{width:7px;height:7px;border-radius:2px}
