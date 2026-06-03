@@ -131,7 +131,7 @@
         <p class="info-p" id="t-home_ref_desc"></p>
         <div class="info-rewards">
           <div class="ir"><b>100</b><span id="t-home_ref_r1"></span></div>
-          <div class="ir"><b>20</b><span id="t-home_ref_r2"></span></div>
+          <div class="ir"><b>5</b><span id="t-home_ref_r2"></span></div>
           <div class="ir"><b>25%</b><span id="t-home_ref_r3"></span></div>
         </div>
       </div>
@@ -172,6 +172,15 @@
       <div class="rs-warn">
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><path d="M12 8v4M12 16h.01"/></svg>
         <span id="t-rs_warn"></span>
+      </div>
+      <div onclick="App.copyPromo()" style="margin-top:14px;border:1.5px solid var(--accent);border-radius:16px;padding:16px;background:rgba(0,0,0,.02);cursor:pointer">
+        <div style="display:flex;align-items:center;justify-content:center;gap:8px;margin-bottom:10px">
+          <span style="font-size:12px;font-weight:700;color:var(--txt-2)" id="t-rs_promo_use"></span>
+          <span style="font-size:20px;font-weight:900;letter-spacing:2px;color:var(--accent)">OUSSO</span>
+        </div>
+        <div style="font-size:14px;font-weight:700;text-align:center;margin-bottom:6px" id="t-rs_promo_300"></div>
+        <div style="font-size:13px;font-weight:600;text-align:center;color:var(--txt-2);margin-bottom:10px" id="t-rs_promo_mon"></div>
+        <div style="font-size:12.5px;text-align:center;color:var(--txt-2);line-height:1.6;border-top:1px solid var(--line,rgba(0,0,0,.08));padding-top:10px" id="t-rs_promo_note"></div>
       </div>
       <button class="btn btn-primary" style="margin-top:16px" onclick="App.openRegLink()">
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width:18px;height:18px"><path d="M15 3h6v6M10 14L21 3M18 13v6a2 2 0 01-2 2H5a2 2 0 01-2-2V8a2 2 0 012-2h6"/></svg>
@@ -294,7 +303,7 @@
         <p style="color:var(--txt-2);font-size:13.5px" id="t-ref_intro"></p>
         <div class="ref-rewards">
           <div class="reward"><div class="num">100</div><div class="lbl" id="rwLbl1"></div></div>
-          <div class="reward"><div class="num">20</div><div class="lbl" id="rwLbl2"></div></div>
+          <div class="reward"><div class="num">5</div><div class="lbl" id="rwLbl2"></div></div>
           <div class="reward"><div class="num">25%</div><div class="lbl" id="rwLbl3"></div></div>
         </div>
         <div class="section-h" style="margin:20px 0 0;padding:0" id="t-ref_your_link"></div>

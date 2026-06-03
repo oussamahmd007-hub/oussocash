@@ -17,7 +17,7 @@ window.TEXTS = {
     feat1_t: 'سحب مرتبط بالهوية', feat1_d: 'سحوباتك مرتبطة دائماً بمعرّف 1xBet المُتحقَّق منه.',
     feat2_t: 'بيانات أقل، أمان أكثر', feat2_d: 'لا نطلب كلمات مرور 1xBet ولا بيانات بنكية حساسة.',
     feat3_t: 'أجهزة موثوقة', feat3_d: 'كل جهاز جديد يحتاج إذناً قبل الوصول للسحب المحمي.',
-    feat4_t: 'إحالات حقيقية', feat4_d: '20 UM لكل إحالة مُفعّلة + 25% من أرباحها.',
+    feat4_t: 'إحالات حقيقية', feat4_d: '5 UM لكل إحالة مُفعّلة + 25% من أرباحها.',
 
     // Agency section
     agency_eyebrow: 'وكالة معتمدة',
@@ -105,7 +105,7 @@ window.TEXTS = {
 
     // Referral
     ref_title: 'الإحالات',
-    ref_intro: 'شارك رابطك. كل من يسجّل عبره ويُفعّل حسابه يمنحك 20 UM + 25% من أرباحه.',
+    ref_intro: 'شارك رابطك. كل من يسجّل عبره ويُفعّل حسابه يمنحك 5 UM + 25% من أرباحه.',
     ref_your_link: 'رابط الإحالة الخاص بك',
     ref_copy: 'نسخ', ref_copied: 'تم النسخ',
     ref_share: 'مشاركة الرابط',
@@ -281,12 +281,16 @@ window.TEXTS = {
 
     // Register steps
     rs_title: 'طريقة التسجيل في وكالتنا',
-    rs_sub: 'اتبع هذه الخطوات لتصبح عضواً في وكالة OussoCash',
+    rs_sub: 'الشرط الوحيد هو معرّف حساب 1xBet — التفعيل فوري',
     rs_s1_t: 'افتح حساباً جديداً في 1xBet', rs_s1_d: 'عبر رابط وكالتنا الرسمي فقط',
-    rs_s2_t: 'استخدم بروموكود OUSSO', rs_s2_d: 'لربط حسابك بوكالتنا المعتمدة',
-    rs_s3_t: 'أودِع 200 UM على الأقل', rs_s3_d: 'والعب بالمبلغ — لا نقبل حساباً بإيداع أقل',
-    rs_s4_t: 'تحقّق من معرّفك لدينا', rs_s4_d: 'بعد الإيداع واللعب، أدخل معرّفك لتفعيل حسابك',
-    rs_warn: 'مهم: لا يُقبل أي حساب لم يتجاوز مجموع إيداعاته 200 UM.',
+    rs_s2_t: 'سجّل ببروموكود OUSSO', rs_s2_d: 'لربط حسابك بوكالتنا والحصول على البونيس',
+    rs_s3_t: 'أدخل معرّف 1xBet لدينا', rs_s3_d: 'هو الشرط الوحيد للتسجيل في الوكالة',
+    rs_s4_t: 'أكّد وسيلة استرجاع حسابك', rs_s4_d: 'وسيتم تفعيل حسابك فوراً دون أي تحقق إضافي',
+    rs_warn: 'الشرط الوحيد للقبول هو معرّف 1xBet صالح — لا حاجة لأي تحقق إضافي.',
+    rs_promo_use: 'سجّل ببروموكود',
+    rs_promo_300: '🎁 بونيس 300% يصل إلى 9000 UM على أول إيداع',
+    rs_promo_mon: '🗓️ ومكافأة 200% كل يوم إثنين',
+    rs_promo_note: 'تسجيلكم على بروموكودنا هو أكثر ما يحفّزنا على تقديم الأفضل دائماً — ندعوكم لاستخدامه 🙏',
     rs_reg_btn: 'التسجيل عبر رابط الوكالة',
     rs_video_btn: 'فيديو: طريقة التفعيل',
     rs_done: 'أكملت الخطوات؟',
@@ -294,7 +298,7 @@ window.TEXTS = {
 
     // Verify modes
     verify_title_reg: 'تحقّق من معرّفك',
-    verify_sub_reg: 'أدخل معرّف 1xBet بعد إكمال التسجيل والإيداع',
+    verify_sub_reg: 'أدخل معرّف 1xBet الخاص بك لتفعيل حسابك فوراً',
     verify_title_login: 'الدخول إلى حسابك',
     verify_sub_login: 'أدخل معرّف 1xBet المعتمد للدخول',
 
@@ -372,7 +376,7 @@ window.TEXTS = {
     feat1_t: 'Retrait lié à l\'identité', feat1_d: 'Vos retraits sont toujours liés à votre ID 1xBet vérifié.',
     feat2_t: 'Moins de données, plus de sécurité', feat2_d: 'Aucun mot de passe 1xBet ni donnée bancaire sensible.',
     feat3_t: 'Appareils de confiance', feat3_d: 'Chaque nouvel appareil nécessite une autorisation.',
-    feat4_t: 'Parrainage réel', feat4_d: '20 UM par parrainage activé + 25% de ses gains.',
+    feat4_t: 'Parrainage réel', feat4_d: '5 UM par parrainage activé + 25% de ses gains.',
 
     // Agency section
     agency_eyebrow: 'Agence certifiée',
@@ -451,7 +455,7 @@ window.TEXTS = {
     deposit_warn: 'Complétez le dépôt de 200 UM sous 3 jours, sinon l\'ID sera supprimé.',
 
     ref_title: 'Parrainage',
-    ref_intro: 'Partagez votre lien. Chaque inscription activée vous rapporte 20 UM + 25% de ses gains.',
+    ref_intro: 'Partagez votre lien. Chaque inscription activée vous rapporte 5 UM + 25% de ses gains.',
     ref_your_link: 'Votre lien de parrainage',
     ref_copy: 'Copier', ref_copied: 'Copié',
     ref_share: 'Partager le lien',
@@ -622,12 +626,16 @@ window.TEXTS = {
 
     // Register steps
     rs_title: 'Comment s\'inscrire à notre agence',
-    rs_sub: 'Suivez ces étapes pour rejoindre l\'agence OussoCash',
+    rs_sub: 'La seule condition est votre ID 1xBet — activation instantanée',
     rs_s1_t: 'Créez un compte 1xBet', rs_s1_d: 'Uniquement via le lien officiel de notre agence',
-    rs_s2_t: 'Utilisez le code OUSSO', rs_s2_d: 'Pour lier votre compte à notre agence',
-    rs_s3_t: 'Déposez au moins 200 UM', rs_s3_d: 'Et jouez — aucun compte avec moins n\'est accepté',
-    rs_s4_t: 'Vérifiez votre ID', rs_s4_d: 'Après dépôt et jeu, entrez votre ID pour activer',
-    rs_warn: 'Important : aucun compte avec un dépôt total inférieur à 200 UM n\'est accepté.',
+    rs_s2_t: 'Inscrivez-vous avec le code OUSSO', rs_s2_d: 'Pour lier votre compte et obtenir le bonus',
+    rs_s3_t: 'Entrez votre ID 1xBet chez nous', rs_s3_d: 'C\'est la seule condition d\'inscription',
+    rs_s4_t: 'Confirmez une méthode de récupération', rs_s4_d: 'Votre compte est activé instantanément, sans vérification',
+    rs_warn: 'La seule condition est un ID 1xBet valide — aucune vérification supplémentaire.',
+    rs_promo_use: 'Inscrivez-vous avec le code',
+    rs_promo_300: '🎁 Bonus 300% jusqu\'à 9000 UM sur le 1er dépôt',
+    rs_promo_mon: '🗓️ Et un bonus 200% chaque lundi',
+    rs_promo_note: 'Votre inscription avec notre code promo est ce qui nous motive le plus à offrir le meilleur — merci de l\'utiliser 🙏',
     rs_reg_btn: 'S\'inscrire via le lien de l\'agence',
     rs_video_btn: 'Vidéo : comment activer',
     rs_done: 'Étapes terminées ?',
@@ -635,7 +643,7 @@ window.TEXTS = {
 
     // Verify modes
     verify_title_reg: 'Vérifiez votre ID',
-    verify_sub_reg: 'Entrez votre ID 1xBet après inscription et dépôt',
+    verify_sub_reg: 'Entrez votre ID 1xBet pour activer votre compte instantanément',
     verify_title_login: 'Connexion à votre compte',
     verify_sub_login: 'Entrez votre ID 1xBet approuvé',
 
