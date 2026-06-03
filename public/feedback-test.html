@@ -1,0 +1,31 @@
+<!doctype html><html lang="ar" dir="rtl"><head>
+<meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>اختبار تلجرام</title>
+<style>
+body{font-family:system-ui,sans-serif;background:#0d1b2e;color:#e8eef7;margin:0;padding:24px}
+h1{font-size:19px}
+button{display:block;width:100%;margin:14px 0;padding:15px;border-radius:12px;border:none;
+  background:#2563eb;color:#fff;font-size:16px;font-weight:800}
+pre{background:#000;color:#5fd;padding:14px;border-radius:10px;white-space:pre-wrap;word-break:break-all;font-size:13px}
+.ok{color:#34d399}.bad{color:#f87171}
+</style></head><body>
+<h1>🔧 اختبار إرسال تلجرام</h1>
+<p>اضغط الزر. سيرسل رسالة اختبار إلى تلجرام ويُظهر النتيجة الحقيقية.</p>
+<button onclick="test()">إرسال رسالة اختبار</button>
+<pre id="out">—</pre>
+<script>
+async function test(){
+  const out=document.getElementById('out'); out.textContent='... جارٍ الإرسال';
+  try{
+    const r=await fetch('/api/feedback',{method:'POST',headers:{'content-type':'application/json'},body:JSON.stringify({diag:true})});
+    const d=await r.json();
+    let s='النتيجة:\n'+JSON.stringify(d,null,2)+'\n\n';
+    if(d.result&&d.result.sent) s+='✅ نجح! تحقق من تلجرام الآن.';
+    else if(!d.has_token) s+='❌ TELEGRAM_BOT_TOKEN غير موجود في Vercel.';
+    else if(!d.has_chat) s+='❌ TELEGRAM_CHAT_ID غير موجود في Vercel.';
+    else if(d.result&&d.result.detail) s+='❌ خطأ تلجرام: '+d.result.detail;
+    else s+='❌ فشل غير معروف.';
+    out.textContent=s;
+  }catch(e){ out.textContent='خطأ في الاتصال: '+e; }
+}
+</script></body></html>
