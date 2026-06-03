@@ -81,6 +81,9 @@ const App = {
     if (this.account){
       document.querySelectorAll('.nav-item').forEach(n=>n.classList.toggle('on', n.dataset.nav===view));
     }
+    // قسيمة الرهان تظهر فقط داخل قسم التوقعات
+    if(view!=='sport'){ this.closeSlip(); const f=document.getElementById('slipFab'); if(f) f.classList.add('hidden'); }
+    else { this.updateSlipFab(); }
   },
   nav(v){
     if (v==='dash'||v==='ref') this.show(v);
@@ -729,13 +732,17 @@ const App = {
       try{ dateEl.textContent=d.toLocaleDateString(this.lang==='fr'?'fr-FR':'ar',{weekday:'long',day:'numeric',month:'long'}); }catch{}
       dateEl.style.display=(v==='standings'||v==='predictions')?'none':'block';
     }
-    body.innerHTML=`<div class="sport-loading">${this.spinner()}</div>`;
+    body.innerHTML=this.sportSkeleton(v);
     const r=await this.api('sport',{ view:v, lang:this.lang });
-    if(r.error){ body.innerHTML=`<div class="sport-empty">${this.sportEmptyIcon()}<span>${T.sport_unavailable}</span></div>`; return; }
+    if(r.error){ body.innerHTML=`<div class="sport-empty">${this.sportEmptyIcon()}<span>${T.sport_unavailable}</span></div>`; this.updateSlipFab(); return; }
 
     if(v==='standings'){ this.renderStandings(r.standings); return; }
 
     if(v==='predictions'){
+      // تجهيز قسيمة الرهان
+      this._slip=r.slip||[];
+      if(!this._slipSel){ this._slipSel=new Set(this._slip.slice(0,3).map(x=>x.event_id)); }
+      this.updateSlipFab();
       let html='';
       // أفضل توقع منفرد (بطاقة بطل)
       if(r.top_pick){ html+=this.heroPick(r.top_pick); }
@@ -774,6 +781,7 @@ const App = {
     } else {
       body.innerHTML=`<div class="sport-empty">${this.sportEmptyIcon()}<span>${T.sport_no_matches}</span></div>`;
     }
+    this.updateSlipFab();
   },
   sportEmptyIcon(){
     return `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" style="width:48px;height:48px;opacity:.3"><circle cx="12" cy="12" r="10"/><path d="M12 2a15 15 0 010 20M12 2a15 15 0 000 20M2 12h20"/></svg>`;
@@ -1087,6 +1095,90 @@ const App = {
     }
     return html;
   },
+
+  // ═══ قسيمة الرهان (خانة جانبية) ═══
+  riskClass(conf){ return conf>=75?'low':conf>=60?'mid':'high'; },
+  riskLabel(conf){ const T=window.TEXTS[this.lang]; return conf>=75?T.slip_risk_low:conf>=60?T.slip_risk_mid:T.slip_risk_high; },
+  slipMarketLabel(mk,pick){
+    const T=window.TEXTS[this.lang];
+    return {'1x2':T.slip_mk_winner,'dc':T.sport_dc,'ou15':T.slip_mk_over+' 1.5','ou25':T.slip_mk_over+' 2.5','ou35':T.slip_mk_over+' 3.5','btts':'BTTS'}[mk]||'';
+  },
+  updateSlipFab(){
+    const fab=document.getElementById('slipFab'); if(!fab) return;
+    const show=this.current==='sport' && this._slip && this._slip.length;
+    fab.classList.toggle('hidden', !show);
+    const c=document.getElementById('slipFabCount');
+    if(c && this._slipSel) c.textContent=this._slipSel.size;
+  },
+  openSlip(){
+    if(!this._slip || !this._slip.length){ this.toast(window.TEXTS[this.lang].slip_empty); return; }
+    this.renderSlip();
+    document.getElementById('slipDrawerBg').classList.add('show');
+  },
+  closeSlip(){ document.getElementById('slipDrawerBg').classList.remove('show'); },
+  closeSlipBg(e){ if(e.target.id==='slipDrawerBg') this.closeSlip(); },
+  toggleSlipPick(id){
+    if(!this._slipSel) this._slipSel=new Set();
+    if(this._slipSel.has(id)) this._slipSel.delete(id); else this._slipSel.add(id);
+    this.renderSlip(); this.updateSlipFab();
+  },
+  computeSlip(){
+    let odds=1, n=0;
+    (this._slip||[]).forEach(r=>{ if(this._slipSel && this._slipSel.has(r.event_id)){ odds*=Number(r.odd)||1; n++; } });
+    return { odds: n?odds:0, n };
+  },
+  renderSlip(){
+    const T=window.TEXTS[this.lang];
+    const list=document.getElementById('slipList'); if(!list) return;
+    const rows=this._slip||[];
+    if(!rows.length){ list.innerHTML=`<div class="slip-empty">${T.slip_empty}</div>`; }
+    else {
+      list.innerHTML=rows.map(r=>{
+        const sel=this._slipSel && this._slipSel.has(r.event_id);
+        const rc=this.riskClass(r.conf);
+        let when=''; try{ when=r.date?new Date(r.date).toLocaleString(this.lang==='fr'?'fr':'ar-u-nu-latn',{day:'numeric',month:'short',hour:'2-digit',minute:'2-digit'}):''; }catch{}
+        return `<div class="slip-row ${sel?'on':''}" onclick="App.toggleSlipPick(${r.event_id||0})">
+          <div class="slip-check ${sel?'on':''}"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><path d="M5 12l5 5L20 6"/></svg></div>
+          <div class="slip-row-main">
+            <div class="slip-row-teams">
+              <img src="${r.home_logo||''}" onerror="this.style.visibility='hidden'">
+              <span>${this.esc(r.home)} <em>${T.sport_vs}</em> ${this.esc(r.away)}</span>
+              <img src="${r.away_logo||''}" onerror="this.style.visibility='hidden'">
+            </div>
+            <div class="slip-row-meta">
+              <span class="slip-mk">${this.slipMarketLabel(r.mk,r.pick)}</span>
+              <span class="slip-pick">${this.esc(r.pick)}</span>
+              <span class="slip-when">${when}</span>
+            </div>
+          </div>
+          <div class="slip-row-end">
+            <div class="slip-odd">${Number(r.odd).toFixed(2)}</div>
+            <div class="slip-risk ${rc}">${r.conf}%</div>
+          </div>
+        </div>`;
+      }).join('');
+    }
+    this.slipStakeInput();
+  },
+  slipStakeInput(){
+    const inp=document.getElementById('slipStake'); if(!inp) return;
+    let v=inp.value.replace(/[^\d]/g,''); if(v!==inp.value) inp.value=v;
+    const stake=parseInt(v||'0',10)||0;
+    const { odds, n }=this.computeSlip();
+    const ret=odds>0?Math.round(stake*odds):0;
+    const po=document.getElementById('slipPicks'); if(po) po.textContent=n;
+    const oo=document.getElementById('slipOdds'); if(oo) oo.textContent=odds>0?odds.toFixed(2):'1.00';
+    const ro=document.getElementById('slipReturn'); if(ro) ro.textContent=ret.toLocaleString(this.lang==='fr'?'fr':'ar-u-nu-latn');
+  },
+
+  // ═══ Skeleton loading ═══
+  sportSkeleton(v){
+    const card=`<div class="sk-card"><div class="sk-line w40"></div><div class="sk-teams"><div class="sk-av"></div><div class="sk-bar"></div><div class="sk-av"></div></div><div class="sk-line w70"></div><div class="sk-line w55"></div></div>`;
+    const row=`<div class="sk-row"><div class="sk-mini"></div><div style="flex:1"><div class="sk-line w60"></div><div class="sk-line w35"></div></div></div>`;
+    if(v==='standings') return `<div class="sk-wrap">${Array(8).fill(row).join('')}</div>`;
+    if(v==='predictions') return `<div class="sk-wrap">${card}${card}${card}</div>`;
+    return `<div class="sk-wrap">${Array(6).fill(row).join('')}</div>`;
+  },
   renderStandings(s){
     const body=document.getElementById('sportBody');
     const T=window.TEXTS[this.lang];
@@ -1095,13 +1187,16 @@ const App = {
     const leagues=[[17,'Premier League'],[8,'La Liga'],[23,'Serie A'],[35,'Bundesliga'],[34,'Ligue 1']];
     let head=`<div class="std-leagues">${leagues.map(l=>`<button class="std-lg ${this._stLeague==l[0]?'on':''}" onclick="App.loadStandings(${l[0]})">${l[1]}</button>`).join('')}</div>`;
     if(!table.length){ body.innerHTML=head+`<div class="sport-empty">${T.sport_no_matches}</div>`; return; }
+    const formDots=(f)=>{ if(!f) return ''; return `<div class="std-form">${String(f).slice(-5).split('').map(ch=>{const c=/w/i.test(ch)?'w':/l/i.test(ch)?'l':'d';return `<i class="${c}"></i>`;}).join('')}</div>`; };
     body.innerHTML=head+`<div class="card" style="padding:6px 12px;margin-top:12px">
-      <div class="std-row std-header"><div class="std-pos">#</div><div class="std-crest"></div><div class="std-name"></div><div class="std-pl">${T.sport_played||'لعب'}</div><div class="std-pts">${T.sport_pts||'نقاط'}</div></div>
+      <div class="std-row std-header"><div class="std-pos">#</div><div class="std-crest"></div><div class="std-name"></div><div class="std-form-h">${T.sport_form||'آخر 5'}</div><div class="std-pl">${T.sport_played||'لعب'}</div><div class="std-gd">+/-</div><div class="std-pts">${T.sport_pts||'نقاط'}</div></div>
       ${table.slice(0,30).map(r=>`<div class="std-row">
         <div class="std-pos ${r.position<=4?'top':r.position>=18?'rel':''}">${r.position}</div>
         <img class="std-crest" src="${r.crest||''}" onerror="this.style.visibility='hidden'">
         <div class="std-name">${this.esc(r.team)}</div>
+        ${formDots(r.form)}
         <div class="std-pl">${r.played}</div>
+        <div class="std-gd">${r.gd>0?'+':''}${r.gd}</div>
         <div class="std-pts">${r.points}</div>
       </div>`).join('')}
       </div>`;
@@ -1109,7 +1204,7 @@ const App = {
   async loadStandings(leagueId){
     this._stLeague=leagueId;
     const body=document.getElementById('sportBody');
-    body.innerHTML=`<div class="sport-loading">${this.spinner()}</div>`;
+    body.innerHTML=this.sportSkeleton('standings');
     const r=await this.api('sport',{ view:'standings', league_id:leagueId, lang:this.lang });
     this.renderStandings(r.standings);
   },

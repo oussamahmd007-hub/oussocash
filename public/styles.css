@@ -1052,3 +1052,104 @@ html[dir="rtl"] .dev-card-arrow{transform:scaleX(-1)}
 .mf-preview{margin-top:14px;background:var(--accent-soft);border-radius:14px;padding:14px 15px}
 .mf-pv-h{font-size:12px;font-weight:800;color:var(--accent);margin-bottom:8px}
 .mf-preview p{font-size:13px;line-height:1.65;color:var(--txt-2)}
+
+/* ═══════════════════════════════════════════════════════════════
+   قسيمة الرهان (خانة جانبية) · Skeleton · Form
+   ═══════════════════════════════════════════════════════════════ */
+
+/* الزر العائم للقسيمة */
+.slip-fab{position:fixed;z-index:60;bottom:84px;inset-inline-end:calc(50% - var(--maxw)/2 + 16px);
+  width:56px;height:56px;border-radius:18px;border:none;background:linear-gradient(135deg,var(--accent),var(--accent-2));
+  color:#fff;display:grid;place-items:center;box-shadow:var(--shadow-blue);cursor:pointer;transition:transform .18s var(--ease)}
+@media(max-width:472px){.slip-fab{inset-inline-end:16px}}
+.slip-fab:active{transform:scale(.92)}
+.slip-fab svg{width:25px;height:25px}
+.slip-fab-count{position:absolute;top:-5px;inset-inline-end:-5px;min-width:21px;height:21px;padding:0 5px;border-radius:11px;
+  background:var(--danger);color:#fff;font-size:11px;font-weight:800;display:grid;place-items:center;border:2px solid var(--bg)}
+
+/* الخلفية + اللوحة */
+.slip-drawer-bg{position:fixed;inset:0;z-index:110;background:rgba(15,28,52,.4);backdrop-filter:blur(4px);
+  display:none;justify-content:flex-end;animation:fade .25s}
+.slip-drawer-bg.show{display:flex}
+.slip-drawer{width:min(392px,90%);max-width:var(--maxw);height:100dvh;background:var(--bg);
+  border-inline-start:1px solid var(--line);display:flex;flex-direction:column;animation:slipIn .34s var(--ease);box-shadow:-12px 0 40px rgba(15,28,52,.18)}
+@keyframes slipIn{from{transform:translateX(30px);opacity:.3}to{transform:none;opacity:1}}
+.slip-head{display:flex;align-items:center;justify-content:space-between;padding:18px 18px 4px}
+.slip-head-title{display:flex;align-items:center;gap:9px}
+.slip-head-title svg{width:22px;height:22px;color:var(--accent)}
+.slip-head-title b{font-size:18px;font-weight:800}
+.slip-close{width:34px;height:34px;border-radius:11px;border:none;background:var(--surface);color:var(--txt-2);display:grid;place-items:center;cursor:pointer}
+.slip-close svg{width:18px;height:18px}
+.slip-sub{font-size:11.5px;color:var(--txt-3);padding:0 18px 12px;font-weight:600}
+.slip-list{flex:1;overflow-y:auto;padding:4px 14px 10px;display:flex;flex-direction:column;gap:9px}
+.slip-empty{text-align:center;color:var(--txt-3);font-size:13px;padding:40px 10px}
+
+.slip-row{display:flex;align-items:center;gap:11px;background:var(--surface);border:1px solid var(--line);
+  border-radius:14px;padding:11px 12px;cursor:pointer;transition:border-color .15s,background .15s;position:relative}
+.slip-row.on{border-color:var(--accent);background:var(--accent-soft)}
+.slip-check{width:22px;height:22px;flex-shrink:0;border-radius:7px;border:2px solid var(--line-2);display:grid;place-items:center;transition:all .15s}
+.slip-check svg{width:13px;height:13px;color:#fff;opacity:0}
+.slip-check.on{background:var(--accent);border-color:var(--accent)}
+.slip-check.on svg{opacity:1}
+.slip-row-main{flex:1;min-width:0}
+.slip-row-teams{display:flex;align-items:center;gap:6px;font-size:12.5px;font-weight:700;white-space:nowrap;overflow:hidden}
+.slip-row-teams img{width:17px;height:17px;object-fit:contain;flex-shrink:0}
+.slip-row-teams span{flex:1;overflow:hidden;text-overflow:ellipsis}
+.slip-row-teams em{font-style:normal;color:var(--txt-3);font-weight:600;margin:0 2px}
+.slip-row-meta{display:flex;align-items:center;gap:7px;margin-top:5px}
+.slip-mk{font-size:9.5px;font-weight:800;color:var(--txt-3);background:var(--bg-2);padding:2px 7px;border-radius:6px}
+.slip-pick{font-size:12px;font-weight:800;color:var(--accent)}
+.slip-when{font-size:10px;color:var(--txt-3);font-weight:600;margin-inline-start:auto}
+.slip-row-end{flex-shrink:0;display:flex;flex-direction:column;align-items:center;gap:5px}
+.slip-odd{font-size:15px;font-weight:800;color:var(--txt);min-width:42px;text-align:center;background:var(--bg-2);border-radius:8px;padding:4px 7px}
+.slip-risk{font-size:9.5px;font-weight:800;padding:2px 7px;border-radius:6px}
+.slip-risk.low{background:rgba(34,197,94,.14);color:#16a34a}
+.slip-risk.mid{background:var(--accent-soft);color:var(--accent)}
+.slip-risk.high{background:rgba(245,158,11,.16);color:#d97706}
+
+/* الحاسبة */
+.slip-calc{background:var(--surface);border-top:1px solid var(--line);padding:14px 16px calc(16px + env(safe-area-inset-bottom));box-shadow:0 -8px 24px rgba(15,28,52,.06)}
+.slip-summary{display:flex;gap:10px;margin-bottom:12px}
+.slip-sm{flex:1;background:var(--bg-2);border-radius:12px;padding:9px 12px;display:flex;align-items:center;justify-content:space-between}
+.slip-sm span{font-size:11px;color:var(--txt-3);font-weight:700}
+.slip-sm b{font-size:15px;font-weight:800;color:var(--accent)}
+.slip-stake-row{margin-bottom:12px}
+.slip-stake{display:block;font-size:11.5px;font-weight:700;color:var(--txt-2);margin-bottom:7px}
+.slip-stake-field{position:relative}
+.slip-stake-field input{width:100%;background:var(--bg-2);border:1.5px solid var(--line);border-radius:13px;
+  padding:14px 58px 14px 16px;font-size:20px;font-weight:800;color:var(--txt);font-family:var(--font);text-align:start;outline:none;transition:border-color .15s}
+html[dir="rtl"] .slip-stake-field input{padding:14px 16px 14px 58px}
+.slip-stake-field input:focus{border-color:var(--accent)}
+.slip-um{position:absolute;top:50%;inset-inline-end:18px;transform:translateY(-50%);font-size:22px;font-weight:800;
+  color:var(--txt-3);opacity:.4;pointer-events:none;letter-spacing:.5px}
+.slip-return{display:flex;align-items:center;justify-content:space-between;background:linear-gradient(135deg,var(--accent),var(--accent-2));
+  border-radius:14px;padding:14px 16px;color:#fff;box-shadow:var(--shadow-blue)}
+.slip-return>span{font-size:13px;font-weight:700;opacity:.95}
+.slip-return b{font-size:22px;font-weight:800;display:flex;align-items:baseline;gap:4px}
+.slip-return b small{font-size:12px;font-weight:700;opacity:.9}
+.slip-note{font-size:10px;color:var(--txt-3);text-align:center;margin-top:10px;line-height:1.5;opacity:.85}
+
+/* Skeleton loading */
+.sk-wrap{display:flex;flex-direction:column;gap:12px;padding-top:4px}
+.sk-card,.sk-row{background:var(--surface);border:1px solid var(--line);border-radius:16px;box-shadow:var(--shadow-card)}
+.sk-card{padding:15px}
+.sk-row{display:flex;align-items:center;gap:12px;padding:13px 14px}
+.sk-mini{width:42px;height:42px;border-radius:10px;flex-shrink:0}
+.sk-teams{display:flex;align-items:center;gap:12px;margin:14px 0}
+.sk-av{width:42px;height:42px;border-radius:50%}
+.sk-bar{flex:1;height:30px;border-radius:8px}
+.sk-line{height:11px;border-radius:6px;margin:7px 0}
+.sk-line.w40{width:40%}.sk-line.w55{width:55%}.sk-line.w60{width:60%}.sk-line.w70{width:70%}.sk-line.w35{width:35%}
+.sk-mini,.sk-av,.sk-bar,.sk-line{background:linear-gradient(100deg,var(--bg-2) 30%,var(--line) 50%,var(--bg-2) 70%);
+  background-size:200% 100%;animation:shimmer 1.3s infinite}
+@keyframes shimmer{from{background-position:200% 0}to{background-position:-200% 0}}
+
+/* Standings — شريط الفورم */
+.std-form{display:flex;gap:3px;width:54px;flex-shrink:0;justify-content:center}
+.std-form i{width:8px;height:8px;border-radius:3px;display:block}
+.std-form i.w{background:#16a34a}
+.std-form i.l{background:var(--danger)}
+.std-form i.d{background:var(--txt-3);opacity:.55}
+.std-form-h{width:54px;flex-shrink:0;text-align:center;font-size:10.5px;color:var(--txt-3);font-weight:700}
+.std-gd{width:32px;flex-shrink:0;text-align:center;font-size:12px;color:var(--txt-2);font-weight:700}
+@media(max-width:400px){.std-form,.std-form-h{display:none}}

@@ -339,12 +339,49 @@
       </div>
       <div class="sport-scroll">
         <div id="sportBody"></div>
-        <a class="sport-news-btn" href="https://koorahgoalnet.com" target="_blank" rel="noopener">
-          <div class="sl-ic sl-ar"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 19.5A2.5 2.5 0 016.5 17H20M4 19.5A2.5 2.5 0 006.5 22H20V2H6.5A2.5 2.5 0 004 4.5z"/></svg></div>
-          <span id="t-sport_news_btn"></span>
-          <svg class="sl-arrow" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 18l6-6-6-6"/></svg>
-        </a>
       </div>
+
+      <!-- ── زر القسيمة الجانبي (يفتح خانة الرهان) ── -->
+      <button class="slip-fab hidden" id="slipFab" onclick="App.openSlip()" aria-label="bet slip">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 4h16v5a2 2 0 000 6v5H4v-5a2 2 0 000-6z"/><path d="M9 9h6M9 13h6"/></svg>
+        <span class="slip-fab-count" id="slipFabCount">0</span>
+      </button>
+
+      <!-- ── خانة قسيمة الرهان الجانبية ── -->
+      <div class="slip-drawer-bg" id="slipDrawerBg" onclick="App.closeSlipBg(event)">
+        <aside class="slip-drawer" id="slipDrawer" onclick="event.stopPropagation()">
+          <div class="slip-head">
+            <div class="slip-head-title">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 4h16v5a2 2 0 000 6v5H4v-5a2 2 0 000-6z"/><path d="M9 9h6M9 13h6"/></svg>
+              <b id="t-slip_title"></b>
+            </div>
+            <button class="slip-close" onclick="App.closeSlip()" aria-label="close">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4"><path d="M18 6L6 18M6 6l12 12"/></svg>
+            </button>
+          </div>
+          <div class="slip-sub" id="t-slip_sub"></div>
+          <div class="slip-list" id="slipList"></div>
+          <div class="slip-calc">
+            <div class="slip-summary">
+              <div class="slip-sm"><span id="t-slip_picks"></span><b id="slipPicks">0</b></div>
+              <div class="slip-sm"><span id="t-slip_total_odds"></span><b id="slipOdds">1.00</b></div>
+            </div>
+            <div class="slip-stake-row">
+              <label class="slip-stake" id="t-slip_stake"></label>
+              <div class="slip-stake-field">
+                <input id="slipStake" inputmode="numeric" autocomplete="off" placeholder="0" oninput="App.slipStakeInput()">
+                <span class="slip-um">UM</span>
+              </div>
+            </div>
+            <div class="slip-return">
+              <span id="t-slip_return"></span>
+              <b><i id="slipReturn">0</i> <small>UM</small></b>
+            </div>
+            <div class="slip-note" id="t-slip_note"></div>
+          </div>
+        </aside>
+      </div>
+
     </div>
 
     <!-- ── SUPPORT CHAT ── -->

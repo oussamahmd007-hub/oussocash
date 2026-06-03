@@ -230,6 +230,16 @@ window.TEXTS = {
     st_pass_acc: 'دقة التمرير', st_crosses: 'العرضيات', st_dribbles: 'المراوغات',
     st_long_balls: 'الكرات الطويلة', st_aerial: 'الكرات الهوائية',
     st_attacks: 'الهجمات', st_dangerous: 'هجمات خطيرة',
+    sport_form: 'آخر 5',
+    // قسيمة الرهان
+    slip_title: 'قسيمة الرهان',
+    slip_sub: 'مباريات اليوم · اختر توقعاتك واحسب أرباحك',
+    slip_picks: 'التوقعات', slip_total_odds: 'مجموع odds',
+    slip_stake: 'مبلغ الرهان', slip_return: 'الأرباح المحتملة',
+    slip_note: 'الأرباح تقديرية بناءً على odds مجمّعة من نسب الثقة · للاطلاع فقط.',
+    slip_empty: 'لا توجد توقعات متاحة لليوم حالياً.',
+    slip_risk_low: 'مضمون', slip_risk_mid: 'متوسط', slip_risk_high: 'مخاطرة',
+    slip_mk_winner: 'الفائز', slip_mk_over: 'أكثر من',
 
     // Smart support
     support_nav: 'الدعم',
@@ -555,6 +565,16 @@ window.TEXTS = {
     st_pass_acc: 'Précision passes', st_crosses: 'Centres', st_dribbles: 'Dribbles',
     st_long_balls: 'Longs ballons', st_aerial: 'Duels aériens',
     st_attacks: 'Attaques', st_dangerous: 'Attaques dang.',
+    sport_form: '5 derniers',
+    // Coupon de paris
+    slip_title: 'Coupon de paris',
+    slip_sub: 'Matchs du jour · choisissez vos pronostics et calculez vos gains',
+    slip_picks: 'Pronostics', slip_total_odds: 'Cote totale',
+    slip_stake: 'Mise', slip_return: 'Gains potentiels',
+    slip_note: 'Gains estimés à partir de cotes dérivées des indices de confiance · indicatif.',
+    slip_empty: 'Aucun pronostic disponible pour aujourd\'hui.',
+    slip_risk_low: 'Sûr', slip_risk_mid: 'Moyen', slip_risk_high: 'Risqué',
+    slip_mk_winner: 'Vainqueur', slip_mk_over: 'Plus de',
 
     // Smart support
     support_nav: 'Support',
