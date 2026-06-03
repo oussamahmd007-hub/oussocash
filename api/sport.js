@@ -276,11 +276,17 @@ module.exports = async (req, res) => {
       let lg = getCache(ck, 6 * 3600e3);
       if (!lg) {
         try {
-          const d = await bsd('/leagues/?is_active=true&limit=60');
+          const d = await bsd('/leagues/?is_active=true&limit=80');
           lg = (d.results || []).map((l) => ({
             id: l.id, name: l.name, country: l.country, logo: leagueImg(l.id),
             season_id: l.current_season ? l.current_season.id : null,
           }));
+          // ترتيب: أبرز البطولات أولاً ثم أبجدياً
+          const PRIORITY = ['premier league', 'la liga', 'serie a', 'bundesliga', 'ligue 1',
+            'champions league', 'europa league', 'primeira liga', 'eredivisie', 'saudi',
+            'mls', 'liga mx', 'world cup', 'euro', 'copa', 'championship'];
+          const rank = (n) => { const s = String(n || '').toLowerCase(); const i = PRIORITY.findIndex((p) => s.includes(p)); return i < 0 ? 999 : i; };
+          lg.sort((a, b) => { const ra = rank(a.name), rb = rank(b.name); return ra !== rb ? ra - rb : String(a.name).localeCompare(String(b.name)); });
         } catch { lg = []; }
         setCache(ck, lg);
       }
