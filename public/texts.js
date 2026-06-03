@@ -139,6 +139,7 @@ window.TEXTS = {
     support_wd: 'دعم السحب',
     support_review: 'مراجعة أمنية',
     support_open: 'فتح دعم واتساب الآمن',
+    support_phone_btn: 'الدعم المباشر',
     support_channel: 'القناة الرسمية',
 
     // Notifications
@@ -178,6 +179,8 @@ window.TEXTS = {
     contest_refs_label: 'إحالة',
     contest_days: 'يوم', contest_hours: 'ساعة',
     contest_banner: 'مسابقة جارية — شارك واربح',
+    channel_banner_t: 'قناتنا الرسمية',
+    channel_banner_d: 'تابعونا لتصلكم كل جديد في خدمات OussoCash',
 
     // Sport
     sport_nav: 'توقعات',
@@ -250,7 +253,8 @@ window.TEXTS = {
     support_placeholder: 'اكتب سؤالك هنا...',
     support_send: 'إرسال',
     support_human: 'تواصل مع الدعم المباشر',
-    support_greeting: 'أهلاً بك في دعم OussoCash 👋 كيف يمكنني مساعدتك؟ اسأل عن التحقق، الإحالات، السحب، أو الوكالة.',
+    chat_open_sport: '⚽ عرض التوقعات الآن',
+    support_greeting: 'أهلاً بك في مساعد OussoCash الذكي 👋\nأستطيع مساعدتك في كل ما يخص الوكالة:\n• التسجيل والتفعيل والبروموكود OUSSO\n• الإيداع والسحب وحلول المشاكل الشائعة\n• الإحالات والأرباح والمسابقة\n• طرق الدفع المدعومة\n• توقعات المباريات (اكتب: اعطني توقعات)\n\nاكتب سؤالك وسأجيبك فوراً.',
     support_typing: 'يكتب...',
     install_btn: 'تنزيل التطبيق',
     install_banner_t: 'ثبّت تطبيق OussoCash',
@@ -478,6 +482,7 @@ window.TEXTS = {
     support_wd: 'Support de retrait',
     support_review: 'Révision de sécurité',
     support_open: 'Ouvrir le support WhatsApp sécurisé',
+    support_phone_btn: 'Support direct',
     support_channel: 'Chaîne officielle',
 
     notif_enable_t: 'Notifications',
@@ -515,6 +520,8 @@ window.TEXTS = {
     contest_refs_label: 'parrain.',
     contest_days: 'j', contest_hours: 'h',
     contest_banner: 'Concours en cours — partagez et gagnez',
+    channel_banner_t: 'Notre chaîne officielle',
+    channel_banner_d: 'Suivez-nous pour toutes les nouveautés OussoCash',
 
     // Sport
     sport_nav: 'Pronostics',
@@ -587,7 +594,8 @@ window.TEXTS = {
     support_placeholder: 'Écrivez votre question...',
     support_send: 'Envoyer',
     support_human: 'Contacter le support direct',
-    support_greeting: 'Bienvenue au support OussoCash 👋 Comment puis-je vous aider ? Vérification, parrainage, retrait ou agence.',
+    chat_open_sport: '⚽ Voir les pronostics',
+    support_greeting: 'Bienvenue sur l\'assistant intelligent OussoCash 👋\nJe peux vous aider sur tout ce qui concerne l\'agence:\n• Inscription, activation et code OUSSO\n• Dépôt, retrait et problèmes courants\n• Parrainages, gains et concours\n• Moyens de paiement supportés\n• Pronostics des matchs (écrivez: donne-moi des pronostics)\n\nPosez votre question et je vous répondrai aussitôt.',
     support_typing: 'écrit...',
     install_btn: 'Installer',
     install_banner_t: 'Installez OussoCash',

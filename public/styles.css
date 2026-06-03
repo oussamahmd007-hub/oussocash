@@ -609,6 +609,25 @@ html[dir="rtl"] .cb-arrow{transform:scaleX(-1)}
 @keyframes typedot{0%,60%,100%{opacity:.3;transform:translateY(0)}30%{opacity:1;transform:translateY(-3px)}}
 .chat-human-btn{align-self:flex-start;margin-top:-4px;font-size:12.5px;font-weight:700;color:var(--accent-lite);
   background:var(--accent-soft);border:1px solid rgba(61,130,247,.25);padding:9px 15px;border-radius:12px}
+.chat-action-btn{align-self:flex-start;margin-top:-2px;font-size:12.8px;font-weight:800;color:#fff;
+  background:linear-gradient(135deg,var(--accent),var(--accent-2));border:none;padding:10px 16px;border-radius:12px;
+  box-shadow:0 4px 14px rgba(37,99,235,.28);cursor:pointer}
+.chat-msg.bot .bubble code{background:var(--accent-soft);color:var(--accent);font-weight:800;
+  padding:1px 7px;border-radius:6px;letter-spacing:.5px;font-family:inherit}
+.chat-msg.bot .bubble u{text-decoration-color:var(--accent);text-underline-offset:2px}
+/* بانر القناة الرسمية أعلى قسم المسابقة */
+.channel-banner{display:flex;align-items:center;gap:12px;text-decoration:none;
+  background:linear-gradient(135deg,var(--accent),var(--accent-2));color:#fff;
+  padding:13px 15px;border-radius:var(--radius-sm);margin-bottom:14px;
+  box-shadow:0 8px 24px rgba(37,99,235,.26)}
+.channel-banner:active{transform:scale(.99)}
+.channel-banner-ic{width:38px;height:38px;flex-shrink:0;border-radius:11px;
+  background:rgba(255,255,255,.18);display:grid;place-items:center}
+.channel-banner-ic svg{width:20px;height:20px}
+.channel-banner-txt{flex:1;display:flex;flex-direction:column;line-height:1.35}
+.channel-banner-txt b{font-size:14.5px;font-weight:800}
+.channel-banner-txt span{font-size:12px;opacity:.9}
+.channel-banner-go{width:18px;height:18px;flex-shrink:0;opacity:.85}
 .chat-input-bar{display:flex;gap:10px;padding:12px 16px calc(12px + env(safe-area-inset-bottom));
   border-top:1px solid var(--line);background:var(--bg-2)}
 .chat-input-bar input{flex:1;height:46px;background:var(--surface);border:1.5px solid var(--line-2);

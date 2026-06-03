@@ -8,6 +8,10 @@ let SUPPORT_WA = '22232230404';
 let CHANNEL    = 'https://whatsapp.com/channel/0029Vb7TGP52phHUrKJ13u1p';
 let OS_APP_ID  = '';
 
+// ── ثوابت مكتوبة في الكود (لا تُقرأ من قاعدة البيانات) ──
+const OFFICIAL_CHANNEL = 'https://whatsapp.com/channel/0029Vb7TGP52phHUrKJ13u1p'; // قناة OussoCash الرسمية
+const SUPPORT_PHONE    = '22249002902'; // رقم الدعم المباشر (واتساب)
+
 const Store = {
   get s()  { try { return localStorage.getItem('oc_session'); } catch { return null; } },
   set s(v) { try { v ? localStorage.setItem('oc_session', v) : localStorage.removeItem('oc_session'); } catch {} },
@@ -526,12 +530,19 @@ const App = {
   openSupport(){
     const T=window.TEXTS[this.lang];
     const items=[[T.support_verify,this.iShield()],[T.support_device,this.iDevice()],[T.support_wd,this.iCash()],[T.support_review,this.iSearch()]];
+    const phoneDisp='+222 '+SUPPORT_PHONE.replace(/^222/,'').replace(/(\d{2})(\d{2})(\d{2})(\d{2})/,'$1 $2 $3 $4');
     this.openSheet(`
       <h3>${T.support_title}</h3><div class="sub">${T.support_sub}</div>
       <div class="support-grid">${items.map(i=>`<div class="sup-item">${i[1]}<span>${i[0]}</span></div>`).join('')}</div>
       <button class="btn btn-primary" onclick="App.openWhatsapp()">${T.support_open}</button>
-      <button class="btn btn-ghost" style="margin-top:10px" onclick="window.open('${CHANNEL}','_blank')">${T.support_channel}</button>
+      <button class="btn btn-ghost" style="margin-top:10px" onclick="App.openSupportPhone()">${T.support_phone_btn} · ${phoneDisp}</button>
+      <button class="btn btn-ghost" style="margin-top:10px" onclick="window.open('${OFFICIAL_CHANNEL}','_blank')">${T.support_channel}</button>
     `);
+  },
+  openSupportPhone(){
+    const id=this.account?this.account.game_id:'';
+    const msg=this.lang==='ar'?`دعم OussoCash · المعرّف: ${id}`:`Support OussoCash · ID: ${id}`;
+    window.open(`https://wa.me/${SUPPORT_PHONE}?text=${encodeURIComponent(msg)}`,'_blank');
   },
   openWhatsapp(){
     const id=this.account?this.account.game_id:'';
@@ -668,13 +679,22 @@ const App = {
   },
 
   // ═══ CONTEST ═══
+  // بانر القناة الرسمية (يظهر أعلى قسم المسابقة) — الرابط ثابت في الكود
+  channelBannerHtml(){
+    const T=window.TEXTS[this.lang];
+    return `<a class="channel-banner" href="${OFFICIAL_CHANNEL}" target="_blank" rel="noopener">
+      <div class="channel-banner-ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 11l18-7-7 18-2.5-7.5z"/><path d="M11.5 13.5L21 4"/></svg></div>
+      <div class="channel-banner-txt"><b>${T.channel_banner_t}</b><span>${T.channel_banner_d}</span></div>
+      <svg class="channel-banner-go" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 6l6 6-6 6"/></svg>
+    </a>`;
+  },
   async loadContest(){
     const T=window.TEXTS[this.lang];
     const body=document.getElementById('contestBody');
     body.innerHTML=`<div class="card" style="text-align:center;color:var(--txt-3);padding:40px 20px">…</div>`;
     const r=await this.api('contest',{ session:Store.s });
     if(!r.contest){
-      body.innerHTML=`<div class="card" style="text-align:center;padding:40px 22px">
+      body.innerHTML=this.channelBannerHtml()+`<div class="card" style="text-align:center;padding:40px 22px">
         <div class="contest-empty-ic">${this.iTrophy()}</div>
         <p style="color:var(--txt-2);font-size:14px;margin-top:14px">${T.contest_none}</p></div>`;
       return;
@@ -684,6 +704,7 @@ const App = {
     const ends=this.countdown(c.ends_at);
     const medal=['①','②','③'];
     body.innerHTML=`
+      ${this.channelBannerHtml()}
       <div class="contest-hero">
         <div class="contest-trophy">${this.iTrophy()}</div>
         <div class="contest-prize-val">${c.prize_um.toLocaleString()} <small>UM</small></div>
@@ -1241,8 +1262,27 @@ const App = {
     const box=document.getElementById('chatMsgs');
     const div=document.createElement('div');
     div.className='chat-msg '+(who==='me'?'me':'bot');
-    div.innerHTML=`<div class="bubble">${this.esc(text).replace(/\n/g,'<br>')}</div>`;
+    let showSport=false;
+    if(who==='bot'){
+      let t=String(text||'');
+      showSport=/<!--SHOW_SPORT-->/.test(t);
+      t=t.replace(/<!--[^>]*-->/g,'').trim();          // إزالة العلامات الداخلية
+      let h=this.esc(t).replace(/\n/g,'<br>');
+      // إعادة تفعيل الوسوم الآمنة القادمة من قاعدة المعرفة فقط
+      h=h.replace(/&lt;code&gt;/g,'<code>').replace(/&lt;\/code&gt;/g,'</code>')
+         .replace(/&lt;u&gt;/g,'<u>').replace(/&lt;\/u&gt;/g,'</u>');
+      div.innerHTML=`<div class="bubble">${h}</div>`;
+    }else{
+      div.innerHTML=`<div class="bubble">${this.esc(text).replace(/\n/g,'<br>')}</div>`;
+    }
     box.appendChild(div);
+    if(showSport){
+      const T=window.TEXTS[this.lang];
+      const b=document.createElement('button');
+      b.className='chat-action-btn'; b.textContent=T.chat_open_sport;
+      b.onclick=()=>this.nav('sport');
+      box.appendChild(b);
+    }
     if(suggestHuman){
       const T=window.TEXTS[this.lang];
       const b=document.createElement('button');
