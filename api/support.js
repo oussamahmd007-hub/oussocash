@@ -130,10 +130,10 @@ module.exports = async (req, res) => {
       if (reply) return json(res, 200, { reply, intent, score: +score.toFixed(3) });
     }
 
-    // لم يُفهم السؤال → رد احترافي + اقتراح الدعم المباشر
+    // لم يُفهم السؤال → رد احترافي + اقتراح المواضيع + الدعم المباشر
     const fallback = lang === 'fr'
-      ? 'Reformulez votre question plus clairement pour que je puisse vous aider précisément. Pour une aide directe, contactez notre support.'
-      : 'رجاءً أعد صياغة سؤالك بشكل أوضح حتى أتمكن من مساعدتك بدقة. وللمساعدة المباشرة، يمكنك التواصل مع الدعم.';
+      ? 'Je n\'ai pas bien saisi votre question. Je peux vous aider sur: l\'inscription, l\'activation, le dépôt, le retrait, les parrainages, les gains, les moyens de paiement, ou les pronostics (écrivez «pronostics»). Reformulez votre question, ou contactez le support direct.'
+      : 'لم أفهم سؤالك تماماً. يمكنني مساعدتك في: التسجيل، التفعيل، الإيداع، السحب، الإحالات، الأرباح، طرق الدفع المدعومة، أو التوقعات (اكتب «اعطني توقعات»). أعد صياغة سؤالك، أو تواصل مع الدعم المباشر.';
     return json(res, 200, { reply: fallback, intent: null, score: +score.toFixed(3), suggest_human: true });
   } catch (e) {
     console.error('support error', e);
