@@ -124,6 +124,43 @@ function buildCoupon(preds, n) {
     .slice(0, n || 5);
 }
 
+// odd عشري ضمني من نسبة الثقة (هامش بسيط ~6%)
+function impliedOdd(conf) {
+  const c = Math.max(2, Math.min(97, conf || 0));
+  return Math.max(1.02, +((100 / c) * 0.94).toFixed(2));
+}
+// أقوى توقع منفرد لكل مباراة (تنوّع: 1X2 / أكثر-أقل / BTTS / فرصة مزدوجة) — الأعلى ثقة
+function bestSlipPick(p) {
+  const c = [];
+  if (p.tip && p.tip !== 'تعادل' && p.fav) c.push({ pick: p.tip, mk: '1x2', conf: p.confidence });
+  if (p.dc_key) c.push({ pick: p.dc_key, mk: 'dc', conf: p.dc_prob });
+  if (p.over15 != null) c.push({ pick: 'Over 1.5', mk: 'ou15', conf: p.over15 });
+  if (p.over25 != null) c.push({ pick: 'Over 2.5', mk: 'ou25', conf: p.over25 });
+  if (p.over35 != null) c.push({ pick: 'Over 3.5', mk: 'ou35', conf: p.over35 });
+  if (p.btts_yes != null) {
+    const yes = p.btts_yes >= 50;
+    c.push({ pick: yes ? 'BTTS: Yes' : 'BTTS: No', mk: 'btts', conf: yes ? p.btts_yes : (100 - p.btts_yes) });
+  }
+  if (!c.length) return null;
+  c.sort((a, b) => b.conf - a.conf);
+  const b = c[0];
+  return { pick: b.pick, mk: b.mk, conf: b.conf, odd: impliedOdd(b.conf) };
+}
+function buildSlip(preds, todayStr) {
+  let src = preds.filter((p) => String(p.date).slice(0, 10) === todayStr && p.status === 'notstarted');
+  if (!src.length) src = preds.filter((p) => p.status !== 'finished'); // احتياط: المباريات القادمة
+  return src.map((p) => {
+    const b = bestSlipPick(p);
+    if (!b) return null;
+    return {
+      event_id: p.event_id, home: p.home, away: p.away,
+      home_logo: p.home_logo, away_logo: p.away_logo,
+      league: p.league, league_logo: p.league_logo, date: p.date,
+      pick: b.pick, mk: b.mk, conf: b.conf, odd: b.odd,
+    };
+  }).filter(Boolean).sort((a, b) => b.conf - a.conf);
+}
+
 // ── خرائط الإحصائيات للعرض المقارن ──
 const STAT_DEFS = [
   ['ball_possession', 'st_possession', 'pct'],
@@ -375,7 +412,8 @@ module.exports = async (req, res) => {
       const coupon = buildCoupon(preds, 5);
       const featured = buildCoupon(preds, 3);
       const top_pick = featured[0] || null;
-      return json(res, 200, { view, predictions: preds.slice(0, 18), coupon, featured, top_pick });
+      const slip = buildSlip(preds, ymd(new Date()));
+      return json(res, 200, { view, predictions: preds.slice(0, 18), coupon, featured, top_pick, slip });
     }
 
     // ── المباريات: اليوم / غداً / أمس / مباشر ──
