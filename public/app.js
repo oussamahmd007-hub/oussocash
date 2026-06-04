@@ -581,15 +581,37 @@ const App = {
   renderLeagues(){
     const box=document.getElementById('leaguesGrid');
     if(!box) return;
+    const C='https://crests.football-data.org/';
     const leagues=[
-      {n:'Premier League',c:'PL',img:'https://crests.football-data.org/PL.png'},
-      {n:'La Liga',c:'PD',img:'https://crests.football-data.org/PD.png'},
-      {n:'Serie A',c:'SA',img:'https://crests.football-data.org/SA.png'},
-      {n:'Bundesliga',c:'BL1',img:'https://crests.football-data.org/BL1.png'},
-      {n:'Ligue 1',c:'FL1',img:'https://crests.football-data.org/FL1.png'},
-      {n:'Champions League',c:'CL',img:'https://crests.football-data.org/CL.png'},
+      {n:'Premier League',      img:C+'PL.png'},
+      {n:'La Liga',             img:C+'PD.png'},
+      {n:'Serie A',             img:C+'SA.png'},
+      {n:'Bundesliga',          img:C+'BL1.png'},
+      {n:'Ligue 1',             img:C+'FL1.png'},
+      {n:'Champions League',    img:C+'CL.png'},
+      {n:'Europa League',       img:C+'EL.png'},
+      {n:'Conf. League',        img:C+'UECL.png'},
+      {n:'Eredivisie',          img:C+'DED.png'},
+      {n:'Primeira Liga',       img:C+'PPL.png'},
+      {n:'Championship',        img:C+'ELC.png'},
+      {n:'Brasileirão',         img:C+'BSA.png'},
+      {n:'Copa Libertadores',   img:C+'CLI.png'},
+      {n:'Süper Lig',           img:C+'TL1.png'},
+      {n:'MLS',                 img:C+'MLS.png'},
+      {n:'World Cup',           img:C+'WC.png'},
+      {n:'Saudi Pro League',    img:''},
+      {n:'Serie A (BRA)',       img:C+'BSA.png'},
+      {n:'Scottish Prem.',      img:''},
+      {n:'Ekstraklasa',         img:''},
+      {n:'AFCON',               img:''},
+      {n:'CAF Champions',       img:''},
     ];
-    box.innerHTML=leagues.map(l=>`<div class="league-chip"><img src="${l.img}" onerror="this.style.display='none'" alt=""><span>${l.n}</span></div>`).join('');
+    box.innerHTML=leagues.map(l=>`
+      <div class="league-chip">
+        ${l.img?`<img src="${l.img}" onerror="this.style.display='none'" alt="">`:
+          `<span class="league-chip-ic">⚽</span>`}
+        <span>${l.n}</span>
+      </div>`).join('');
   },
   renderPayStrip(){
     const track=document.getElementById('payTrack');
@@ -858,15 +880,27 @@ const App = {
       <div class="pp"><span>X</span><div class="pp-bar draw"><i style="width:${p.prob_draw}%"></i></div><em>${p.prob_draw}%</em></div>
       <div class="pp"><span>2</span><div class="pp-bar"><i style="width:${p.prob_away}%"></i></div><em>${p.prob_away}%</em></div>
     </div>`;
+    // كل البيانات الإضافية المتاحة من الـ API
     let extra='';
-    if(p.score) extra+=`<div class="pred-chip"><span>${T.sport_score}</span><b>${this.esc(p.score)}</b></div>`;
-    if(p.over25!=null) extra+=`<div class="pred-chip"><span>+2.5</span><b>${p.over25}%</b></div>`;
-    if(p.btts_yes!=null) extra+=`<div class="pred-chip"><span>BTTS</span><b>${p.btts_yes}%</b></div>`;
-    if(p.eg_home!=null&&p.eg_away!=null) extra+=`<div class="pred-chip"><span>xG</span><b>${p.eg_home.toFixed(1)}-${p.eg_away.toFixed(1)}</b></div>`;
+    if(p.score)       extra+=`<div class="pred-chip"><span>${T.sport_score}</span><b>${this.esc(p.score)}</b></div>`;
+    if(p.dc_key)      extra+=`<div class="pred-chip accent"><span>${T.sport_dc||'DC'}</span><b>${p.dc_key} · ${p.dc_prob}%</b></div>`;
+    if(p.over15!=null)extra+=`<div class="pred-chip"><span>+1.5</span><b>${p.over15}%</b></div>`;
+    if(p.over25!=null)extra+=`<div class="pred-chip"><span>+2.5</span><b>${p.over25}%</b></div>`;
+    if(p.over35!=null)extra+=`<div class="pred-chip"><span>+3.5</span><b>${p.over35}%</b></div>`;
+    if(p.btts_yes!=null)extra+=`<div class="pred-chip"><span>BTTS</span><b>${p.btts_yes}%</b></div>`;
+    if(p.eg_home!=null&&p.eg_away!=null)extra+=`<div class="pred-chip"><span>xG</span><b>${p.eg_home.toFixed(1)}-${p.eg_away.toFixed(1)}</b></div>`;
+    // حساسب معامل ضمني من نسبة الثقة (مرجعي)
+    const implOdd=(c)=>Math.max(1.02,+((100/Math.max(2,Math.min(97,c||0)))*0.94).toFixed(2));
+    const oddVal=implOdd(conf);
     let when='';
     try{ when=p.date?new Date(p.date).toLocaleString(this.lang==='fr'?'fr':'ar-u-nu-latn',{day:'numeric',month:'short',hour:'2-digit',minute:'2-digit'}):''; }catch{}
-    return `<div class="pred-card" onclick="App.openMatch(${p.event_id||0})">
-      <div class="pred-comp"><img src="${p.league_logo||''}" onerror="this.style.display='none'"><span>${this.esc(p.league)}</span>${when?`<em class="pred-when">${when}</em>`:''}${p.recommended?`<span class="pred-rec">★</span>`:''}</div>
+    return `<div class="pred-card${p.recommended?' pred-card-rec':''}" onclick="App.openMatch(${p.event_id||0})">
+      <div class="pred-comp">
+        <img src="${p.league_logo||''}" onerror="this.style.display='none'">
+        <span>${this.esc(p.league)}</span>
+        ${when?`<em class="pred-when">${when}</em>`:''}
+        ${p.recommended?`<span class="pred-rec">★ ${T.sport_top_pick||'توقع مميز'}</span>`:''}
+      </div>
       <div class="pred-teams">
         <div class="pred-team"><img src="${p.home_logo||''}" onerror="this.style.visibility='hidden'"><span>${this.esc(p.home)}</span></div>
         <div class="pred-vs">${T.sport_vs}</div>
@@ -874,7 +908,10 @@ const App = {
       </div>
       ${probBar}
       <div class="pred-foot">
-        <div class="pred-pick"><span>${T.sport_pick}</span><b>${this.esc(p.tip)}</b></div>
+        <div class="pred-pick-wrap">
+          <div class="pred-pick"><span>${T.sport_pick}</span><b>${this.esc(p.tip)}</b></div>
+          <div class="pred-odd-badge">× ${oddVal}</div>
+        </div>
         <div class="pred-conf ${cc}"><div class="conf-bar"><i style="width:${conf}%"></i></div><span>${conf}%</span></div>
       </div>
       ${extra?`<div class="pred-extra">${extra}</div>`:''}

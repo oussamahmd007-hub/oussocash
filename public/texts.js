@@ -280,8 +280,8 @@ window.TEXTS = {
     cta_have_account: 'لدي حساب',
 
     // Register steps
-    rs_title: 'طريقة التسجيل في وكالتنا',
-    rs_sub: 'الشرط الوحيد هو معرّف حساب 1xBet — التفعيل فوري',
+    rs_title: 'انضم إلى OussoCash',
+    rs_sub: 'وكالة 1xBet الرسمية · تفعيل فوري · مجاناً',
     rs_s1_t: 'افتح حساباً جديداً في 1xBet', rs_s1_d: 'عبر رابط وكالتنا الرسمي فقط',
     rs_s2_t: 'سجّل ببروموكود OUSSO', rs_s2_d: 'لربط حسابك بوكالتنا والحصول على البونيس',
     rs_s3_t: 'أدخل معرّف 1xBet لدينا', rs_s3_d: 'هو الشرط الوحيد للتسجيل في الوكالة',
@@ -294,7 +294,7 @@ window.TEXTS = {
     rs_reg_btn: 'التسجيل عبر رابط الوكالة',
     rs_video_btn: 'فيديو: طريقة التفعيل',
     rs_done: 'أكملت الخطوات؟',
-    rs_have_deposited: 'لقد سجّلت وأودعت — تحقّق من معرّفي',
+    rs_have_deposited: 'أدخل معرّف 1xBet الآن',
 
     // Verify modes
     verify_title_reg: 'تحقّق من معرّفك',
@@ -625,8 +625,8 @@ window.TEXTS = {
     cta_have_account: 'J\'ai un compte',
 
     // Register steps
-    rs_title: 'Comment s\'inscrire à notre agence',
-    rs_sub: 'La seule condition est votre ID 1xBet — activation instantanée',
+    rs_title: 'Rejoindre OussoCash',
+    rs_sub: 'Agence officielle 1xBet · Activation instantanée · Gratuit',
     rs_s1_t: 'Créez un compte 1xBet', rs_s1_d: 'Uniquement via le lien officiel de notre agence',
     rs_s2_t: 'Inscrivez-vous avec le code OUSSO', rs_s2_d: 'Pour lier votre compte et obtenir le bonus',
     rs_s3_t: 'Entrez votre ID 1xBet chez nous', rs_s3_d: 'C\'est la seule condition d\'inscription',
@@ -639,7 +639,7 @@ window.TEXTS = {
     rs_reg_btn: 'S\'inscrire via le lien de l\'agence',
     rs_video_btn: 'Vidéo : comment activer',
     rs_done: 'Étapes terminées ?',
-    rs_have_deposited: 'J\'ai déposé — vérifier mon ID',
+    rs_have_deposited: 'Entrer mon ID 1xBet maintenant',
 
     // Verify modes
     verify_title_reg: 'Vérifiez votre ID',

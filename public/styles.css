@@ -1229,3 +1229,94 @@ html[dir="rtl"] .slip-stake-field input{padding:14px 16px 14px 58px}
 .std-tbl .std-header .std-c,.std-tbl .std-header .std-team{color:var(--txt-3);font-weight:700}
 .std-tbl .std-form{display:flex;gap:3px;justify-content:flex-start;width:auto}
 .std-tbl .std-form i{width:7px;height:7px;border-radius:2px}
+
+/* ═══════════════════════════════════════════════════════════════
+   تحديث: صفحة التسجيل (view-regsteps) — تصميم احترافي مبسّط
+   ═══════════════════════════════════════════════════════════════ */
+
+/* ─ Hero ─ */
+.reg-hero{text-align:center;padding:28px 4px 18px}
+.reg-hero-logo{display:flex;align-items:center;justify-content:center;gap:9px;margin-bottom:14px}
+.reg-hero-logo img{width:34px;height:34px;border-radius:10px;object-fit:cover}
+.reg-wordmark{font-size:21px;font-weight:900;letter-spacing:-.3px;color:var(--txt)}
+.reg-wordmark span{color:var(--accent)}
+.reg-hero-badge{display:inline-block;background:var(--accent-soft);color:var(--accent);font-size:10.5px;
+  font-weight:800;padding:4px 13px;border-radius:100px;letter-spacing:.4px;margin-bottom:11px;
+  text-transform:uppercase}
+.reg-hero-h{font-size:28px;font-weight:900;letter-spacing:-.7px;line-height:1.14;margin-bottom:9px}
+.reg-hero-sub{color:var(--txt-2);font-size:13.5px;line-height:1.55}
+
+/* ─ Registration Steps ─ */
+.reg-step{display:flex;align-items:flex-start;gap:13px;margin:22px 0 11px}
+.reg-num{width:34px;height:34px;flex-shrink:0;border-radius:11px;background:var(--accent-soft);
+  color:var(--accent);font-size:15px;font-weight:900;display:grid;place-items:center}
+.reg-num-wh{background:rgba(255,255,255,.18)!important;color:#fff!important}
+.reg-step-body{padding-top:5px;flex:1}
+.reg-step-body b{display:block;font-size:15px;font-weight:800;margin-bottom:4px;color:var(--txt)}
+.reg-step-body span{font-size:13px;color:var(--txt-2);line-height:1.5}
+.reg-btns{display:flex;flex-direction:column;gap:9px;margin-bottom:4px}
+
+/* ─ Promo Card OUSSO ─ */
+.reg-promo{
+  margin:20px 0 8px;padding:18px;border-radius:22px;cursor:pointer;
+  background:linear-gradient(140deg,#1e3a8a 0%,#1d4ed8 55%,#2563eb 100%);
+  color:#fff;box-shadow:0 10px 36px rgba(37,99,235,.35);
+  transition:transform .15s var(--ease),box-shadow .15s var(--ease)}
+.reg-promo:active{transform:scale(.98);box-shadow:0 6px 22px rgba(37,99,235,.28)}
+.reg-promo-top{display:flex;align-items:center;gap:10px;margin-bottom:14px}
+.reg-promo-lbl{font-size:13px;font-weight:700;opacity:.85}
+.reg-promo-code-row{
+  display:flex;align-items:center;gap:9px;justify-content:center;
+  background:rgba(255,255,255,.13);border:1.5px solid rgba(255,255,255,.24);
+  border-radius:15px;padding:12px 16px;margin-bottom:14px}
+.reg-promo-hint{font-size:11px;font-weight:700;opacity:.65;white-space:nowrap}
+.reg-promo-code{font-size:30px;font-weight:900;letter-spacing:5px;flex:1;text-align:center}
+.reg-promo-bonuses{display:flex;flex-direction:column;gap:6px;margin-bottom:12px}
+.reg-bonus{font-size:14px;font-weight:700;opacity:.95}
+.reg-promo-note{margin:0;font-size:12px;opacity:.7;line-height:1.6;
+  border-top:1px solid rgba(255,255,255,.16);padding-top:11px}
+
+/* ─ Main CTA ─ */
+.reg-cta{margin-top:14px;height:56px;font-size:16px;font-weight:800;border-radius:18px;
+  box-shadow:var(--shadow-blue)}
+
+/* ═══════════════════════════════════════════════════════════════
+   تحديث: بطاقات التوقعات + الدوريات
+   ═══════════════════════════════════════════════════════════════ */
+
+/* بطاقة توقع مميزة */
+.pred-card-rec{
+  border:1.5px solid var(--accent)!important;
+  box-shadow:0 4px 20px rgba(37,99,235,.13)!important}
+.pred-rec{
+  margin-inline-start:auto;font-size:10.5px;font-weight:800;
+  color:var(--accent);background:var(--accent-soft);
+  padding:2px 8px;border-radius:100px;white-space:nowrap}
+
+/* صف التوقع + المعامل */
+.pred-pick-wrap{display:flex;align-items:center;gap:8px;flex:1}
+.pred-odd-badge{
+  font-size:12px;font-weight:800;color:var(--accent);
+  background:var(--accent-soft);border-radius:8px;
+  padding:3px 8px;white-space:nowrap;flex-shrink:0}
+
+/* شريحة DC مميزة */
+.pred-chip.accent{
+  background:var(--accent)!important;color:#fff!important}
+.pred-chip.accent span,.pred-chip.accent b{color:#fff!important}
+
+/* رقاقة دوري بدون صورة */
+.league-chip-ic{font-size:16px;line-height:1}
+
+/* دوريات: شبكة أوسع */
+#leaguesGrid{
+  display:grid;
+  grid-template-columns:repeat(auto-fill,minmax(130px,1fr));
+  gap:8px}
+.league-chip{
+  display:flex;align-items:center;gap:7px;
+  padding:8px 12px;border-radius:12px;
+  background:var(--card);border:1px solid var(--line,rgba(0,0,0,.07));
+  font-size:13px;font-weight:600;color:var(--txt);
+  transition:background .15s}
+.league-chip img{width:22px;height:22px;object-fit:contain;flex-shrink:0}

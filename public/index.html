@@ -156,39 +156,68 @@
       </div>
     </div>
 
-    <!-- ── REGISTER STEPS (شرح طريقة التسجيل) ── -->
+    <!-- ── REGISTER STEPS ── -->
     <div id="view-regsteps" class="view hidden pad">
-      <div style="padding:20px 4px 0">
-        <div class="id-shield" style="margin:0 auto 16px"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M16 21v-2a4 4 0 00-4-4H6a4 4 0 00-4 4v2M9 7a4 4 0 108 0 4 4 0 00-8 0M19 8v6M22 11h-6"/></svg></div>
-        <h2 style="font-size:22px;font-weight:800;text-align:center;letter-spacing:-.4px" id="t-rs_title"></h2>
-        <p style="color:var(--txt-2);font-size:14px;text-align:center;margin-top:8px" id="t-rs_sub"></p>
-      </div>
-      <div class="card" style="margin-top:18px">
-        <div class="rs-step"><span class="rs-num">1</span><div><b id="t-rs_s1_t"></b><span id="t-rs_s1_d"></span></div></div>
-        <div class="rs-step"><span class="rs-num">2</span><div><b id="t-rs_s2_t"></b><span id="t-rs_s2_d"></span></div></div>
-        <div class="rs-step"><span class="rs-num">3</span><div><b id="t-rs_s3_t"></b><span id="t-rs_s3_d"></span></div></div>
-        <div class="rs-step"><span class="rs-num">4</span><div><b id="t-rs_s4_t"></b><span id="t-rs_s4_d"></span></div></div>
-      </div>
-      <div class="rs-warn">
-        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><path d="M12 8v4M12 16h.01"/></svg>
-        <span id="t-rs_warn"></span>
-      </div>
-      <div onclick="App.copyPromo()" style="margin-top:14px;border:1.5px solid var(--accent);border-radius:16px;padding:16px;background:rgba(0,0,0,.02);cursor:pointer">
-        <div style="display:flex;align-items:center;justify-content:center;gap:8px;margin-bottom:10px">
-          <span style="font-size:12px;font-weight:700;color:var(--txt-2)" id="t-rs_promo_use"></span>
-          <span style="font-size:20px;font-weight:900;letter-spacing:2px;color:var(--accent)">OUSSO</span>
+
+      <!-- Hero -->
+      <div class="reg-hero">
+        <div class="reg-hero-logo">
+          <img src="/logos/mascot_sm.png" alt="OussoCash">
+          <div class="reg-wordmark">Ousso<span>Cash</span></div>
         </div>
-        <div style="font-size:14px;font-weight:700;text-align:center;margin-bottom:6px" id="t-rs_promo_300"></div>
-        <div style="font-size:13px;font-weight:600;text-align:center;color:var(--txt-2);margin-bottom:10px" id="t-rs_promo_mon"></div>
-        <div style="font-size:12.5px;text-align:center;color:var(--txt-2);line-height:1.6;border-top:1px solid var(--line,rgba(0,0,0,.08));padding-top:10px" id="t-rs_promo_note"></div>
+        <div class="reg-hero-badge" id="t-hero_eyebrow"></div>
+        <h1 class="reg-hero-h" id="t-rs_title"></h1>
+        <p class="reg-hero-sub" id="t-rs_sub"></p>
       </div>
-      <button class="btn btn-primary" style="margin-top:16px" onclick="App.openRegLink()">
-        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width:18px;height:18px"><path d="M15 3h6v6M10 14L21 3M18 13v6a2 2 0 01-2 2H5a2 2 0 01-2-2V8a2 2 0 012-2h6"/></svg>
-        <span id="t-rs_reg_btn"></span>
+
+      <!-- ── الخطوة 1: فتح حساب 1xBet ── -->
+      <div class="reg-step">
+        <div class="reg-num">1</div>
+        <div class="reg-step-body">
+          <b id="t-rs_s1_t"></b>
+          <span id="t-rs_s1_d"></span>
+        </div>
+      </div>
+      <div class="reg-btns">
+        <button class="btn btn-primary" onclick="App.openRegLink()">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width:18px;height:18px"><path d="M15 3h6v6M10 14L21 3M18 13v6a2 2 0 01-2 2H5a2 2 0 01-2-2V8a2 2 0 012-2h6"/></svg>
+          <span id="t-rs_reg_btn"></span>
+        </button>
+        <button class="btn btn-ghost" onclick="App.openVideo()" id="t-rs_video_btn"></button>
+      </div>
+
+      <!-- ── الخطوة 2: بروموكود OUSSO ── -->
+      <div class="reg-promo" onclick="App.copyPromo()">
+        <div class="reg-promo-top">
+          <div class="reg-num reg-num-wh">2</div>
+          <span class="reg-promo-lbl" id="t-rs_s2_t"></span>
+        </div>
+        <div class="reg-promo-code-row">
+          <span class="reg-promo-hint" id="t-rs_promo_use"></span>
+          <span class="reg-promo-code">OUSSO</span>
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width:18px;height:18px;opacity:.6;flex-shrink:0"><rect x="9" y="9" width="11" height="11" rx="2"/><path d="M5 15V5a2 2 0 012-2h10"/></svg>
+        </div>
+        <div class="reg-promo-bonuses">
+          <div class="reg-bonus" id="t-rs_promo_300"></div>
+          <div class="reg-bonus" id="t-rs_promo_mon"></div>
+        </div>
+        <p class="reg-promo-note" id="t-rs_promo_note"></p>
+      </div>
+
+      <!-- ── الخطوة 3: أدخل المعرّف ── -->
+      <div class="reg-step">
+        <div class="reg-num">3</div>
+        <div class="reg-step-body">
+          <b id="t-rs_s3_t"></b>
+          <span id="t-rs_s3_d"></span>
+        </div>
+      </div>
+
+      <button class="btn btn-primary reg-cta" onclick="App.openVerify('register')">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" style="width:20px;height:20px"><path d="M16 21v-2a4 4 0 00-4-4H6a4 4 0 00-4 4v2M9 7a4 4 0 108 0 4 4 0 00-8 0M19 8v6M22 11h-6"/></svg>
+        <span id="t-rs_have_deposited"></span>
       </button>
-      <button class="btn btn-ghost" style="margin-top:10px" onclick="App.openVideo()" id="t-rs_video_btn"></button>
-      <div class="rs-divider"><span id="t-rs_done"></span></div>
-      <button class="btn btn-secondary" onclick="App.openVerify('register')" id="t-rs_have_deposited"></button>
+
     </div>
 
     <!-- ── VERIFY (ID ENTRY) ── -->
@@ -357,42 +386,9 @@
         <div id="sportBody"></div>
       </div>
 
-      <!-- ── خانة قسيمة الرهان (ملء الشاشة) ── -->
-      <div class="slip-drawer-bg" id="slipDrawerBg" onclick="App.closeSlipBg(event)">
-        <aside class="slip-drawer" id="slipDrawer" onclick="event.stopPropagation()">
-          <div class="slip-head">
-            <div class="slip-head-title">
-              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 4h16v5a2 2 0 000 6v5H4v-5a2 2 0 000-6z"/><path d="M9 9h6M9 13h6"/></svg>
-              <b id="t-slip_title"></b>
-            </div>
-            <button class="slip-close" onclick="App.closeSlip()" aria-label="close">
-              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4"><path d="M18 6L6 18M6 6l12 12"/></svg>
-            </button>
-          </div>
-          <div class="slip-sub" id="t-slip_sub"></div>
-          <div class="slip-list" id="slipList"></div>
-          <div class="slip-calc">
-            <div class="slip-summary">
-              <div class="slip-sm"><span id="t-slip_picks"></span><b id="slipPicks">0</b></div>
-              <div class="slip-sm"><span id="t-slip_total_odds"></span><b id="slipOdds">1.00</b></div>
-            </div>
-            <div class="slip-stake-row">
-              <label class="slip-stake" id="t-slip_stake"></label>
-              <div class="slip-stake-field">
-                <input id="slipStake" inputmode="numeric" autocomplete="off" placeholder="0" oninput="App.slipStakeInput()">
-                <span class="slip-um">UM</span>
-              </div>
-            </div>
-            <div class="slip-return">
-              <span id="t-slip_return"></span>
-              <b><i id="slipReturn">0</i> <small>UM</small></b>
-            </div>
-            <div class="slip-note" id="t-slip_note"></div>
-          </div>
-        </aside>
-      </div>
+      <!-- ── خانة قسيمة الرهان ── (تُحرَّك إلى خارج scroll لضمان تغطية كاملة) -->
 
-    </div>
+    </div><!-- /view-sport -->
 
     <!-- ── SUPPORT CHAT ── -->
     <div id="view-support" class="view hidden">
@@ -511,7 +507,43 @@
       <span id="t-support_nav"></span>
     </button>
   </nav>
-</div>
+
+  <!-- ── قسيمة الرهان (خارج scroll — تغطية كاملة مضمونة) ── -->
+  <div class="slip-drawer-bg" id="slipDrawerBg" onclick="App.closeSlipBg(event)">
+    <aside class="slip-drawer" id="slipDrawer" onclick="event.stopPropagation()">
+      <div class="slip-head">
+        <div class="slip-head-title">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 4h16v5a2 2 0 000 6v5H4v-5a2 2 0 000-6z"/><path d="M9 9h6M9 13h6"/></svg>
+          <b id="t-slip_title"></b>
+        </div>
+        <button class="slip-close" onclick="App.closeSlip()" aria-label="close">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4"><path d="M18 6L6 18M6 6l12 12"/></svg>
+        </button>
+      </div>
+      <div class="slip-sub" id="t-slip_sub"></div>
+      <div class="slip-list" id="slipList"></div>
+      <div class="slip-calc">
+        <div class="slip-summary">
+          <div class="slip-sm"><span id="t-slip_picks"></span><b id="slipPicks">0</b></div>
+          <div class="slip-sm"><span id="t-slip_total_odds"></span><b id="slipOdds">1.00</b></div>
+        </div>
+        <div class="slip-stake-row">
+          <label class="slip-stake" id="t-slip_stake"></label>
+          <div class="slip-stake-field">
+            <input id="slipStake" inputmode="numeric" autocomplete="off" placeholder="0" oninput="App.slipStakeInput()">
+            <span class="slip-um">UM</span>
+          </div>
+        </div>
+        <div class="slip-return">
+          <span id="t-slip_return"></span>
+          <b><i id="slipReturn">0</i> <small>UM</small></b>
+        </div>
+        <div class="slip-note" id="t-slip_note"></div>
+      </div>
+    </aside>
+  </div>
+
+</div><!-- /app -->
 
 <!-- ═══ SHEETS ═══ -->
 <div class="sheet-bg" id="sheetBg" onclick="App.closeSheetBg(event)">
