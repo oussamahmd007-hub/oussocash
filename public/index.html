@@ -187,21 +187,12 @@
       </div>
 
       <!-- ── الخطوة 2: بروموكود OUSSO ── -->
-      <div class="reg-promo" onclick="App.copyPromo()">
-        <div class="reg-promo-top">
-          <div class="reg-num reg-num-wh">2</div>
-          <span class="reg-promo-lbl" id="t-rs_s2_t"></span>
+      <div class="reg-step">
+        <div class="reg-num">2</div>
+        <div class="reg-step-body">
+          <b id="t-rs_s2_t"></b>
+          <span id="t-rs_s2_d"></span>
         </div>
-        <div class="reg-promo-code-row">
-          <span class="reg-promo-hint" id="t-rs_promo_use"></span>
-          <span class="reg-promo-code">OUSSO</span>
-          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width:18px;height:18px;opacity:.6;flex-shrink:0"><rect x="9" y="9" width="11" height="11" rx="2"/><path d="M5 15V5a2 2 0 012-2h10"/></svg>
-        </div>
-        <div class="reg-promo-bonuses">
-          <div class="reg-bonus" id="t-rs_promo_300"></div>
-          <div class="reg-bonus" id="t-rs_promo_mon"></div>
-        </div>
-        <p class="reg-promo-note" id="t-rs_promo_note"></p>
       </div>
 
       <!-- ── الخطوة 3: أدخل المعرّف ── -->
@@ -541,6 +532,22 @@
         <div class="slip-note" id="t-slip_note"></div>
       </div>
     </aside>
+  </div>
+  <!-- ── إشعار البروموكود عند الضغط على سجل الآن ── -->
+  <div class="pnotice-bg" id="pnoticeBg" onclick="App.closePromoNotice(event)">
+    <div class="pnotice" onclick="event.stopPropagation()">
+      <div class="pnotice-body">
+        <p>نرجو منك عند التسجيل استخدام البروموكود <span class="pnotice-code">OUSSO</span>. يمكنك بالطبع إنشاء حساب بدون بروموكود وإضافة ID في نظامنا، لكن التسجيل عبر البروموكود الخاص بنا يدعم المنصة بشكل مباشر ويساعدنا على الاستمرار في تطوير خدماتنا وتقديم مزايا جديدة للمستخدمين.</p>
+        <p>كما يمكنك الاستفادة من مكافأة ترحيبية تصل إلى <b>300%</b> على أول إيداع بقيمة تصل إلى <b>9000 UM</b>، بالإضافة إلى المشاركة في السحوبات والجوائز الحصرية المخصصة للمستخدمين المسجلين عبر البروموكود.</p>
+        <p>دعمك لا يكلفك أي شيء إضافي، لكنه يصنع فرقاً كبيراً بالنسبة لنا.</p>
+      </div>
+      <div class="pnotice-foot">
+        <button class="btn btn-primary pnotice-btn" onclick="App.confirmRegister()">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" style="width:18px;height:18px"><path d="M16 21v-2a4 4 0 00-4-4H6a4 4 0 00-4 4v2M9 7a4 4 0 108 0 4 4 0 00-8 0M19 8v6M22 11h-6"/></svg>
+          سجل الآن
+        </button>
+      </div>
+    </div>
   </div>
 
 </div><!-- /app -->

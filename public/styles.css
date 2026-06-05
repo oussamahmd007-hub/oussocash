@@ -1320,3 +1320,36 @@ html[dir="rtl"] .slip-stake-field input{padding:14px 16px 14px 58px}
   font-size:13px;font-weight:600;color:var(--txt);
   transition:background .15s}
 .league-chip img{width:22px;height:22px;object-fit:contain;flex-shrink:0}
+
+/* ── إشعار البروموكود ── */
+.pnotice-bg{
+  position:fixed;inset:0;z-index:300;
+  background:rgba(10,20,40,.55);
+  backdrop-filter:blur(4px);
+  display:none;align-items:flex-end;justify-content:center}
+.pnotice-bg.show{display:flex}
+.pnotice{
+  width:100%;max-width:var(--maxw);
+  background:var(--bg);
+  border-radius:24px 24px 0 0;
+  display:flex;flex-direction:column;
+  max-height:82dvh;
+  animation:slipUp .3s var(--ease)}
+.pnotice-body{
+  flex:1;overflow-y:auto;
+  padding:28px 20px 16px;
+  display:flex;flex-direction:column;gap:14px}
+.pnotice-body p{
+  margin:0;font-size:15px;line-height:1.75;
+  color:var(--txt);direction:rtl}
+.pnotice-code{
+  color:#2563eb;font-weight:900;
+  font-size:16px;letter-spacing:.5px}
+.pnotice-foot{
+  padding:14px 20px 28px;
+  border-top:1px solid var(--line,rgba(0,0,0,.07));
+  background:var(--bg)}
+.pnotice-btn{
+  width:100%;height:52px;
+  font-size:16px;font-weight:800;
+  border-radius:16px}

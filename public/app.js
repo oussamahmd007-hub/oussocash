@@ -98,7 +98,20 @@ const App = {
   },
 
   // ═══ نقطتا الدخول: تسجيل جديد / لدي حساب ═══
-  startRegister(){ this.show('regsteps'); },
+  startRegister(){
+    document.getElementById('pnoticeBg').classList.add('show');
+    document.body.style.overflow='hidden';
+  },
+  closePromoNotice(e){
+    if(e && e.target!==document.getElementById('pnoticeBg')) return;
+    document.getElementById('pnoticeBg').classList.remove('show');
+    document.body.style.overflow='';
+  },
+  confirmRegister(){
+    document.getElementById('pnoticeBg').classList.remove('show');
+    document.body.style.overflow='';
+    this.openVerify('register');
+  },
   openLogin(){ this._verifyMode='login'; this.openVerify('login'); },
   openVerify(mode){
     this._verifyMode = mode || this._verifyMode || 'register';
