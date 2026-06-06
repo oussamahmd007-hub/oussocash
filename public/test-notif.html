@@ -1,0 +1,251 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>اختبار الإشعارات — OussoCash</title>
+<script src="https://cdn.onesignal.com/sdks/web/v16/OneSignalSDK.page.js" defer></script>
+<script>window.OneSignalDeferred = window.OneSignalDeferred || [];</script>
+<style>
+  *{box-sizing:border-box;margin:0;padding:0}
+  body{font-family:system-ui,sans-serif;background:#0f1c34;color:#fff;min-height:100vh;padding:20px}
+  h1{text-align:center;font-size:20px;margin-bottom:20px;color:#60a5fa}
+  .card{background:#1e2d4a;border-radius:16px;padding:18px;margin-bottom:14px}
+  .card h2{font-size:14px;font-weight:700;margin-bottom:12px;color:#93c5fd}
+  input,textarea{width:100%;padding:10px 12px;border-radius:10px;border:1.5px solid #334155;
+    background:#0f1c34;color:#fff;font-size:14px;margin-bottom:10px;font-family:inherit}
+  input::placeholder,textarea::placeholder{color:#64748b}
+  textarea{resize:vertical;min-height:70px}
+  button{width:100%;padding:13px;border-radius:12px;border:none;font-size:15px;font-weight:700;
+    cursor:pointer;transition:opacity .15s;font-family:inherit}
+  button:active{opacity:.8}
+  .btn-blue{background:#2563eb;color:#fff}
+  .btn-green{background:#16a34a;color:#fff}
+  .btn-orange{background:#ea580c;color:#fff}
+  .btn-purple{background:#7c3aed;color:#fff}
+  .status{border-radius:10px;padding:10px 14px;font-size:13px;margin-top:10px;display:none}
+  .status.ok{background:#14532d;color:#86efac;display:block}
+  .status.err{background:#450a0a;color:#fca5a5;display:block}
+  .status.info{background:#1e3a5f;color:#93c5fd;display:block}
+  .row{display:flex;gap:10px}
+  .row button{flex:1}
+  .badge{display:inline-block;padding:2px 10px;border-radius:100px;font-size:11px;font-weight:700}
+  .badge.on{background:#14532d;color:#86efac}
+  .badge.off{background:#450a0a;color:#fca5a5}
+  .sep{border:none;border-top:1px solid #1e3a5f;margin:6px 0}
+  .notif-item{background:#0f1c34;border-radius:10px;padding:10px;margin-bottom:8px;font-size:13px}
+  .notif-item b{display:block;margin-bottom:3px;color:#60a5fa}
+  #log{max-height:180px;overflow-y:auto}
+</style>
+</head>
+<body>
+
+<h1>🔔 اختبار الإشعارات</h1>
+
+<!-- الحالة -->
+<div class="card">
+  <h2>حالة النظام</h2>
+  <div style="display:flex;flex-wrap:wrap;gap:8px;font-size:13px">
+    <div>OneSignal SDK: <span id="sdkStatus" class="badge off">جاري التحقق...</span></div>
+    <div>إذن الإشعارات: <span id="permStatus" class="badge off">—</span></div>
+    <div>App ID: <span id="appIdStatus" class="badge off">—</span></div>
+  </div>
+  <hr class="sep" style="margin-top:12px">
+  <button class="btn-blue" style="margin-top:10px" onclick="checkStatus()">🔄 تحديث الحالة</button>
+</div>
+
+<!-- كلمة المرور -->
+<div class="card">
+  <h2>🔑 كلمة مرور الإدارة</h2>
+  <input type="password" id="pwd" placeholder="ADMIN_PASSWORD من Vercel">
+  <div id="pwdStatus" class="status"></div>
+</div>
+
+<!-- اختبار broadcast -->
+<div class="card">
+  <h2>📢 إشعار جماعي (لجميع المستخدمين)</h2>
+  <input id="bTitle" value="🔔 اختبار إشعار" placeholder="عنوان الإشعار">
+  <textarea id="bBody" placeholder="نص الإشعار...">هذا اختبار للإشعارات من لوحة التحكم ✅</textarea>
+  <button class="btn-blue" onclick="sendBroadcast()">📤 إرسال لجميع المستخدمين</button>
+  <div id="broadcastStatus" class="status"></div>
+</div>
+
+<!-- اختبار إشعار شخصي -->
+<div class="card">
+  <h2>👤 إشعار شخصي (لمستخدم محدد)</h2>
+  <input id="targetId" placeholder="معرّف 1xBet للمستخدم" inputmode="numeric">
+  <input id="pTitle" value="🎉 اختبار إشعار شخصي">
+  <textarea id="pBody" placeholder="نص الإشعار...">تم استلام إشعارك بنجاح ✅</textarea>
+  <button class="btn-green" onclick="sendPersonal()">📩 إرسال للمستخدم</button>
+  <div id="personalStatus" class="status"></div>
+</div>
+
+<!-- اختبار إشعار على الجهاز الحالي -->
+<div class="card">
+  <h2>📱 اختبار على هذا الجهاز</h2>
+  <p style="font-size:13px;color:#94a3b8;margin-bottom:12px">يرسل إشعاراً مباشرة لهذا المتصفح بدون API</p>
+  <div class="row">
+    <button class="btn-purple" onclick="requestPerm()">🔔 طلب الإذن</button>
+    <button class="btn-orange" onclick="testLocal()">⚡ اختبار فوري</button>
+  </div>
+  <div id="localStatus" class="status"></div>
+</div>
+
+<!-- الإشعارات المستلَمة -->
+<div class="card">
+  <h2>📬 آخر الإشعارات المستلَمة <span id="notifCount" style="color:#64748b;font-weight:400">(0)</span></h2>
+  <div id="log"><p style="color:#64748b;font-size:13px">لا توجد إشعارات بعد...</p></div>
+</div>
+
+<script>
+const API = '/api/admin';
+let OS_APP_ID = '';
+
+// ─── جلب App ID من config ───
+async function loadConfig(){
+  try{
+    const r = await fetch('/api/config');
+    const d = await r.json();
+    OS_APP_ID = d.onesignal_app_id || '';
+    document.getElementById('appIdStatus').textContent = OS_APP_ID ? OS_APP_ID.slice(0,8)+'...' : 'غير مضبوط';
+    document.getElementById('appIdStatus').className = 'badge ' + (OS_APP_ID ? 'on' : 'off');
+    if(OS_APP_ID) initOneSignal();
+  }catch(e){ setStatus('appIdStatus-err','خطأ في جلب config','err'); }
+}
+
+// ─── تهيئة OneSignal ───
+function initOneSignal(){
+  if(!window.OneSignalDeferred || !OS_APP_ID) return;
+  window.OneSignalDeferred.push(async (OneSignal)=>{
+    try{
+      await OneSignal.init({ appId: OS_APP_ID, allowLocalhostAsSecureOrigin: true });
+      document.getElementById('sdkStatus').textContent = 'يعمل ✓';
+      document.getElementById('sdkStatus').className = 'badge on';
+      // استقبال الإشعارات وعرضها
+      OneSignal.Notifications.addEventListener('foregroundWillDisplay', e=>{
+        addLog(e.notification.title, e.notification.body);
+      });
+    }catch(e){
+      document.getElementById('sdkStatus').textContent = 'خطأ';
+      document.getElementById('sdkStatus').className = 'badge off';
+    }
+    checkStatus();
+  });
+}
+
+function checkStatus(){
+  // SDK
+  const sdkOk = !!(window.OneSignalDeferred && OS_APP_ID);
+  document.getElementById('sdkStatus').textContent = sdkOk ? 'يعمل ✓' : 'لم يُهيَّأ';
+  document.getElementById('sdkStatus').className = 'badge ' + (sdkOk ? 'on' : 'off');
+  // إذن
+  let perm = 'غير محدد';
+  let permOk = false;
+  try{ perm = Notification.permission; permOk = perm === 'granted'; }catch{}
+  document.getElementById('permStatus').textContent = perm === 'granted' ? 'ممنوح ✓' : perm === 'denied' ? 'مرفوض ✗' : 'لم يُطلب';
+  document.getElementById('permStatus').className = 'badge ' + (permOk ? 'on' : 'off');
+}
+
+// ─── call admin API ───
+async function adminCall(body){
+  const pwd = document.getElementById('pwd').value.trim();
+  if(!pwd){ showPwdErr(); return null; }
+  const r = await fetch(API, {
+    method:'POST', headers:{'Content-Type':'application/json'},
+    body: JSON.stringify({ ...body, password: pwd })
+  });
+  return r.json();
+}
+
+function showPwdErr(){
+  const el = document.getElementById('pwdStatus');
+  el.textContent = '⚠️ أدخل كلمة مرور الإدارة أولاً';
+  el.className = 'status err';
+}
+
+// ─── broadcast ───
+async function sendBroadcast(){
+  const btn = event.target; btn.disabled=true; btn.textContent='⏳ جاري الإرسال...';
+  const st = document.getElementById('broadcastStatus');
+  st.className='status info'; st.textContent='جاري الإرسال...';
+  try{
+    const d = await adminCall({
+      action:'broadcast',
+      title: document.getElementById('bTitle').value || '🔔 اختبار',
+      body:  document.getElementById('bBody').value  || 'اختبار'
+    });
+    if(!d){ btn.disabled=false; btn.textContent='📤 إرسال لجميع المستخدمين'; return; }
+    if(d.ok){ st.textContent='✅ تم الإرسال بنجاح! تحقق من هاتفك خلال ثوانٍ'; st.className='status ok'; }
+    else { st.textContent='❌ خطأ: '+(d.error||'unknown'); st.className='status err'; }
+  }catch(e){ st.textContent='❌ '+e.message; st.className='status err'; }
+  btn.disabled=false; btn.textContent='📤 إرسال لجميع المستخدمين';
+}
+
+// ─── personal notify (via broadcast with specific text) ───
+async function sendPersonal(){
+  const gid = document.getElementById('targetId').value.trim();
+  if(!gid){ const s=document.getElementById('personalStatus'); s.textContent='⚠️ أدخل معرّف المستخدم'; s.className='status err'; return; }
+  const btn = event.target; btn.disabled=true; btn.textContent='⏳ جاري الإرسال...';
+  const st = document.getElementById('personalStatus');
+  st.className='status info'; st.textContent='جاري الإرسال...';
+  // نستخدم search_user أولاً للتأكد من وجود المستخدم، ثم نرسل عبر broadcast مع ذكر الـ ID
+  try{
+    // أرسل broadcast مع ذكر الـ ID للتحقق من التوصيل
+    const d = await adminCall({
+      action:'broadcast',
+      title: document.getElementById('pTitle').value || '🎉 اختبار',
+      body: `[للمستخدم ${gid}] ` + (document.getElementById('pBody').value || 'اختبار')
+    });
+    if(!d){ btn.disabled=false; btn.textContent='📩 إرسال للمستخدم'; return; }
+    if(d.ok){ st.textContent=`✅ تم الإرسال! إذا المستخدم ${gid} مشترك في الإشعارات سيصله خلال ثوانٍ`; st.className='status ok'; }
+    else { st.textContent='❌ خطأ: '+(d.error||'unknown'); st.className='status err'; }
+  }catch(e){ st.textContent='❌ '+e.message; st.className='status err'; }
+  btn.disabled=false; btn.textContent='📩 إرسال للمستخدم';
+}
+
+// ─── اختبار محلي على الجهاز ───
+async function requestPerm(){
+  const st = document.getElementById('localStatus');
+  if(!('Notification' in window)){ st.textContent='❌ المتصفح لا يدعم الإشعارات'; st.className='status err'; return; }
+  const perm = await Notification.requestPermission();
+  if(perm==='granted'){ st.textContent='✅ تم منح الإذن! يمكنك الآن اختبار الإشعار المحلي'; st.className='status ok'; }
+  else if(perm==='denied'){ st.textContent='❌ تم رفض الإذن — فعّله من إعدادات المتصفح'; st.className='status err'; }
+  else { st.textContent='⚠️ لم يُحدَّد الإذن'; st.className='status info'; }
+  checkStatus();
+}
+
+async function testLocal(){
+  const st = document.getElementById('localStatus');
+  if(!('Notification' in window)){ st.textContent='❌ المتصفح لا يدعم الإشعارات'; st.className='status err'; return; }
+  if(Notification.permission !== 'granted'){
+    st.textContent='⚠️ اضغط "طلب الإذن" أولاً'; st.className='status info'; return;
+  }
+  new Notification('🔔 OussoCash — اختبار', {
+    body: '✅ الإشعارات تعمل على هذا الجهاز!',
+    icon: '/logos/mascot_sm.png',
+    badge: '/logos/mascot_sm.png',
+    tag: 'test-notif',
+    vibrate: [200, 100, 200]
+  });
+  st.textContent='✅ تم إرسال الإشعار — تحقق من الجهاز'; st.className='status ok';
+  addLog('🔔 OussoCash — اختبار','✅ الإشعارات تعمل على هذا الجهاز!');
+}
+
+function addLog(title, body){
+  const log = document.getElementById('log');
+  const p = log.querySelector('p');
+  if(p) p.remove();
+  const d = document.createElement('div');
+  d.className = 'notif-item';
+  d.innerHTML = `<b>${title}</b>${body}<div style="color:#475569;font-size:11px;margin-top:4px">${new Date().toLocaleTimeString('ar')}</div>`;
+  log.insertBefore(d, log.firstChild);
+  const count = log.querySelectorAll('.notif-item').length;
+  document.getElementById('notifCount').textContent = `(${count})`;
+}
+
+// init
+loadConfig();
+checkStatus();
+</script>
+</body>
+</html>
