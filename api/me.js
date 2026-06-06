@@ -26,10 +26,15 @@ module.exports = async (req, res) => {
 
     await sbUpdate('accounts', `game_id=eq.${gid}`, { last_seen_at: new Date().toISOString() }).catch(() => {});
 
-    // إحصائيات الإحالة (الخاصة بهذا المستخدم فقط)
-    const refs = await sb(`referrals?referrer_gid=eq.${gid}&select=activated_at,commission_um`);
-    const activated = refs.filter((r) => r.activated_at).length;
-    const earned = refs.reduce((s, r) => s + (r.commission_um || 0), 0);
+    // إحصائيات الإحالة — مستوى 1 (مباشر) + مستوى 2 (من أحلته)
+    const refs = await sb(`referrals?referrer_gid=eq.${gid}&select=activated_at,commission_um,level`);
+    const l1refs = refs.filter(r => (r.level || 1) === 1);
+    const l2refs = refs.filter(r => r.level === 2);
+    const activated  = l1refs.filter(r => r.activated_at).length;
+    const l2_count   = l2refs.filter(r => r.activated_at).length;
+    const l1_earned  = l1refs.reduce((s, r) => s + (Number(r.commission_um) || 0), 0);
+    const l2_earned  = l2refs.reduce((s, r) => s + (Number(r.commission_um) || 0), 0);
+    const earned     = Math.round((l1_earned + l2_earned) * 100) / 100;
 
     // الإشعارات غير المقروءة (الخاصة + الجماعية '*')
     const notifs = await sb(`notifications?or=(game_id.eq.${gid},game_id.eq.*)&seen=eq.false&select=id,title,body,created_at&order=created_at.desc&limit=15`);
@@ -53,7 +58,8 @@ module.exports = async (req, res) => {
       ok: true,
       account: publicAccount(account),
       device_trusted: deviceTrusted,
-      stats: { activated, earned, percent: REFERRAL_PERCENT, min_withdraw: MIN_WITHDRAW },
+      stats: { activated, l2_count, earned, l1_earned, l2_earned,
+               percent: REFERRAL_PERCENT, min_withdraw: MIN_WITHDRAW },
       notifications: notifs,
       contest,
     });

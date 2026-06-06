@@ -7,7 +7,7 @@ const {
   sbGet, sbInsert, sbUpdate, isValidGameId, cleanGameId,
   isValidRefCode, generateRefCode, xbetSearchPlayer,
   hashFingerprint, hashPin, makeSession, publicAccount, pushNotify,
-  json, readBody, WELCOME_BONUS, REFERRAL_COMMISSION,
+  json, readBody, WELCOME_BONUS, REFERRAL_COMMISSION, REFERRAL_PERCENT,
 } = require('../lib/core');
 
 module.exports = async (req, res) => {
@@ -75,18 +75,45 @@ module.exports = async (req, res) => {
 
     if (fp) await sbInsert('devices', { game_id: gid, fingerprint: fp, trusted: true, user_agent: ua }).catch(() => {});
 
-    // الإحالة — تفعيل فوري + دفع العمولة (مرّة واحدة، 5 UM)
-    if (validReferrer) {
-      const ref = await sbGet('accounts', `ref_code=eq.${validReferrer}&select=game_id,balance_um`);
-      if (ref && ref.game_id !== gid) {
-        await sbInsert('referrals', {
-          referrer_gid: ref.game_id, referred_gid: gid,
-          commission_um: REFERRAL_COMMISSION, paid: true, activated_at: now,
-        }).catch(() => {});
-        await sbUpdate('accounts', `game_id=eq.${ref.game_id}`, { balance_um: (ref.balance_um || 0) + REFERRAL_COMMISSION }).catch(() => {});
-        await pushNotify(ref.game_id, 'OussoCash', `إحالة جديدة مُفعّلة · Parrainage activé · +${REFERRAL_COMMISSION} UM`).catch(() => {});
+  // ═══ الإحالة: مستويان ═══
+  // المستوى 1 (مباشر)   → المُحيل المباشر يربح REFERRAL_COMMISSION = 5 UM
+  // المستوى 2 (غير مباشر) → جدّ المُحيل يربح 25% × 5 = 1.25 UM
+  if (validReferrer) {
+    const ref1 = await sbGet('accounts',
+      `ref_code=eq.${validReferrer}&select=game_id,balance_um,referrer_code`);
+
+    if (ref1 && ref1.game_id !== gid) {
+
+      // ── المستوى 1: 5 UM ──
+      const l1 = REFERRAL_COMMISSION;
+      await sbInsert('referrals', {
+        referrer_gid: ref1.game_id, referred_gid: gid,
+        commission_um: l1, level: 1, paid: true, activated_at: now,
+      }).catch(() => {});
+      await sbUpdate('accounts', `game_id=eq.${ref1.game_id}`,
+        { balance_um: (ref1.balance_um || 0) + l1 }).catch(() => {});
+      await pushNotify(ref1.game_id, 'OussoCash',
+        `🎉 إحالة مباشرة جديدة · +${l1} UM`).catch(() => {});
+
+      // ── المستوى 2: 25% من 5 UM = 1.25 UM ──
+      if (ref1.referrer_code) {
+        const l2 = REFERRAL_COMMISSION * REFERRAL_PERCENT / 100; // 1.25 UM
+        const ref2 = await sbGet('accounts',
+          `ref_code=eq.${ref1.referrer_code}&select=game_id,balance_um`);
+
+        if (ref2 && ref2.game_id !== gid && ref2.game_id !== ref1.game_id) {
+          await sbInsert('referrals', {
+            referrer_gid: ref2.game_id, referred_gid: gid,
+            commission_um: l2, level: 2, paid: true, activated_at: now,
+          }).catch(() => {});
+          await sbUpdate('accounts', `game_id=eq.${ref2.game_id}`,
+            { balance_um: (ref2.balance_um || 0) + l2 }).catch(() => {});
+          await pushNotify(ref2.game_id, 'OussoCash',
+            `💰 إحالة من مستواك 2 · +${l2} UM`).catch(() => {});
+        }
       }
     }
+  }
 
     return json(res, 200, {
       ok: true, existing: false, device: 'trusted', new_account: true,
