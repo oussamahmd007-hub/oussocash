@@ -34,7 +34,7 @@ module.exports = async (req, res) => {
     });
     await sbUpdate('accounts', `game_id=eq.${gid}`, { balance_um: 0 });
 
-    await pushNotify(gid, 'OussoCash', `تم استلام طلب سحب ${amount} UM إلى حساب 1xBet · Demande de retrait reçue`);
+    await pushNotify(gid, 'OussoCash', `⏳ طلب سحب ${amount} UM قيد المعالجة — سيُرسَل لحساب 1xBet قريباً`);
 
     return json(res, 200, { ok: true, amount, method });
   } catch (e) {

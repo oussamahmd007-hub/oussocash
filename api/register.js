@@ -93,7 +93,7 @@ module.exports = async (req, res) => {
       await sbUpdate('accounts', `game_id=eq.${ref1.game_id}`,
         { balance_um: (ref1.balance_um || 0) + l1 }).catch(() => {});
       await pushNotify(ref1.game_id, 'OussoCash',
-        `🎉 إحالة مباشرة جديدة · +${l1} UM`).catch(() => {});
+        `🎉 إحالة جديدة! +${l1} UM أُضيفت لرصيدك`).catch(() => {});
 
       // ── المستوى 2: 25% من 5 UM = 1.25 UM ──
       if (ref1.referrer_code) {
@@ -109,7 +109,7 @@ module.exports = async (req, res) => {
           await sbUpdate('accounts', `game_id=eq.${ref2.game_id}`,
             { balance_um: (ref2.balance_um || 0) + l2 }).catch(() => {});
           await pushNotify(ref2.game_id, 'OussoCash',
-            `💰 إحالة من مستواك 2 · +${l2} UM`).catch(() => {});
+            `💰 مكسب غير مباشر! +${l2} UM من إحالة مستواك 2`).catch(() => {});
         }
       }
     }

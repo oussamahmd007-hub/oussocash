@@ -73,7 +73,7 @@ module.exports = async (req, res) => {
       if (!wd || wd.status !== 'pending') return json(res, 400, { error: 'not_found' });
       if (approve) {
         await sbUpdate('withdrawals', `id=eq.${wid}`, { status: 'approved', processed_at: new Date().toISOString() });
-        await pushNotify(wd.game_id, 'OussoCash', `تم تنفيذ السحب · Retrait effectué · ${wd.amount_um} UM`);
+        await pushNotify(wd.game_id, 'OussoCash', `💸 تم تنفيذ سحبك! ${wd.amount_um} UM أُرسلت لحساب 1xBet`);
       } else {
         const a = await sbGet('accounts', `game_id=eq.${wd.game_id}&select=balance_um`);
         await sbUpdate('accounts', `game_id=eq.${wd.game_id}`, { balance_um: (a.balance_um || 0) + wd.amount_um });
@@ -89,7 +89,7 @@ module.exports = async (req, res) => {
     }
     if (action === 'trust_device') {
       await sbUpdate('devices', `game_id=eq.${body.game_id}&fingerprint=eq.${body.fingerprint}`, { trusted: true }).catch(() => {});
-      await pushNotify(body.game_id, 'OussoCash', 'تمت إضافة جهاز موثوق · Appareil de confiance ajouté');
+      await pushNotify(body.game_id, 'OussoCash', '📱 جهاز جديد موثوق أُضيف لحسابك');
       return json(res, 200, { ok: true });
     }
 
@@ -131,8 +131,8 @@ module.exports = async (req, res) => {
       const c = Array.isArray(created) ? created[0] : created;
       // إشعار جماعي ببدء المسابقة
       await pushBroadcast(
-        'مسابقة جديدة · Nouveau concours',
-        `${c.title} · الجائزة ${c.prize_um} UM · ادعُ أصدقاءك واربح!`
+        '🏆 مسابقة جديدة في OussoCash!',
+        `${c.title} · الجائزة ${c.prize_um} UM · ادعُ أصدقاءك وفز الآن! 🎁`
       );
       return json(res, 200, { ok: true, contest: c });
     }
@@ -257,7 +257,7 @@ async function processCSV(content, filename) {
         // غاب عن تقريرين متتاليين → حذف
         stats.deleted++;
         await sbDelete('accounts', `game_id=eq.${gid}`).catch(() => {});
-        await pushNotify(gid, 'OussoCash', 'تم حذف معرّفك لعدم وجوده في التقارير · ID supprimé');
+        await pushNotify(gid, 'OussoCash', '⚠️ معرّفك لم يُعثر عليه في التقارير وتم حذفه');
       } else {
         // غياب أول → تحذير فقط، لا حذف
         stats.missed++;
@@ -297,12 +297,12 @@ async function processCSV(content, filename) {
       if (a.deadline_at && new Date(a.deadline_at) < new Date()) { // انتهت المهلة → حظر
         await sbInsert('banned_ids', { game_id: gid, reason: 'deposit_deadline_passed' }).catch(() => {});
         await sbDelete('accounts', `game_id=eq.${gid}`).catch(() => {});
-        await pushNotify(gid, 'OussoCash', 'تم حذف المعرّف لعدم إكمال الإيداع · ID supprimé');
+        await pushNotify(gid, 'OussoCash', '❌ تم حذف حسابك لعدم إكمال الإيداع في الوقت المحدد');
       } else {
         const deadline = a.deadline_at || new Date(Date.now() + DEPOSIT_DEADLINE_DAYS * 864e5).toISOString();
         await sbUpdate('accounts', `game_id=eq.${gid}`, { ...extracted, status: 'deposit_incomplete', deposit_needed: needed, deadline_at: deadline });
         await pushNotify(gid, 'OussoCash',
-          `إيداعك غير مكتمل ⚠️ ينقصك ${needed} UM للوصول إلى الحد المطلوب (200 UM). أكمل الإيداع خلال ${DEPOSIT_DEADLINE_DAYS} أيام والعب به لتفعيل حسابك. · Dépôt incomplet : il manque ${needed} UM, complétez sous ${DEPOSIT_DEADLINE_DAYS} jours.`);
+          `⚠️ إيداعك غير مكتمل! ينقصك ${needed} UM — أكملها خلال ${DEPOSIT_DEADLINE_DAYS} أيام لتفعيل حسابك`);
       }
       continue;
     }
@@ -315,8 +315,8 @@ async function processCSV(content, filename) {
     });
     stats.activated++;
     await pushNotify(gid, 'OussoCash', a.referrer_code
-      ? `تم تفعيل حسابك بنجاح ✅ مرحباً بك في OussoCash! حصلت على مكافأة ترحيب ${WELCOME_BONUS} UM. · Compte activé ! Bonus de ${WELCOME_BONUS} UM ajouté.`
-      : 'تم تفعيل حسابك بنجاح ✅ مرحباً بك في OussoCash! يمكنك الآن الدخول والاستفادة من جميع الخدمات. · Votre compte est activé !');
+      ? `✅ حسابك مُفعَّل! أهلاً بك 🎊 مكافأة ترحيب +${WELCOME_BONUS} UM أُضيفت لرصيدك`
+      : `✅ حسابك مُفعَّل! أهلاً بك في OussoCash 🎊 يمكنك الآن الاستفادة من جميع الخدمات`);
 
     if (a.referrer_code) { // عمولة الإحالة — مرة واحدة فقط (لا تكرار)
       // تحقّق أن العمولة لم تُدفع من قبل لهذا المُحال (منع التضارب والازدواج)
@@ -332,7 +332,7 @@ async function processCSV(content, filename) {
           } else {
             await sbInsert('referrals', { referrer_gid: ref.game_id, referred_gid: gid, commission_um: REFERRAL_COMMISSION, paid: true, activated_at: now }).catch(() => {});
           }
-          await pushNotify(ref.game_id, 'OussoCash', `إحالة جديدة مُفعّلة · Parrainage activé · +${REFERRAL_COMMISSION} UM`);
+          await pushNotify(ref.game_id, 'OussoCash', `🎉 إحالة مُفعَّلة! +${REFERRAL_COMMISSION} UM أُضيفت لرصيدك`);
         }
       }
     }
