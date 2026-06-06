@@ -340,8 +340,19 @@ const App = {
     const fp=await this.fingerprint();
     const r=await this.api('me',{ session:Store.s, fingerprint:fp });
     if(r.error==='no_session'||r.error==='banned'){ this.logout(); return; }
-    if(r.ok){ this.account=r.account; this.stats=r.stats; this._deviceTrusted=r.device_trusted; this.contest=r.contest;
-      (r.notifications||[]).forEach(n=>this.toast(n.body||n.title)); }
+    if(r.ok){
+      this.account=r.account; this.stats=r.stats;
+      this._deviceTrusted=r.device_trusted; this.contest=r.contest;
+      // عرض الإشعارات — مع تجنب تكرار الجماعية عبر localStorage
+      let seen=[];
+      try{ seen=JSON.parse(localStorage.getItem('oc_seen_notifs')||'[]'); }catch{}
+      const fresh=(r.notifications||[]).filter(n=>!seen.includes(n.id));
+      fresh.forEach(n=>this.toast(n.body||n.title));
+      if(fresh.length){
+        try{ localStorage.setItem('oc_seen_notifs',
+          JSON.stringify([...seen,...fresh.map(n=>n.id)].slice(-100))); }catch{}
+      }
+    }
     // حجب لوحة التحكم حتى التفعيل
     if(!this.account || this.account.status!=='active'){ this.showPending(); return; }
     this.show('dash'); this.renderDash();
