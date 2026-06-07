@@ -4,7 +4,7 @@
 // ═══════════════════════════════════════════════════════════════════
 const REG_LINK = 'https://reffpa.com/L?tag=d_3649166m_1599c_OUSSO&site=3649166&ad=1599&r=en/registration';
 const VIDEO_REGISTER = 'https://player.cloudinary.com/embed/?cloud_name=djkqimryk&public_id=lv_0_%D9%A2%D9%A0%D9%A2%D9%A6%D9%A0%D9%A4%D9%A1%D9%A0%D9%A1%D9%A4%D9%A1%D9%A1%D9%A3%D9%A2_ylopqt';
-let SUPPORT_WA = '22232230404';
+let SUPPORT_WA = '22236652939';
 let CHANNEL    = 'https://whatsapp.com/channel/0029Vb7TGP52phHUrKJ13u1p';
 let OS_APP_ID  = '';
 
@@ -805,14 +805,11 @@ const App = {
     if(r.error){ body.innerHTML=`<div class="sport-empty">${this.sportEmptyIcon()}<span>${T.sport_unavailable}</span></div>`; this.updateSlipFab(); return; }
 
     if(v==='predictions'){
-      // تجهيز قسيمة الرهان
       this._slip=r.slip||[];
       if(!this._slipSel){ this._slipSel=new Set(this._slip.slice(0,3).map(x=>x.event_id)); }
       this.updateSlipFab();
       let html='';
-      // أفضل توقع منفرد (بطاقة بطل)
       if(r.top_pick){ html+=this.heroPick(r.top_pick); }
-      // قسيمة اليوم — أفضل التوقعات موثوقية
       if(r.coupon && r.coupon.length){
         html+=`<div class="coupon-card">
           <div class="coupon-card-head">
@@ -823,9 +820,17 @@ const App = {
         </div>`;
       }
       if(r.predictions && r.predictions.length){
-        html+=`<div class="sport-sec-title">${T.sport_all_preds||T.sport_predictions} <small>${T.sport_tap_hint||''}</small></div>`;
-        html+=`<div class="pred-grid">${r.predictions.map(p=>this.predCard(p)).join('')}</div>`;
-        html+=`<div class="sport-disclaimer">${T.sport_disclaimer}</div>`;
+        // إزالة المباريات الموجودة في الكوبون لتجنب التكرار
+        const usedIds=new Set([
+          ...(r.coupon||[]).map(p=>p.event_id),
+          r.top_pick?r.top_pick.event_id:null
+        ].filter(Boolean));
+        const remaining=r.predictions.filter(p=>!usedIds.has(p.event_id));
+        if(remaining.length){
+          html+=`<div class="sport-sec-title">${T.sport_all_preds||T.sport_predictions} <small>${T.sport_tap_hint||''}</small></div>`;
+          html+=`<div class="pred-grid">${remaining.map(p=>this.predCard(p)).join('')}</div>`;
+          html+=`<div class="sport-disclaimer">${T.sport_disclaimer}</div>`;
+        }
       }
       if(!html) html=`<div class="sport-empty">${this.sportEmptyIcon()}<span>${T.sport_no_matches}</span></div>`;
       body.innerHTML=html;
@@ -912,6 +917,10 @@ const App = {
     if(p.over25!=null)extra+=`<div class="pred-chip"><span>+2.5</span><b>${p.over25}%</b></div>`;
     if(p.over35!=null)extra+=`<div class="pred-chip"><span>+3.5</span><b>${p.over35}%</b></div>`;
     if(p.btts_yes!=null)extra+=`<div class="pred-chip"><span>BTTS</span><b>${p.btts_yes}%</b></div>`;
+    if(p.corners_over85!=null) extra+=`<div class="pred-chip"><span>🚩+8.5</span><b>${p.corners_over85}%</b></div>`;
+    if(p.corners_over95!=null) extra+=`<div class="pred-chip"><span>🚩+9.5</span><b>${p.corners_over95}%</b></div>`;
+    if(p.cards_over25!=null)   extra+=`<div class="pred-chip"><span>🟨+2.5</span><b>${p.cards_over25}%</b></div>`;
+    if(p.cards_over35!=null)   extra+=`<div class="pred-chip"><span>🟨+3.5</span><b>${p.cards_over35}%</b></div>`;
     if(p.eg_home!=null&&p.eg_away!=null)extra+=`<div class="pred-chip"><span>xG</span><b>${p.eg_home.toFixed(1)}-${p.eg_away.toFixed(1)}</b></div>`;
     // حساسب معامل ضمني من نسبة الثقة (مرجعي)
     const implOdd=(c)=>Math.max(1.02,+((100/Math.max(2,Math.min(97,c||0)))*0.94).toFixed(2));
