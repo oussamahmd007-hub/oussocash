@@ -86,6 +86,8 @@ function simplifyPrediction(p) {
   const ou = M.over_under || {};
   const btts = M.btts || {};
   const score = M.score || {};
+  const corners = M.corners || M.corner_kicks || {};
+  const cards   = M.yellow_cards || M.cards || {};
   const rec = p.recommendations || {};
   const mdl = p.model || {};
   const fav = mr.predicted || rec.favorite || null; // H | D | A
@@ -124,6 +126,11 @@ function simplifyPrediction(p) {
     over25: ou.prob_over_25 != null ? Math.round(ou.prob_over_25) : null,
     over35: ou.prob_over_35 != null ? Math.round(ou.prob_over_35) : null,
     btts_yes: btts.prob_yes != null ? Math.round(btts.prob_yes) : null,
+    corners_over85: corners.prob_over_8_5 != null ? Math.round(corners.prob_over_8_5) : null,
+    corners_over95: corners.prob_over_9_5 != null ? Math.round(corners.prob_over_9_5) : null,
+    corners_over105:corners.prob_over_10_5!= null ? Math.round(corners.prob_over_10_5): null,
+    cards_over25:   cards.prob_over_2_5   != null ? Math.round(cards.prob_over_2_5)   : null,
+    cards_over35:   cards.prob_over_3_5   != null ? Math.round(cards.prob_over_3_5)   : null,
     dc_key: dc.key, dc_prob: Math.round(dc.prob),
     model_conf: mdl.confidence != null ? Math.round(mdl.confidence * 100) : confidence,
     model_version: mdl.version || '',
@@ -135,12 +142,15 @@ function simplifyPrediction(p) {
   };
 }
 
-// قسيمة اليوم: أفضل التوقعات موثوقية (أعلى ثقة، استبعاد التعادل)
+// قسيمة اليوم: أفضل التوقعات عبر جميع الأسواق (الأعلى % من أي سوق)
 function buildCoupon(preds, n) {
   return preds
-    .filter((p) => p.tip && p.tip !== 'تعادل' && p.confidence >= 55)
-    .sort((a, b) => b.confidence - a.confidence)
-    .slice(0, n || 5);
+    .map((p) => { const b = bestSlipPick(p); return b ? { ...p, _best: b } : null; })
+    .filter(Boolean)
+    .filter((p) => p._best.conf >= 62)          // حد أدنى للثقة 62%
+    .sort((a, b) => b._best.conf - a._best.conf)
+    .slice(0, n || 5)
+    .map(({ _best, ...p }) => ({ ...p, tip: _best.pick, confidence: _best.conf, _mk: _best.mk, _odd: _best.odd }));
 }
 
 // odd عشري ضمني من نسبة الثقة (هامش بسيط ~6%)
@@ -148,19 +158,37 @@ function impliedOdd(conf) {
   const c = Math.max(2, Math.min(97, conf || 0));
   return Math.max(1.02, +((100 / c) * 0.94).toFixed(2));
 }
-// أقوى توقع منفرد لكل مباراة (تنوّع: 1X2 / أكثر-أقل / BTTS / فرصة مزدوجة) — الأعلى ثقة
+// أقوى توقع منفرد لكل مباراة — يشمل جميع الأسواق المتاحة ويختار الأعلى %
 function bestSlipPick(p) {
   const c = [];
-  if (p.tip && p.tip !== 'تعادل' && p.fav) c.push({ pick: p.tip, mk: '1x2', conf: p.confidence });
+  // 1X2
+  if (p.tip && p.fav) c.push({ pick: p.tip, mk: '1x2', conf: p.confidence });
+  // فرصة مزدوجة DC
   if (p.dc_key) c.push({ pick: p.dc_key, mk: 'dc', conf: p.dc_prob });
+  // أهداف
   if (p.over15 != null) c.push({ pick: 'Over 1.5', mk: 'ou15', conf: p.over15 });
   if (p.over25 != null) c.push({ pick: 'Over 2.5', mk: 'ou25', conf: p.over25 });
   if (p.over35 != null) c.push({ pick: 'Over 3.5', mk: 'ou35', conf: p.over35 });
+  // BTTS
   if (p.btts_yes != null) {
     const yes = p.btts_yes >= 50;
     c.push({ pick: yes ? 'BTTS: Yes' : 'BTTS: No', mk: 'btts', conf: yes ? p.btts_yes : (100 - p.btts_yes) });
   }
+  // ركنيات
+  if (p.corners_over85  != null) c.push({ pick: 'Corners +8.5',  mk: 'corners', conf: p.corners_over85 });
+  if (p.corners_over95  != null) c.push({ pick: 'Corners +9.5',  mk: 'corners', conf: p.corners_over95 });
+  if (p.corners_over105 != null) c.push({ pick: 'Corners +10.5', mk: 'corners', conf: p.corners_over105 });
+  // بطاقات صفراء
+  if (p.cards_over25 != null) {
+    const yes25 = p.cards_over25 >= 50;
+    c.push({ pick: yes25 ? 'Cards +2.5' : 'Cards -2.5', mk: 'cards', conf: yes25 ? p.cards_over25 : 100 - p.cards_over25 });
+  }
+  if (p.cards_over35 != null) {
+    const yes35 = p.cards_over35 >= 50;
+    c.push({ pick: yes35 ? 'Cards +3.5' : 'Cards -3.5', mk: 'cards', conf: yes35 ? p.cards_over35 : 100 - p.cards_over35 });
+  }
   if (!c.length) return null;
+  // الأعلى نسبة ثقة هو الفائز
   c.sort((a, b) => b.conf - a.conf);
   const b = c[0];
   return { pick: b.pick, mk: b.mk, conf: b.conf, odd: impliedOdd(b.conf) };
@@ -452,7 +480,7 @@ module.exports = async (req, res) => {
       try {
         if (view === 'live') {
           const d = await bsd('/events/live/');
-          all = (d.events || []).map(simplifyMatch);
+          all = dedupBy((d.events || []).map(simplifyMatch), 'id');
         } else {
           const today = new Date();
           let day = today;
