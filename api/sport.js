@@ -25,6 +25,25 @@ async function bsdSafe(path) { try { return await bsd(path); } catch { return nu
 
 function ymd(d) { return d.toISOString().slice(0, 10); }
 
+// تطبيع التاريخ: يضمن أن الوقت يُقرأ كـ UTC في المتصفح
+function normalizeDate(s) {
+  if (!s) return '';
+  const t = String(s).trim().replace(' ', 'T'); // "2024-01-15 15:00" → "2024-01-15T15:00"
+  if (/Z$|[+\-]\d{2}:\d{2}$/.test(t)) return t; // مزود بـ timezone مسبقاً
+  return t + 'Z'; // أضف Z لضمان التفسير كـ UTC
+}
+
+// إزالة المكررات بالـ key المحدد
+function dedupBy(arr, key) {
+  const seen = new Set();
+  return arr.filter(item => {
+    const k = item[key];
+    if (!k || seen.has(k)) return false;
+    seen.add(k);
+    return true;
+  });
+}
+
 // شعارات مجانية من BSD (بدون مصادقة)
 const teamImg = (id) => (id ? `${IMG}/team/${id}/` : '');
 const leagueImg = (id) => (id ? `${IMG}/league/${id}/` : '');
@@ -37,7 +56,7 @@ function simplifyMatch(m) {
     league: m.league_name || '',
     league_id: m.league_id || null,
     league_logo: leagueImg(m.league_id),
-    date: m.event_date || '',
+    date: normalizeDate(m.event_date),
     status, // notstarted | inprogress | penalties | finished
     period: m.period || null,
     minute: m.current_minute || null,
@@ -92,7 +111,7 @@ function simplifyPrediction(p) {
     league: ev.league_name || '',
     league_id: ev.league_id || null,
     league_logo: leagueImg(ev.league_id),
-    date: ev.event_date || '',
+    date: normalizeDate(ev.event_date),
     status: ev.status || 'notstarted',
     tip: tipName,
     fav,
@@ -411,7 +430,10 @@ module.exports = async (req, res) => {
       if (!preds) {
         try {
           const d = await bsd('/predictions/?status=upcoming&limit=40');
-          preds = (d.results || []).map(simplifyPrediction).filter((p) => p.home && p.away);
+          preds = dedupBy(
+            (d.results || []).map(simplifyPrediction).filter((p) => p.home && p.away),
+            'event_id'
+          );
         } catch { preds = []; }
         setCache(ck, preds);
       }
@@ -438,7 +460,7 @@ module.exports = async (req, res) => {
           else if (view === 'yesterday') day = new Date(+today - 864e5);
           const ds = ymd(day);
           const d = await bsd(`/events/?date_from=${ds}&date_to=${ds}&limit=120`);
-          all = (d.results || []).map(simplifyMatch);
+          all = dedupBy((d.results || []).map(simplifyMatch), 'id');
           all.sort((a, b) => String(a.date).localeCompare(String(b.date)));
         }
       } catch { all = []; }
