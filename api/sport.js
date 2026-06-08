@@ -494,11 +494,11 @@ module.exports = async (req, res) => {
           if (!pred.home || !pred.away) return null;
           const best = bestSlipPick(pred);
           if (!best) return null;
-          const ev  = p.event || {};
-          const hs  = ev.home_score  ?? ev.ft_home  ?? ev.home_goals  ?? null;
-          const as_ = ev.away_score  ?? ev.ft_away  ?? ev.away_goals  ?? null;
-          const res = ev.result      ?? ev.outcome   ?? ev.final_result ?? null;
-          const won = checkWin(best, res, hs, as_);
+          const ev      = p.event || {};
+          const hs      = ev.home_score  ?? ev.ft_home  ?? ev.home_goals  ?? null;
+          const as_     = ev.away_score  ?? ev.ft_away  ?? ev.away_goals  ?? null;
+          const outcome = ev.result      ?? ev.outcome   ?? ev.final_result ?? null;
+          const won     = checkWin(best, outcome, hs, as_);
           return {
             ...pred,
             tip: best.pick, confidence: best.conf, _mk: best.mk,
