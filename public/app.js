@@ -800,6 +800,43 @@ const App = {
       dateEl.style.display=(v==='standings'||v==='predictions')?'none':'block';
     }
     body.innerHTML=this.sportSkeleton(v);
+    if(v==='results'){
+      const T=window.TEXTS[this.lang];
+      body.innerHTML=this.sportSkeleton(v);
+      const r=await this.api('sport',{view:'results',lang:this.lang});
+      if(r.error){body.innerHTML=`<div class="sport-empty">${this.sportEmptyIcon()}<span>${T.sport_unavailable}</span></div>`;return;}
+      let html='';
+      // ── شريط الإحصاء ──
+      if(r.stats && r.stats.total > 0){
+        const {wins,total,rate}=r.stats;
+        const pct=rate||0;
+        const color=pct>=70?'#16a34a':pct>=50?'#ca8a04':'#dc2626';
+        html+=`<div class="res-stats">
+          <div class="res-stats-bar">
+            <div class="res-stats-fill" style="width:${pct}%;background:${color}"></div>
+          </div>
+          <div class="res-stats-row">
+            <span class="res-stat-label">${T.sport_results_rate}</span>
+            <span class="res-stat-pct" style="color:${color}">${pct}%</span>
+          </div>
+          <div class="res-stats-sub">${wins} ${T.sport_results_of} ${total}</div>
+        </div>`;
+      }
+      // ── نتائج اليوم ──
+      if(r.today_results && r.today_results.length){
+        html+=`<div class="sport-sec-title">${T.sport_results_today}</div>`;
+        html+=r.today_results.map(m=>this.resultCard(m)).join('');
+      }
+      // ── نتائج الأمس ──
+      if(r.yesterday_results && r.yesterday_results.length){
+        html+=`<div class="sport-sec-title">${T.sport_results_yesterday}</div>`;
+        html+=r.yesterday_results.map(m=>this.resultCard(m)).join('');
+      }
+      if(!html) html=`<div class="sport-empty">${this.sportEmptyIcon()}<span>${T.sport_results_empty}</span></div>`;
+      body.innerHTML=html;
+      return;
+    }
+
     if(v==='standings'){ await this.renderStandingsHub(); this.updateSlipFab(); return; }
     const r=await this.api('sport',{ view:v, lang:this.lang });
     if(r.error){ body.innerHTML=`<div class="sport-empty">${this.sportEmptyIcon()}<span>${T.sport_unavailable}</span></div>`; this.updateSlipFab(); return; }
@@ -856,6 +893,37 @@ const App = {
   },
   sportEmptyIcon(){
     return `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" style="width:48px;height:48px;opacity:.3"><circle cx="12" cy="12" r="10"/><path d="M12 2a15 15 0 010 20M12 2a15 15 0 000 20M2 12h20"/></svg>`;
+  },
+  resultCard(r){
+    const T=window.TEXTS[this.lang];
+    const hs=r.home_score; const as_=r.away_score;
+    const hasScore=(hs!=null&&as_!=null);
+    const wonClass=r.won===true?'res-win':r.won===false?'res-loss':'res-pending';
+    const wonIcon=r.won===true?'✅':r.won===false?'❌':'⏳';
+    const wonLabel=r.won===true?T.sport_results_win:r.won===false?T.sport_results_loss:T.sport_results_pending;
+    const conf=r.confidence||0;
+    let when='';
+    try{when=r.date?new Date(r.date).toLocaleTimeString(this.lang==='fr'?'fr':'ar-u-nu-latn',{hour:'2-digit',minute:'2-digit'}):''}catch{}
+    return `<div class="res-card ${wonClass}">
+      <div class="res-card-head">
+        <img src="${r.league_logo||''}" onerror="this.style.display='none'" style="width:16px;height:16px;object-fit:contain">
+        <span class="res-league">${this.esc(r.league)}</span>
+        ${when?`<span class="res-time">${when}</span>`:''}
+      </div>
+      <div class="res-teams">
+        <span>${this.esc(r.home)}</span>
+        <div class="res-score">${hasScore?`<b>${hs}</b><em>–</em><b>${as_}</b>`:`<em>–</em>`}</div>
+        <span>${this.esc(r.away)}</span>
+      </div>
+      <div class="res-footer">
+        <div class="res-pick">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width:12px;height:12px;opacity:.6"><path d="M9 16.2l-3.5-3.5L4 14.2 9 19l11-11-1.5-1.4z"/></svg>
+          ${this.esc(r.tip)}
+          <span class="res-conf">${conf}%</span>
+        </div>
+        <div class="res-badge ${wonClass}">${wonIcon} ${wonLabel}</div>
+      </div>
+    </div>`;
   },
   couponRow(p,rank){
     const conf=p.confidence||0;

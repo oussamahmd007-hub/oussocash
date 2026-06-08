@@ -1353,3 +1353,43 @@ html[dir="rtl"] .slip-stake-field input{padding:14px 16px 14px 58px}
   width:100%;height:52px;
   font-size:16px;font-weight:800;
   border-radius:16px}
+
+/* ═══════════════════════════════════════════════════════════
+   نتائج التوقعات — results view
+   ═══════════════════════════════════════════════════════════ */
+.res-stats{background:var(--card);border-radius:18px;padding:16px 18px;margin-bottom:14px}
+.res-stats-bar{height:8px;background:var(--line,rgba(0,0,0,.08));border-radius:100px;overflow:hidden;margin-bottom:10px}
+.res-stats-fill{height:100%;border-radius:100px;transition:width .6s var(--ease)}
+.res-stats-row{display:flex;justify-content:space-between;align-items:center}
+.res-stat-label{font-size:13px;color:var(--txt-2);font-weight:600}
+.res-stat-pct{font-size:22px;font-weight:900;letter-spacing:-.5px}
+.res-stats-sub{font-size:12px;color:var(--txt-2);margin-top:4px;text-align:center}
+
+.res-card{background:var(--card);border-radius:16px;padding:14px 16px;margin-bottom:10px;
+  border:1.5px solid transparent}
+.res-card.res-win{border-color:rgba(22,163,74,.3)}
+.res-card.res-loss{border-color:rgba(220,38,38,.2)}
+.res-card.res-pending{border-color:var(--line,rgba(0,0,0,.07))}
+
+.res-card-head{display:flex;align-items:center;gap:6px;margin-bottom:10px}
+.res-league{font-size:11.5px;color:var(--txt-2);font-weight:600;flex:1}
+.res-time{font-size:11px;color:var(--txt-2);opacity:.7}
+
+.res-teams{display:flex;align-items:center;justify-content:space-between;gap:8px;margin-bottom:10px}
+.res-teams span{font-size:14px;font-weight:700;flex:1;line-height:1.3}
+.res-teams span:first-child{text-align:right}
+.res-teams span:last-child{text-align:left}
+.res-score{display:flex;align-items:center;gap:5px;flex-shrink:0;
+  background:var(--bg);border-radius:10px;padding:5px 10px}
+.res-score b{font-size:18px;font-weight:900}
+.res-score em{font-size:14px;color:var(--txt-2);font-style:normal}
+
+.res-footer{display:flex;align-items:center;justify-content:space-between;gap:8px;
+  padding-top:10px;border-top:1px solid var(--line,rgba(0,0,0,.06))}
+.res-pick{display:flex;align-items:center;gap:5px;font-size:13px;font-weight:600;color:var(--txt-2);flex:1;flex-wrap:wrap}
+.res-conf{font-size:11px;background:var(--accent-soft);color:var(--accent);
+  padding:1px 7px;border-radius:100px;font-weight:700}
+.res-badge{font-size:12px;font-weight:800;padding:4px 10px;border-radius:100px;white-space:nowrap}
+.res-badge.res-win{background:rgba(22,163,74,.12);color:#16a34a}
+.res-badge.res-loss{background:rgba(220,38,38,.1);color:#dc2626}
+.res-badge.res-pending{background:var(--accent-soft);color:var(--accent)}
