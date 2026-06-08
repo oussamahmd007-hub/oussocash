@@ -161,8 +161,8 @@ function impliedOdd(conf) {
 // أقوى توقع منفرد لكل مباراة — يشمل جميع الأسواق المتاحة ويختار الأعلى %
 function bestSlipPick(p) {
   const c = [];
-  // 1X2
-  if (p.tip && p.fav) c.push({ pick: p.tip, mk: '1x2', conf: p.confidence });
+  // 1X2 — نحتفظ بـ fav لاستخدامه في التحقق من النتيجة لاحقاً
+  if (p.tip && p.fav) c.push({ pick: p.tip, mk: '1x2', conf: p.confidence, fav: p.fav });
   // فرصة مزدوجة DC
   if (p.dc_key) c.push({ pick: p.dc_key, mk: 'dc', conf: p.dc_prob });
   // أهداف
@@ -191,7 +191,38 @@ function bestSlipPick(p) {
   // الأعلى نسبة ثقة هو الفائز
   c.sort((a, b) => b.conf - a.conf);
   const b = c[0];
-  return { pick: b.pick, mk: b.mk, conf: b.conf, odd: impliedOdd(b.conf) };
+  return { pick: b.pick, mk: b.mk, conf: b.conf, odd: impliedOdd(b.conf), fav: b.fav || null };
+}
+
+// ── التحقق من صحة التوقع بعد انتهاء المباراة ──
+// يُرجع: true=صحيح | false=خطأ | null=لا يمكن التحقق
+function checkWin(best, actualResult, hs, as_) {
+  if (!best) return null;
+  const h = hs != null ? Number(hs) : null;
+  const a = as_ != null ? Number(as_) : null;
+  // اشتق النتيجة من الأهداف إذا لم تكن موجودة
+  let res = actualResult;
+  if (!res && h != null && a != null) res = h > a ? 'H' : a > h ? 'A' : 'D';
+  switch (best.mk) {
+    case '1x2': return res && best.fav ? res === best.fav : null;
+    case 'dc': {
+      if (!res) return null;
+      const p = best.pick;
+      if (p === '1X') return res === 'H' || res === 'D';
+      if (p === 'X2') return res === 'D' || res === 'A';
+      if (p === '12') return res === 'H' || res === 'A';
+      return null;
+    }
+    case 'ou15': return (h != null && a != null) ? (h + a > 1.5) : null;
+    case 'ou25': return (h != null && a != null) ? (h + a > 2.5) : null;
+    case 'ou35': return (h != null && a != null) ? (h + a > 3.5) : null;
+    case 'btts': {
+      if (h == null || a == null) return null;
+      const btts = h > 0 && a > 0;
+      return best.pick.includes('Yes') ? btts : !btts;
+    }
+    default: return null; // ركنيات/بطاقات — لا تتوفر البيانات الفعلية
+  }
 }
 function buildSlip(preds, todayStr) {
   let src = preds.filter((p) => String(p.date).slice(0, 10) === todayStr && p.status === 'notstarted');
@@ -452,6 +483,44 @@ module.exports = async (req, res) => {
     }
 
     // ── التوقعات + قسيمة اليوم ──
+    // ── نتائج التوقعات (اليوم + الأمس) ──
+    if (view === 'results') {
+      const todayStr     = ymd(now);
+      const yesterdayStr = ymd(new Date(+now - 864e5));
+      const raw = await bsdSafe('/predictions/?status=past&limit=60');
+      const all = dedupBy(
+        (raw?.results || []).map(p => {
+          const pred = simplifyPrediction(p);
+          if (!pred.home || !pred.away) return null;
+          const best = bestSlipPick(pred);
+          if (!best) return null;
+          const ev  = p.event || {};
+          const hs  = ev.home_score  ?? ev.ft_home  ?? ev.home_goals  ?? null;
+          const as_ = ev.away_score  ?? ev.ft_away  ?? ev.away_goals  ?? null;
+          const res = ev.result      ?? ev.outcome   ?? ev.final_result ?? null;
+          const won = checkWin(best, res, hs, as_);
+          return {
+            ...pred,
+            tip: best.pick, confidence: best.conf, _mk: best.mk,
+            home_score: hs, away_score: as_, won,
+          };
+        }).filter(Boolean),
+        'event_id'
+      );
+      const todayRes     = all.filter(r => r.date && r.date.startsWith(todayStr));
+      const yesterdayRes = all.filter(r => r.date && r.date.startsWith(yesterdayStr));
+      const decided      = all.filter(r => r.won !== null);
+      const wins         = decided.filter(r => r.won === true).length;
+      const total        = decided.length;
+      const rate         = total > 0 ? Math.round((wins / total) * 100) : null;
+      return json(res, 200, {
+        view: 'results',
+        today_results: todayRes,
+        yesterday_results: yesterdayRes,
+        stats: { wins, total, rate },
+      });
+    }
+
     if (view === 'predictions') {
       const ck = 'predictions';
       let preds = getCache(ck, 5 * 60e3);
