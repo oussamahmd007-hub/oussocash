@@ -483,6 +483,65 @@ module.exports = async (req, res) => {
     }
 
     // ── التوقعات + قسيمة اليوم ──
+    // ── قسائم 3 أيام (أمس/اليوم/غداً) مع النتائج ──
+    if (view === 'slips') {
+      const todayStr     = ymd(now);
+      const tomorrowStr  = ymd(new Date(+now + 864e5));
+      const yesterdayStr = ymd(new Date(+now - 864e5));
+
+      const [yEvt, tEvt, mEvt, upPred, pastPred] = await Promise.all([
+        bsdSafe(`/events/?date_from=${yesterdayStr}&date_to=${yesterdayStr}&limit=90`),
+        bsdSafe(`/events/?date_from=${todayStr}&date_to=${todayStr}&limit=90`),
+        bsdSafe(`/events/?date_from=${tomorrowStr}&date_to=${tomorrowStr}&limit=90`),
+        bsdSafe('/predictions/?status=upcoming&limit=90'),
+        bsdSafe('/predictions/?status=past&limit=90'),
+      ]);
+
+      // فهرس النتائج الحقيقية
+      const eventMap = {};
+      [...(yEvt?.results || []), ...(tEvt?.results || []), ...(mEvt?.results || [])].forEach(ev => {
+        const hs  = ev.home_score ?? ev.ft_home ?? ev.home_goals ?? null;
+        const as_ = ev.away_score ?? ev.ft_away ?? ev.away_goals ?? null;
+        if (hs == null && as_ == null) return;
+        const outcome = ev.result ?? ev.outcome ?? (hs > as_ ? 'H' : as_ > hs ? 'A' : 'D');
+        eventMap[String(ev.id)] = { hs, as_, outcome };
+      });
+
+      const allPreds = dedupBy(
+        [...(upPred?.results || []), ...(pastPred?.results || [])],
+        p => String((p.event || {}).id || p.id || Math.random())
+      );
+
+      const buildDay = (dayStr) => dedupBy(
+        allPreds.map(p => {
+          const pred = simplifyPrediction(p);
+          if (!pred.home || !pred.away || !pred.date) return null;
+          if (pred.date.slice(0, 10) !== dayStr) return null;
+          const best = bestSlipPick(pred);
+          if (!best) return null;
+          const actual = eventMap[String(pred.event_id)];
+          const won = actual ? checkWin(best, actual.outcome, actual.hs, actual.as_) : null;
+          return {
+            event_id: pred.event_id, home: pred.home, away: pred.away,
+            home_logo: pred.home_logo, away_logo: pred.away_logo,
+            league: pred.league, date: pred.date,
+            pick: best.pick, mk: best.mk, conf: best.conf, odd: best.odd,
+            home_score: actual ? actual.hs : null,
+            away_score: actual ? actual.as_ : null,
+            won,
+          };
+        }).filter(Boolean),
+        'event_id'
+      ).sort((a, b) => b.conf - a.conf);
+
+      return json(res, 200, {
+        view: 'slips',
+        yesterday: buildDay(yesterdayStr),
+        today: buildDay(todayStr),
+        tomorrow: buildDay(tomorrowStr),
+      });
+    }
+
     // ── نتائج التوقعات: تقاطع التوقعات مع نتائج المباريات الحقيقية ──
     if (view === 'results') {
       const todayStr     = ymd(now);
