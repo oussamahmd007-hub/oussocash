@@ -512,11 +512,11 @@ module.exports = async (req, res) => {
         p => String((p.event || {}).id || p.id || Math.random())
       );
 
-      const buildDay = (dayStr) => dedupBy(
+      // تحويل كل التوقعات إلى صفوف قسيمة (مع النتائج إن وُجدت)
+      const allRows = dedupBy(
         allPreds.map(p => {
           const pred = simplifyPrediction(p);
           if (!pred.home || !pred.away || !pred.date) return null;
-          if (pred.date.slice(0, 10) !== dayStr) return null;
           const best = bestSlipPick(pred);
           if (!best) return null;
           const actual = eventMap[String(pred.event_id)];
@@ -532,13 +532,20 @@ module.exports = async (req, res) => {
           };
         }).filter(Boolean),
         'event_id'
-      ).sort((a, b) => Number(a.date > b.date) - Number(a.date < b.date));
+      );
+      const byDate = (a, b) => String(a.date).localeCompare(String(b.date));
+      const byDay = (dayStr) => allRows.filter(r => r.date.slice(0, 10) === dayStr).sort(byDate);
 
-      // قسيمة اليوم — تبقى المباريات المنتهية. إذا انتهت كلها → قسيمة الغد
-      let slip = buildDay(todayStr);
+      // قسيمة اليوم — كل مباريات اليوم (تبقى المنتهية)
+      let slip = byDay(todayStr);
+      // احتياط: إذا لا توجد مباريات اليوم، اعرض كل المباريات القادمة (غير المنتهية)
+      if (!slip.length) {
+        slip = allRows.filter(r => r.home_score == null).sort(byDate);
+      }
+      // إذا انتهت كل مباريات اليوم → قسيمة الغد
       const allDone = slip.length > 0 && slip.every(m => m.home_score != null && m.away_score != null);
       if (allDone) {
-        const tom = buildDay(tomorrowStr);
+        const tom = byDay(tomorrowStr);
         if (tom.length) slip = tom;
       }
 
