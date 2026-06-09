@@ -524,7 +524,7 @@ module.exports = async (req, res) => {
           return {
             event_id: pred.event_id, home: pred.home, away: pred.away,
             home_logo: pred.home_logo, away_logo: pred.away_logo,
-            league: pred.league, date: pred.date,
+            league: pred.league, league_logo: pred.league_logo, date: pred.date,
             pick: best.pick, mk: best.mk, conf: best.conf, odd: best.odd,
             home_score: actual ? actual.hs : null,
             away_score: actual ? actual.as_ : null,
@@ -532,14 +532,17 @@ module.exports = async (req, res) => {
           };
         }).filter(Boolean),
         'event_id'
-      ).sort((a, b) => b.conf - a.conf);
+      ).sort((a, b) => Number(a.date > b.date) - Number(a.date < b.date));
 
-      return json(res, 200, {
-        view: 'slips',
-        yesterday: buildDay(yesterdayStr),
-        today: buildDay(todayStr),
-        tomorrow: buildDay(tomorrowStr),
-      });
+      // قسيمة اليوم — تبقى المباريات المنتهية. إذا انتهت كلها → قسيمة الغد
+      let slip = buildDay(todayStr);
+      const allDone = slip.length > 0 && slip.every(m => m.home_score != null && m.away_score != null);
+      if (allDone) {
+        const tom = buildDay(tomorrowStr);
+        if (tom.length) slip = tom;
+      }
+
+      return json(res, 200, { view: 'slips', slip });
     }
 
     // ── نتائج التوقعات: تقاطع التوقعات مع نتائج المباريات الحقيقية ──
