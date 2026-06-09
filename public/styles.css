@@ -1393,3 +1393,52 @@ html[dir="rtl"] .slip-stake-field input{padding:14px 16px 14px 58px}
 .res-badge.res-win{background:rgba(22,163,74,.12);color:#16a34a}
 .res-badge.res-loss{background:rgba(220,38,38,.1);color:#dc2626}
 .res-badge.res-pending{background:var(--accent-soft);color:var(--accent)}
+
+/* ═══════════════════════════════════════════════════════════
+   القسيمة متعددة الأيام + كود الحجز
+   ═══════════════════════════════════════════════════════════ */
+.slip-days{display:flex;gap:6px;padding:0 16px 12px}
+.slip-day{flex:1;padding:9px 0;border-radius:12px;border:none;cursor:pointer;
+  background:var(--bg);color:var(--txt-2);font-size:13px;font-weight:700;font-family:inherit;
+  transition:all .15s}
+.slip-day.on{background:var(--accent);color:#fff}
+
+.slip-code-btn{display:flex;align-items:center;justify-content:center;gap:8px;
+  width:calc(100% - 32px);margin:0 16px 12px;padding:13px;border:none;cursor:pointer;
+  border-radius:14px;font-family:inherit;font-size:14.5px;font-weight:800;
+  background:linear-gradient(135deg,#16a34a,#15803d);color:#fff;
+  box-shadow:0 4px 16px rgba(22,163,74,.3);transition:transform .15s}
+.slip-code-btn:active{transform:scale(.98)}
+.slip-code-btn:disabled{opacity:.6}
+
+.slip-code-card{margin:0 16px 12px}
+.code-loading{display:flex;flex-direction:column;align-items:center;gap:12px;padding:28px 16px;
+  background:var(--card);border-radius:16px;text-align:center;font-size:14px;color:var(--txt-2)}
+.code-spinner{width:36px;height:36px;border:3px solid var(--line,rgba(0,0,0,.1));
+  border-top-color:#16a34a;border-radius:50%;animation:spin .8s linear infinite}
+@keyframes spin{to{transform:rotate(360deg)}}
+.code-empty{padding:18px;background:var(--card);border-radius:14px;text-align:center;
+  font-size:13.5px;color:var(--txt-2);line-height:1.6}
+
+.code-result{background:var(--card);border-radius:18px;padding:18px;border:1.5px solid rgba(22,163,74,.3)}
+.code-result-top{display:flex;align-items:center;gap:8px;margin-bottom:14px}
+.code-result-top b{font-size:15px;font-weight:800;color:#16a34a}
+.code-box{display:flex;align-items:center;justify-content:space-between;gap:10px;cursor:pointer;
+  background:var(--bg);border:2px dashed var(--accent);border-radius:14px;padding:14px 16px;margin-bottom:14px}
+.code-value{font-size:24px;font-weight:900;letter-spacing:3px;color:var(--accent);
+  font-family:ui-monospace,monospace}
+.code-stats{display:flex;gap:10px;margin-bottom:14px}
+.code-stat{flex:1;background:var(--bg);border-radius:12px;padding:10px 12px;text-align:center}
+.code-stat span{display:block;font-size:11px;color:var(--txt-2);margin-bottom:3px}
+.code-stat b{font-size:18px;font-weight:900;color:var(--txt)}
+.code-copy-btn{width:100%;padding:13px;border:none;border-radius:14px;cursor:pointer;
+  background:var(--accent);color:#fff;font-size:15px;font-weight:800;font-family:inherit;margin-bottom:10px}
+.code-copy-btn:active{transform:scale(.99)}
+.code-hint{font-size:12px;color:var(--txt-2);line-height:1.6;text-align:center}
+
+/* صفوف القسيمة مع النتائج */
+.slip-row.row-won{border-inline-start:3px solid #16a34a}
+.slip-row.row-lost{border-inline-start:3px solid #dc2626;opacity:.75}
+.slip-won{font-size:18px}.slip-lost{font-size:18px}
+.slip-score{background:var(--accent-soft);color:var(--accent);border-radius:8px;
+  padding:1px 8px;font-weight:800;font-size:12px}

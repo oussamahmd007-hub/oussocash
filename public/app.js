@@ -842,8 +842,6 @@ const App = {
     if(r.error){ body.innerHTML=`<div class="sport-empty">${this.sportEmptyIcon()}<span>${T.sport_unavailable}</span></div>`; this.updateSlipFab(); return; }
 
     if(v==='predictions'){
-      this._slip=r.slip||[];
-      if(!this._slipSel){ this._slipSel=new Set(this._slip.slice(0,3).map(x=>x.event_id)); }
       this.updateSlipFab();
       let html='';
       if(r.top_pick){ html+=this.heroPick(r.top_pick); }
@@ -1263,70 +1261,103 @@ const App = {
   },
   updateSlipFab(){
     const fab=document.getElementById('slipFab'); if(!fab) return;
-    const show=this.current==='sport' && this._slip && this._slip.length;
+    const show=this.current==='sport';
     fab.classList.toggle('hidden', !show);
-    const c=document.getElementById('slipFabCount');
-    if(c && this._slipSel) c.textContent=this._slipSel.size;
   },
-  openSlip(){
-    if(!this._slip || !this._slip.length){ this.toast(window.TEXTS[this.lang].slip_empty); return; }
-    this.renderSlip();
+  async openSlip(){
     document.getElementById('slipDrawerBg').classList.add('show');
+    if(!this._slipsData){
+      const list=document.getElementById('slipList');
+      if(list) list.innerHTML=this.sportSkeleton('today');
+      const r=await this.api('sport',{view:'slips',lang:this.lang});
+      this._slipsData=r&&!r.error?r:{yesterday:[],today:[],tomorrow:[]};
+    }
+    if(!this._slipDay) this._slipDay='today';
+    this.renderSlipDay();
   },
   closeSlip(){ document.getElementById('slipDrawerBg').classList.remove('show'); },
   closeSlipBg(e){ if(e.target.id==='slipDrawerBg') this.closeSlip(); },
-  toggleSlipPick(id){
-    if(!this._slipSel) this._slipSel=new Set();
-    if(this._slipSel.has(id)) this._slipSel.delete(id); else this._slipSel.add(id);
-    this.renderSlip(); this.updateSlipFab();
+  slipDay(day){
+    this._slipDay=day;
+    document.querySelectorAll('.slip-day').forEach(b=>b.classList.toggle('on', b.dataset.day===day));
+    // إخفاء بطاقة الكود عند تبديل اليوم
+    const card=document.getElementById('slipCodeCard'); if(card){card.classList.add('hidden');card.innerHTML='';}
+    this.renderSlipDay();
   },
-  computeSlip(){
-    let odds=1, n=0;
-    (this._slip||[]).forEach(r=>{ if(this._slipSel && this._slipSel.has(r.event_id)){ odds*=Number(r.odd)||1; n++; } });
-    return { odds: n?odds:0, n };
-  },
-  renderSlip(){
+  renderSlipDay(){
     const T=window.TEXTS[this.lang];
     const list=document.getElementById('slipList'); if(!list) return;
-    const rows=this._slip||[];
-    if(!rows.length){ list.innerHTML=`<div class="slip-empty">${T.slip_empty}</div>`; }
-    else {
-      list.innerHTML=rows.map(r=>{
-        const sel=this._slipSel && this._slipSel.has(r.event_id);
-        const rc=this.riskClass(r.conf);
-        let when=''; try{ when=r.date?new Date(r.date).toLocaleString(this.lang==='fr'?'fr':'ar-u-nu-latn',{day:'numeric',month:'short',hour:'2-digit',minute:'2-digit'}):''; }catch{}
-        return `<div class="slip-row ${sel?'on':''}" onclick="App.toggleSlipPick(${r.event_id||0})">
-          <div class="slip-check ${sel?'on':''}"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><path d="M5 12l5 5L20 6"/></svg></div>
-          <div class="slip-row-main">
-            <div class="slip-row-teams">
-              <img src="${r.home_logo||''}" onerror="this.style.visibility='hidden'">
-              <span>${this.esc(r.home)} <em>${T.sport_vs}</em> ${this.esc(r.away)}</span>
-              <img src="${r.away_logo||''}" onerror="this.style.visibility='hidden'">
-            </div>
-            <div class="slip-row-meta">
-              <span class="slip-mk">${this.slipMarketLabel(r.mk,r.pick)}</span>
-              <span class="slip-pick">${this.esc(r.pick)}</span>
-              <span class="slip-when">${when}</span>
-            </div>
+    const rows=(this._slipsData&&this._slipsData[this._slipDay])||[];
+    if(!rows.length){ list.innerHTML=`<div class="slip-empty">${T.slip_empty_day||T.slip_empty}</div>`; return; }
+    list.innerHTML=rows.map(r=>{
+      const rc=this.riskClass(r.conf);
+      const finished=(r.home_score!=null&&r.away_score!=null);
+      const wonBadge=r.won===true?`<span class="slip-won">✅</span>`:r.won===false?`<span class="slip-lost">❌</span>`:'';
+      const score=finished?`<span class="slip-score">${r.home_score} - ${r.away_score}</span>`:'';
+      let when=''; try{ when=r.date?new Date(r.date).toLocaleTimeString(this.lang==='fr'?'fr':'ar-u-nu-latn',{hour:'2-digit',minute:'2-digit'}):''; }catch{}
+      return `<div class="slip-row ${r.won===true?'row-won':r.won===false?'row-lost':''}">
+        <div class="slip-row-main">
+          <div class="slip-row-teams">
+            <img src="${r.home_logo||''}" onerror="this.style.visibility='hidden'">
+            <span>${this.esc(r.home)} <em>${T.sport_vs}</em> ${this.esc(r.away)}</span>
+            <img src="${r.away_logo||''}" onerror="this.style.visibility='hidden'">
           </div>
-          <div class="slip-row-end">
-            <div class="slip-odd">${Number(r.odd).toFixed(2)}</div>
-            <div class="slip-risk ${rc}">${r.conf}%</div>
+          <div class="slip-row-meta">
+            <span class="slip-pick">${this.esc(r.pick)}</span>
+            ${score}
+            <span class="slip-when">${when}</span>
           </div>
-        </div>`;
-      }).join('');
-    }
-    this.slipStakeInput();
+        </div>
+        <div class="slip-row-end">
+          ${wonBadge||`<div class="slip-odd">${Number(r.odd).toFixed(2)}</div>`}
+          <div class="slip-risk ${rc}">${r.conf}%</div>
+        </div>
+      </div>`;
+    }).join('');
   },
-  slipStakeInput(){
-    const inp=document.getElementById('slipStake'); if(!inp) return;
-    let v=inp.value.replace(/[^\d]/g,''); if(v!==inp.value) inp.value=v;
-    const stake=parseInt(v||'0',10)||0;
-    const { odds, n }=this.computeSlip();
-    const ret=odds>0?Math.round(stake*odds):0;
-    const po=document.getElementById('slipPicks'); if(po) po.textContent=n;
-    const oo=document.getElementById('slipOdds'); if(oo) oo.textContent=odds>0?odds.toFixed(2):'1.00';
-    const ro=document.getElementById('slipReturn'); if(ro) ro.textContent=ret.toLocaleString(this.lang==='fr'?'fr':'ar-u-nu-latn');
+  // ── استخراج كود القسيمة (واجهة احترافية مع تأخير) ──
+  async extractCode(){
+    const T=window.TEXTS[this.lang];
+    const btn=document.getElementById('slipCodeBtn');
+    const card=document.getElementById('slipCodeCard');
+    if(!card) return;
+    const code=(this._coupons&&this._coupons[this._slipDay||'today'])||'';
+    // لا يوجد كود لهذا اليوم
+    if(!code){
+      card.classList.remove('hidden');
+      card.innerHTML=`<div class="code-empty">${T.slip_code_none}</div>`;
+      return;
+    }
+    // واجهة التحميل (محاكاة الاتصال بالسيرفر)
+    btn.disabled=true;
+    card.classList.remove('hidden');
+    card.innerHTML=`<div class="code-loading">
+      <div class="code-spinner"></div>
+      <span>${T.slip_code_connecting}</span>
+    </div>`;
+    await new Promise(r=>setTimeout(r,1600)); // تأخير احترافي
+    // تنسيق: CODE|odds|count
+    const [cc,odds,count]=code.split('|').map(s=>s.trim());
+    card.innerHTML=`<div class="code-result">
+      <div class="code-result-top">
+        <svg viewBox="0 0 24 24" fill="none" stroke="#16a34a" stroke-width="2.5" style="width:22px;height:22px"><path d="M9 16.2l-3.5-3.5L4 14.2 9 19l11-11-1.5-1.4z"/></svg>
+        <b>${T.slip_code_ready}</b>
+      </div>
+      <div class="code-box" onclick="App.copyCode('${this.esc(cc)}')">
+        <span class="code-value">${this.esc(cc)}</span>
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width:18px;height:18px;flex-shrink:0;opacity:.6"><rect x="9" y="9" width="11" height="11" rx="2"/><path d="M5 15V5a2 2 0 012-2h10"/></svg>
+      </div>
+      <div class="code-stats">
+        ${odds?`<div class="code-stat"><span>${T.slip_total_odds}</span><b>${this.esc(odds)}</b></div>`:''}
+        ${count?`<div class="code-stat"><span>${T.slip_matches_count}</span><b>${this.esc(count)}</b></div>`:''}
+      </div>
+      <button class="code-copy-btn" onclick="App.copyCode('${this.esc(cc)}')">${T.slip_code_copy}</button>
+      <div class="code-hint">${T.slip_code_hint}</div>
+    </div>`;
+    btn.disabled=false;
+  },
+  copyCode(code){
+    try{ navigator.clipboard.writeText(code); this.toast(window.TEXTS[this.lang].slip_code_copied); }catch{ this.toast(code); }
   },
 
   // ═══ Skeleton loading ═══
@@ -1464,7 +1495,7 @@ const App = {
     this.refreshNotifBanner();
     this.maybeShowNotifModal();
     // load config
-    try{ const c=await this.api('config'); SUPPORT_WA=c.support_whatsapp||SUPPORT_WA; CHANNEL=c.channel_url||CHANNEL; OS_APP_ID=c.onesignal_app_id||''; }catch{}
+    try{ const c=await this.api('config'); SUPPORT_WA=c.support_whatsapp||SUPPORT_WA; CHANNEL=c.channel_url||CHANNEL; OS_APP_ID=c.onesignal_app_id||''; this._coupons=c.coupons||{}; }catch{}
     // عرض رقم الوكالة بشكل منسّق
     const ph=document.getElementById('agencyPhone');
     if(ph){ const n=SUPPORT_WA.replace(/^222/,''); ph.textContent='+222 '+n.replace(/(\d{2})(\d{2})(\d{2})(\d{2})/,'$1 $2 $3 $4'); }
