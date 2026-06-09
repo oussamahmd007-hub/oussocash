@@ -842,6 +842,8 @@ const App = {
     if(r.error){ body.innerHTML=`<div class="sport-empty">${this.sportEmptyIcon()}<span>${T.sport_unavailable}</span></div>`; this.updateSlipFab(); return; }
 
     if(v==='predictions'){
+      this._slip=r.slip||[];
+      if(!this._slipSel){ this._slipSel=new Set(this._slip.slice(0,3).map(x=>x.event_id)); }
       this.updateSlipFab();
       let html='';
       if(r.top_pick){ html+=this.heroPick(r.top_pick); }
@@ -1261,26 +1263,22 @@ const App = {
   },
   updateSlipFab(){
     const fab=document.getElementById('slipFab'); if(!fab) return;
-    fab.classList.toggle('hidden', this.current!=='sport');
+    const show=this.current==='sport' && this._slip && this._slip.length;
+    fab.classList.toggle('hidden', !show);
+    const c=document.getElementById('slipFabCount');
+    if(c && this._slipSel) c.textContent=this._slipSel.size;
   },
-  async openSlip(){
-    document.getElementById('slipDrawerBg').classList.add('show');
-    if(!this._slip || !this._slip.length){
-      const list=document.getElementById('slipList');
-      if(list) list.innerHTML=this.sportSkeleton('today');
-      const r=await this.api('sport',{view:'slips',lang:this.lang});
-      this._slip=(r&&!r.error&&r.slip)||[];
-      // اختيار أول 3 مباريات غير منتهية افتراضياً
-      this._slipSel=new Set(this._slip.filter(x=>x.home_score==null).slice(0,3).map(x=>x.event_id));
-    }
+  openSlip(){
+    if(!this._slip || !this._slip.length){ this.toast(window.TEXTS[this.lang].slip_empty); return; }
     this.renderSlip();
+    document.getElementById('slipDrawerBg').classList.add('show');
   },
   closeSlip(){ document.getElementById('slipDrawerBg').classList.remove('show'); },
   closeSlipBg(e){ if(e.target.id==='slipDrawerBg') this.closeSlip(); },
   toggleSlipPick(id){
     if(!this._slipSel) this._slipSel=new Set();
     if(this._slipSel.has(id)) this._slipSel.delete(id); else this._slipSel.add(id);
-    this.renderSlip();
+    this.renderSlip(); this.updateSlipFab();
   },
   computeSlip(){
     let odds=1, n=0;
@@ -1294,30 +1292,9 @@ const App = {
     if(!rows.length){ list.innerHTML=`<div class="slip-empty">${T.slip_empty}</div>`; }
     else {
       list.innerHTML=rows.map(r=>{
-        const rc=this.riskClass(r.conf);
-        const finished=(r.home_score!=null&&r.away_score!=null);
-        let when=''; try{ when=r.date?new Date(r.date).toLocaleString(this.lang==='fr'?'fr':'ar-u-nu-latn',{day:'numeric',month:'short',hour:'2-digit',minute:'2-digit'}):''; }catch{}
-        // مباراة منتهية → تعرض النتيجة بدل checkbox (غير قابلة للاختيار)
-        if(finished){
-          const wonBadge=r.won===true?`<span class="slip-won">✅</span>`:r.won===false?`<span class="slip-lost">❌</span>`:'';
-          return `<div class="slip-row ${r.won===true?'row-won':r.won===false?'row-lost':''}">
-            <div class="slip-row-main">
-              <div class="slip-row-teams">
-                <img src="${r.home_logo||''}" onerror="this.style.visibility='hidden'">
-                <span>${this.esc(r.home)} <em>${T.sport_vs}</em> ${this.esc(r.away)}</span>
-                <img src="${r.away_logo||''}" onerror="this.style.visibility='hidden'">
-              </div>
-              <div class="slip-row-meta">
-                <span class="slip-pick">${this.esc(r.pick)}</span>
-                <span class="slip-score">${r.home_score} - ${r.away_score}</span>
-                <span class="slip-when">${when}</span>
-              </div>
-            </div>
-            <div class="slip-row-end">${wonBadge}<div class="slip-risk ${rc}">${r.conf}%</div></div>
-          </div>`;
-        }
-        // مباراة قادمة → قابلة للاختيار في الحاسبة
         const sel=this._slipSel && this._slipSel.has(r.event_id);
+        const rc=this.riskClass(r.conf);
+        let when=''; try{ when=r.date?new Date(r.date).toLocaleString(this.lang==='fr'?'fr':'ar-u-nu-latn',{day:'numeric',month:'short',hour:'2-digit',minute:'2-digit'}):''; }catch{}
         return `<div class="slip-row ${sel?'on':''}" onclick="App.toggleSlipPick(${r.event_id||0})">
           <div class="slip-check ${sel?'on':''}"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><path d="M5 12l5 5L20 6"/></svg></div>
           <div class="slip-row-main">
@@ -1351,43 +1328,78 @@ const App = {
     const oo=document.getElementById('slipOdds'); if(oo) oo.textContent=odds>0?odds.toFixed(2):'1.00';
     const ro=document.getElementById('slipReturn'); if(ro) ro.textContent=ret.toLocaleString(this.lang==='fr'?'fr':'ar-u-nu-latn');
   },
-  // ── استخراج كود القسيمة (واجهة احترافية مع تأخير) ──
+
+  // ═══ استخراج كود القسيمة (واجهة احترافية تحاكي الاتصال بسيرفر 1xBet) ═══
   async extractCode(){
     const T=window.TEXTS[this.lang];
-    const btn=document.getElementById('slipCodeBtn');
-    const card=document.getElementById('slipCodeCard');
-    if(!card) return;
-    const code=(this._coupons&&this._coupons.today)||'';
+    const bg=document.getElementById('codeModalBg');
+    const body=document.getElementById('codeModalBody');
+    if(!bg||!body) return;
+    bg.classList.add('show');
+
+    const code=this._coupon||'';
+    // لا يوجد كود متاح
     if(!code){
-      card.classList.remove('hidden');
-      card.innerHTML=`<div class="code-empty">${T.slip_code_none}</div>`;
+      body.innerHTML=`<div class="cm-empty">
+        <div class="cm-empty-ic">🎫</div>
+        <b>${T.code_none_title}</b>
+        <span>${T.code_none_sub}</span>
+      </div>`;
       return;
     }
-    btn.disabled=true;
-    card.classList.remove('hidden');
-    card.innerHTML=`<div class="code-loading"><div class="code-spinner"></div><span>${T.slip_code_connecting}</span></div>`;
-    await new Promise(r=>setTimeout(r,1600));
-    const [cc,odds,count]=code.split('|').map(s=>s.trim());
-    card.innerHTML=`<div class="code-result">
-      <div class="code-result-top">
-        <svg viewBox="0 0 24 24" fill="none" stroke="#16a34a" stroke-width="2.5" style="width:22px;height:22px"><path d="M9 16.2l-3.5-3.5L4 14.2 9 19l11-11-1.5-1.4z"/></svg>
-        <b>${T.slip_code_ready}</b>
-      </div>
-      <div class="code-box" onclick="App.copyCode('${this.esc(cc)}')">
-        <span class="code-value">${this.esc(cc)}</span>
-        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width:18px;height:18px;flex-shrink:0;opacity:.6"><rect x="9" y="9" width="11" height="11" rx="2"/><path d="M5 15V5a2 2 0 012-2h10"/></svg>
-      </div>
-      <div class="code-stats">
-        ${odds?`<div class="code-stat"><span>${T.slip_total_odds}</span><b>${this.esc(odds)}</b></div>`:''}
-        ${count?`<div class="code-stat"><span>${T.slip_matches_count}</span><b>${this.esc(count)}</b></div>`:''}
-      </div>
-      <button class="code-copy-btn" onclick="App.copyCode('${this.esc(cc)}')">${T.slip_code_copy}</button>
-      <div class="code-hint">${T.slip_code_hint}</div>
+
+    // مراحل التحميل الاحترافية
+    const steps=[T.code_step1,T.code_step2,T.code_step3];
+    body.innerHTML=`<div class="cm-loading">
+      <div class="cm-logo"><span>1x</span></div>
+      <div class="cm-spinner"></div>
+      <div class="cm-step" id="cmStep">${steps[0]}</div>
+      <div class="cm-progress"><i id="cmBar"></i></div>
     </div>`;
-    btn.disabled=false;
+    const bar=document.getElementById('cmBar');
+    const stepEl=document.getElementById('cmStep');
+    const widths=['33%','66%','100%'];
+    for(let i=0;i<steps.length;i++){
+      if(bar) bar.style.width=widths[i];
+      if(stepEl) stepEl.textContent=steps[i];
+      await new Promise(r=>setTimeout(r, i===2?900:700));
+    }
+    await new Promise(r=>setTimeout(r,300));
+
+    // تنسيق: CODE|odds|count — مع احتساب احتياطي من القسيمة الحالية
+    let [cc,odds,count]=code.split('|').map(s=>(s||'').trim());
+    if(!odds||!count){
+      const cmp=this.computeSlip();
+      if(!odds && cmp.odds>0) odds=cmp.odds.toFixed(2);
+      if(!count && cmp.n>0) count=String(cmp.n);
+    }
+    body.innerHTML=`<div class="cm-result">
+      <div class="cm-success">
+        <svg viewBox="0 0 24 24" fill="none" stroke="#16a34a" stroke-width="3" style="width:30px;height:30px"><circle cx="12" cy="12" r="10" stroke="rgba(22,163,74,.25)"/><path d="M8 12l3 3 5-6"/></svg>
+        <b>${T.code_ready}</b>
+      </div>
+      <div class="cm-code" onclick="App.copyCode('${this.esc(cc)}')">
+        <span class="cm-code-label">${T.code_booking}</span>
+        <span class="cm-code-value">${this.esc(cc)}</span>
+      </div>
+      <div class="cm-stats">
+        <div class="cm-stat"><span>${T.code_matches}</span><b>${this.esc(count||'—')}</b></div>
+        <div class="cm-stat"><span>${T.code_odds}</span><b>${this.esc(odds||'—')}</b></div>
+      </div>
+      <button class="cm-copy" onclick="App.copyCode('${this.esc(cc)}')">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width:18px;height:18px"><rect x="9" y="9" width="11" height="11" rx="2"/><path d="M5 15V5a2 2 0 012-2h10"/></svg>
+        ${T.code_copy}
+      </button>
+      <div class="cm-hint">${T.code_hint}</div>
+    </div>`;
+  },
+  closeCodeModal(e){
+    if(e && e.target.id!=='codeModalBg') return;
+    document.getElementById('codeModalBg').classList.remove('show');
   },
   copyCode(code){
-    try{ navigator.clipboard.writeText(code); this.toast(window.TEXTS[this.lang].slip_code_copied); }catch{ this.toast(code); }
+    const T=window.TEXTS[this.lang];
+    try{ navigator.clipboard.writeText(code); this.toast(T.code_copied); }catch{ this.toast(code); }
   },
 
   // ═══ Skeleton loading ═══
@@ -1525,7 +1537,7 @@ const App = {
     this.refreshNotifBanner();
     this.maybeShowNotifModal();
     // load config
-    try{ const c=await this.api('config'); SUPPORT_WA=c.support_whatsapp||SUPPORT_WA; CHANNEL=c.channel_url||CHANNEL; OS_APP_ID=c.onesignal_app_id||''; this._coupons=c.coupons||{}; }catch{}
+    try{ const c=await this.api('config'); SUPPORT_WA=c.support_whatsapp||SUPPORT_WA; CHANNEL=c.channel_url||CHANNEL; OS_APP_ID=c.onesignal_app_id||''; this._coupon=c.coupon||''; }catch{}
     // عرض رقم الوكالة بشكل منسّق
     const ph=document.getElementById('agencyPhone');
     if(ph){ const n=SUPPORT_WA.replace(/^222/,''); ph.textContent='+222 '+n.replace(/(\d{2})(\d{2})(\d{2})(\d{2})/,'$1 $2 $3 $4'); }

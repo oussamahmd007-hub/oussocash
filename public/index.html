@@ -360,12 +360,12 @@
             <button class="slip-pill hidden" id="slipFab" onclick="App.openSlip()" aria-label="bet slip">
               <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 4h16v5a2 2 0 000 6v5H4v-5a2 2 0 000-6z"/><path d="M9 9h6M9 13h6"/></svg>
               <span id="t-slip_btn"></span>
+              <span class="slip-pill-count" id="slipFabCount">0</span>
             </button>
           </div>
         </div>
         <div class="sport-tabs" id="sportTabs">
           <button class="sport-tab on" data-sv="predictions" onclick="App.sportView('predictions')" id="t-sport_predictions_tab"></button>
-          <button class="sport-tab" data-sv="results" onclick="App.sportView('results')" id="t-sport_results"></button>
           <button class="sport-tab" data-sv="live" onclick="App.sportView('live')" id="t-sport_live"></button>
           <button class="sport-tab" data-sv="today" onclick="App.sportView('today')" id="t-sport_today"></button>
           <button class="sport-tab" data-sv="tomorrow" onclick="App.sportView('tomorrow')" id="t-sport_tomorrow"></button>
@@ -530,15 +530,22 @@
           <b><i id="slipReturn">0</i> <small>UM</small></b>
         </div>
         <div class="slip-note" id="t-slip_note"></div>
-
-        <!-- زر استخراج كود القسيمة -->
         <button class="slip-code-btn" id="slipCodeBtn" onclick="App.extractCode()">
-          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width:18px;height:18px"><rect x="3" y="5" width="18" height="14" rx="2"/><path d="M7 9h2M7 13h6M15 9h2"/></svg>
-          <span id="t-slip_extract_code"></span>
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" style="width:19px;height:19px"><rect x="3" y="5" width="18" height="14" rx="2"/><path d="M7 9h2M7 13h6M15 9h2"/></svg>
+          <span id="t-slip_get_code"></span>
         </button>
-        <div class="slip-code-card hidden" id="slipCodeCard"></div>
       </div>
     </aside>
+  </div>
+
+  <!-- ── نافذة كود القسيمة المنبثقة ── -->
+  <div class="code-modal-bg" id="codeModalBg" onclick="App.closeCodeModal(event)">
+    <div class="code-modal" onclick="event.stopPropagation()">
+      <button class="code-modal-close" onclick="App.closeCodeModal()" aria-label="close">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4"><path d="M18 6L6 18M6 6l12 12"/></svg>
+      </button>
+      <div class="code-modal-body" id="codeModalBody"></div>
+    </div>
   </div>
   <!-- ── إشعار البروموكود عند الضغط على سجل الآن ── -->
   <div class="pnotice-bg" id="pnoticeBg" onclick="App.closePromoNotice(event)">
