@@ -157,6 +157,24 @@ module.exports = async (req, res) => {
       return json(res, 200, { ok: true });
     }
 
+    // ─── أكواد القسائم (متوافق مع كل نسخ الواجهة) ───
+    if (action === 'get_coupons') {
+      const rows = await sb('settings?select=key,value&key=in.(coupon_today,coupon_tomorrow,coupon_yesterday)');
+      const map = {}; (rows || []).forEach((r) => (map[r.key] = r.value));
+      return json(res, 200, { today: map.coupon_today || '', tomorrow: map.coupon_tomorrow || '', yesterday: map.coupon_yesterday || '' });
+    }
+    if (action === 'set_coupon') {
+      const day = body.day === 'tomorrow' ? 'tomorrow' : body.day === 'yesterday' ? 'yesterday' : 'today';
+      const key = 'coupon_' + day;
+      const existing = await sb(`settings?key=eq.${key}&select=key`);
+      if (existing && existing.length) {
+        await sbUpdate('settings', `key=eq.${key}`, { value: String(body.value || ''), updated_at: new Date().toISOString() });
+      } else {
+        await sbInsert('settings', { key, value: String(body.value || '') });
+      }
+      return json(res, 200, { ok: true });
+    }
+
     // ─── تنظيف الحسابات المعلّقة منتهية المدة ───
     if (action === 'cleanup_pending') {
       const cutoff = new Date(Date.now() - PENDING_TTL_HOURS * 36e5).toISOString();
