@@ -17,19 +17,62 @@ module.exports = async (req, res) => {
 
     // ─── لوحة المعلومات ───
     if (action === 'dashboard') {
-      const accs = await sb('accounts?select=status,balance_um');
+      const accs = await sb('accounts?select=status,balance_um,last_seen_at');
       const wd = await sb('withdrawals?status=eq.pending&select=amount_um');
       const refs = await sb('referrals?paid=eq.true&select=commission_um');
+      const todayStart = new Date(); todayStart.setHours(0, 0, 0, 0);
+      const activeAccs = accs.filter((a) => a.status === 'active');
+      const activeToday = activeAccs.filter((a) => a.last_seen_at && new Date(a.last_seen_at) >= todayStart).length;
       return json(res, 200, {
         total: accs.length,
-        active: accs.filter((a) => a.status === 'active').length,
+        active: activeAccs.length,
+        active_today: activeToday,
+        inactive_today: activeAccs.length - activeToday,
         pending: accs.filter((a) => a.status === 'pending').length,
         incomplete: accs.filter((a) => a.status === 'deposit_incomplete').length,
         pending_wd: wd.length,
-        pending_wd_amount: wd.reduce((s, w) => s + w.amount_um, 0),
-        total_commissions: refs.reduce((s, r) => s + r.commission_um, 0),
-        balance_total: accs.reduce((s, a) => s + (a.balance_um || 0), 0),
+        pending_wd_amount: wd.reduce((s, w) => s + (Number(w.amount_um) || 0), 0),
+        total_commissions: refs.reduce((s, r) => s + (Number(r.commission_um) || 0), 0),
+        balance_total: accs.reduce((s, a) => s + (Number(a.balance_um) || 0), 0),
       });
+    }
+
+    // ─── نشاط اللاعبين اليوم (نشط / غير نشط) ───
+    if (action === 'players_activity') {
+      const accs = await sb('accounts?status=eq.active&select=game_id,name,balance_um,last_seen_at&order=last_seen_at.desc&limit=500');
+      const todayStart = new Date(); todayStart.setHours(0, 0, 0, 0);
+      const active = [], inactive = [];
+      accs.forEach((a) => {
+        const seen = a.last_seen_at ? new Date(a.last_seen_at) : null;
+        (seen && seen >= todayStart ? active : inactive).push(a);
+      });
+      return json(res, 200, {
+        active, inactive,
+        active_count: active.length,
+        inactive_count: inactive.length,
+      });
+    }
+
+    // ─── أكواد القسائم ───
+    if (action === 'get_coupons') {
+      const rows = await sb('settings?select=key,value&key=in.(coupon_today,coupon_tomorrow,coupon_yesterday)');
+      const map = {}; (rows || []).forEach((r) => (map[r.key] = r.value));
+      return json(res, 200, {
+        today: map.coupon_today || '',
+        tomorrow: map.coupon_tomorrow || '',
+        yesterday: map.coupon_yesterday || '',
+      });
+    }
+    if (action === 'set_coupon') {
+      const day = body.day === 'tomorrow' ? 'tomorrow' : body.day === 'yesterday' ? 'yesterday' : 'today';
+      const key = 'coupon_' + day;
+      const existing = await sb(`settings?key=eq.${key}&select=key`);
+      if (existing && existing.length) {
+        await sbUpdate('settings', `key=eq.${key}`, { value: String(body.value || ''), updated_at: new Date().toISOString() });
+      } else {
+        await sbInsert('settings', { key, value: String(body.value || '') });
+      }
+      return json(res, 200, { ok: true });
     }
 
     // ─── البحث عن مستخدم بالـ ID (بياناته كاملة) ───
