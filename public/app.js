@@ -1265,7 +1265,7 @@ const App = {
   },
   async openSlip(){
     document.getElementById('slipDrawerBg').classList.add('show');
-    if(!this._slip){
+    if(!this._slip || !this._slip.length){
       const list=document.getElementById('slipList');
       if(list) list.innerHTML=this.sportSkeleton('today');
       const r=await this.api('sport',{view:'slips',lang:this.lang});
