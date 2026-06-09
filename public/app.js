@@ -1261,59 +1261,95 @@ const App = {
   },
   updateSlipFab(){
     const fab=document.getElementById('slipFab'); if(!fab) return;
-    const show=this.current==='sport';
-    fab.classList.toggle('hidden', !show);
+    fab.classList.toggle('hidden', this.current!=='sport');
   },
   async openSlip(){
     document.getElementById('slipDrawerBg').classList.add('show');
-    if(!this._slipsData){
+    if(!this._slip){
       const list=document.getElementById('slipList');
       if(list) list.innerHTML=this.sportSkeleton('today');
       const r=await this.api('sport',{view:'slips',lang:this.lang});
-      this._slipsData=r&&!r.error?r:{yesterday:[],today:[],tomorrow:[]};
+      this._slip=(r&&!r.error&&r.slip)||[];
+      // اختيار أول 3 مباريات غير منتهية افتراضياً
+      this._slipSel=new Set(this._slip.filter(x=>x.home_score==null).slice(0,3).map(x=>x.event_id));
     }
-    if(!this._slipDay) this._slipDay='today';
-    this.renderSlipDay();
+    this.renderSlip();
   },
   closeSlip(){ document.getElementById('slipDrawerBg').classList.remove('show'); },
   closeSlipBg(e){ if(e.target.id==='slipDrawerBg') this.closeSlip(); },
-  slipDay(day){
-    this._slipDay=day;
-    document.querySelectorAll('.slip-day').forEach(b=>b.classList.toggle('on', b.dataset.day===day));
-    // إخفاء بطاقة الكود عند تبديل اليوم
-    const card=document.getElementById('slipCodeCard'); if(card){card.classList.add('hidden');card.innerHTML='';}
-    this.renderSlipDay();
+  toggleSlipPick(id){
+    if(!this._slipSel) this._slipSel=new Set();
+    if(this._slipSel.has(id)) this._slipSel.delete(id); else this._slipSel.add(id);
+    this.renderSlip();
   },
-  renderSlipDay(){
+  computeSlip(){
+    let odds=1, n=0;
+    (this._slip||[]).forEach(r=>{ if(this._slipSel && this._slipSel.has(r.event_id)){ odds*=Number(r.odd)||1; n++; } });
+    return { odds: n?odds:0, n };
+  },
+  renderSlip(){
     const T=window.TEXTS[this.lang];
     const list=document.getElementById('slipList'); if(!list) return;
-    const rows=(this._slipsData&&this._slipsData[this._slipDay])||[];
-    if(!rows.length){ list.innerHTML=`<div class="slip-empty">${T.slip_empty_day||T.slip_empty}</div>`; return; }
-    list.innerHTML=rows.map(r=>{
-      const rc=this.riskClass(r.conf);
-      const finished=(r.home_score!=null&&r.away_score!=null);
-      const wonBadge=r.won===true?`<span class="slip-won">✅</span>`:r.won===false?`<span class="slip-lost">❌</span>`:'';
-      const score=finished?`<span class="slip-score">${r.home_score} - ${r.away_score}</span>`:'';
-      let when=''; try{ when=r.date?new Date(r.date).toLocaleTimeString(this.lang==='fr'?'fr':'ar-u-nu-latn',{hour:'2-digit',minute:'2-digit'}):''; }catch{}
-      return `<div class="slip-row ${r.won===true?'row-won':r.won===false?'row-lost':''}">
-        <div class="slip-row-main">
-          <div class="slip-row-teams">
-            <img src="${r.home_logo||''}" onerror="this.style.visibility='hidden'">
-            <span>${this.esc(r.home)} <em>${T.sport_vs}</em> ${this.esc(r.away)}</span>
-            <img src="${r.away_logo||''}" onerror="this.style.visibility='hidden'">
+    const rows=this._slip||[];
+    if(!rows.length){ list.innerHTML=`<div class="slip-empty">${T.slip_empty}</div>`; }
+    else {
+      list.innerHTML=rows.map(r=>{
+        const rc=this.riskClass(r.conf);
+        const finished=(r.home_score!=null&&r.away_score!=null);
+        let when=''; try{ when=r.date?new Date(r.date).toLocaleString(this.lang==='fr'?'fr':'ar-u-nu-latn',{day:'numeric',month:'short',hour:'2-digit',minute:'2-digit'}):''; }catch{}
+        // مباراة منتهية → تعرض النتيجة بدل checkbox (غير قابلة للاختيار)
+        if(finished){
+          const wonBadge=r.won===true?`<span class="slip-won">✅</span>`:r.won===false?`<span class="slip-lost">❌</span>`:'';
+          return `<div class="slip-row ${r.won===true?'row-won':r.won===false?'row-lost':''}">
+            <div class="slip-row-main">
+              <div class="slip-row-teams">
+                <img src="${r.home_logo||''}" onerror="this.style.visibility='hidden'">
+                <span>${this.esc(r.home)} <em>${T.sport_vs}</em> ${this.esc(r.away)}</span>
+                <img src="${r.away_logo||''}" onerror="this.style.visibility='hidden'">
+              </div>
+              <div class="slip-row-meta">
+                <span class="slip-pick">${this.esc(r.pick)}</span>
+                <span class="slip-score">${r.home_score} - ${r.away_score}</span>
+                <span class="slip-when">${when}</span>
+              </div>
+            </div>
+            <div class="slip-row-end">${wonBadge}<div class="slip-risk ${rc}">${r.conf}%</div></div>
+          </div>`;
+        }
+        // مباراة قادمة → قابلة للاختيار في الحاسبة
+        const sel=this._slipSel && this._slipSel.has(r.event_id);
+        return `<div class="slip-row ${sel?'on':''}" onclick="App.toggleSlipPick(${r.event_id||0})">
+          <div class="slip-check ${sel?'on':''}"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><path d="M5 12l5 5L20 6"/></svg></div>
+          <div class="slip-row-main">
+            <div class="slip-row-teams">
+              <img src="${r.home_logo||''}" onerror="this.style.visibility='hidden'">
+              <span>${this.esc(r.home)} <em>${T.sport_vs}</em> ${this.esc(r.away)}</span>
+              <img src="${r.away_logo||''}" onerror="this.style.visibility='hidden'">
+            </div>
+            <div class="slip-row-meta">
+              <span class="slip-mk">${this.slipMarketLabel(r.mk,r.pick)}</span>
+              <span class="slip-pick">${this.esc(r.pick)}</span>
+              <span class="slip-when">${when}</span>
+            </div>
           </div>
-          <div class="slip-row-meta">
-            <span class="slip-pick">${this.esc(r.pick)}</span>
-            ${score}
-            <span class="slip-when">${when}</span>
+          <div class="slip-row-end">
+            <div class="slip-odd">${Number(r.odd).toFixed(2)}</div>
+            <div class="slip-risk ${rc}">${r.conf}%</div>
           </div>
-        </div>
-        <div class="slip-row-end">
-          ${wonBadge||`<div class="slip-odd">${Number(r.odd).toFixed(2)}</div>`}
-          <div class="slip-risk ${rc}">${r.conf}%</div>
-        </div>
-      </div>`;
-    }).join('');
+        </div>`;
+      }).join('');
+    }
+    this.slipStakeInput();
+  },
+  slipStakeInput(){
+    const inp=document.getElementById('slipStake'); if(!inp) return;
+    let v=inp.value.replace(/[^\d]/g,''); if(v!==inp.value) inp.value=v;
+    const stake=parseInt(v||'0',10)||0;
+    const { odds, n }=this.computeSlip();
+    const ret=odds>0?Math.round(stake*odds):0;
+    const po=document.getElementById('slipPicks'); if(po) po.textContent=n;
+    const oo=document.getElementById('slipOdds'); if(oo) oo.textContent=odds>0?odds.toFixed(2):'1.00';
+    const ro=document.getElementById('slipReturn'); if(ro) ro.textContent=ret.toLocaleString(this.lang==='fr'?'fr':'ar-u-nu-latn');
   },
   // ── استخراج كود القسيمة (واجهة احترافية مع تأخير) ──
   async extractCode(){
@@ -1321,22 +1357,16 @@ const App = {
     const btn=document.getElementById('slipCodeBtn');
     const card=document.getElementById('slipCodeCard');
     if(!card) return;
-    const code=(this._coupons&&this._coupons[this._slipDay||'today'])||'';
-    // لا يوجد كود لهذا اليوم
+    const code=(this._coupons&&this._coupons.today)||'';
     if(!code){
       card.classList.remove('hidden');
       card.innerHTML=`<div class="code-empty">${T.slip_code_none}</div>`;
       return;
     }
-    // واجهة التحميل (محاكاة الاتصال بالسيرفر)
     btn.disabled=true;
     card.classList.remove('hidden');
-    card.innerHTML=`<div class="code-loading">
-      <div class="code-spinner"></div>
-      <span>${T.slip_code_connecting}</span>
-    </div>`;
-    await new Promise(r=>setTimeout(r,1600)); // تأخير احترافي
-    // تنسيق: CODE|odds|count
+    card.innerHTML=`<div class="code-loading"><div class="code-spinner"></div><span>${T.slip_code_connecting}</span></div>`;
+    await new Promise(r=>setTimeout(r,1600));
     const [cc,odds,count]=code.split('|').map(s=>s.trim());
     card.innerHTML=`<div class="code-result">
       <div class="code-result-top">
