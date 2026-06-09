@@ -37,6 +37,8 @@ const Admin = {
     if(tab==='withdrawals') this.loadWithdrawals();
     if(tab==='contests') this.loadContests();
     if(tab==='search') this.loadAccounts('all');
+    if(tab==='coupon') this.loadCoupons();
+    if(tab==='activity') this.loadActivity('active');
     window.scrollTo(0,0);
   },
 
@@ -66,10 +68,55 @@ const Admin = {
     document.getElementById('dashCards').innerHTML=`
       <div class="scard accent"><div class="v">${d.total||0}</div><div class="l">إجمالي الحسابات</div></div>
       <div class="scard"><div class="v">${d.active||0}</div><div class="l">مُفعّل</div></div>
+      <div class="scard" style="background:rgba(22,163,74,.12)"><div class="v" style="color:#16a34a">${d.active_today||0}</div><div class="l">نشط اليوم</div></div>
+      <div class="scard" style="background:rgba(202,138,4,.12)"><div class="v" style="color:#ca8a04">${d.inactive_today||0}</div><div class="l">غير نشط اليوم</div></div>
       <div class="scard"><div class="v">${d.pending||0}</div><div class="l">قيد المراجعة</div></div>
       <div class="scard"><div class="v">${d.incomplete||0}</div><div class="l">إيداع ناقص</div></div>
       <div class="scard"><div class="v">${d.pending_wd||0}</div><div class="l">سحوبات معلّقة</div></div>
       <div class="scard"><div class="v">${(d.balance_total||0).toLocaleString()}</div><div class="l">إجمالي الأرصدة UM</div></div>`;
+  },
+
+  // ─── COUPON CODES ───
+  async loadCoupons(){
+    const r=await this.api('get_coupons');
+    if(r.error) return;
+    const t=document.getElementById('cpToday'); if(t) t.value=r.today||'';
+    const m=document.getElementById('cpTomorrow'); if(m) m.value=r.tomorrow||'';
+  },
+  async saveCoupon(day){
+    const id = day==='tomorrow'?'cpTomorrow':'cpToday';
+    const value=document.getElementById(id).value.trim();
+    const r=await this.api('set_coupon',{ day, value });
+    const box=document.getElementById('cpResult');
+    if(r.ok){ box.innerHTML=`<div class="ok-msg">✅ تم حفظ كود ${day==='tomorrow'?'الغد':'اليوم'} بنجاح</div>`; this.toast('تم الحفظ'); }
+    else { box.innerHTML=`<div class="err-msg">❌ خطأ في الحفظ</div>`; }
+  },
+
+  // ─── ACTIVITY ───
+  async loadActivity(filter){
+    document.querySelectorAll('#actFilters .acc-filter').forEach(b=>b.classList.toggle('on', b.dataset.f===filter));
+    const box=document.getElementById('actList');
+    box.innerHTML=`<div class="empty">…</div>`;
+    const r=await this.api('players_activity');
+    if(r.error){ box.innerHTML=`<div class="empty">خطأ في التحميل</div>`; return; }
+    const sum=document.getElementById('actSummary');
+    if(sum) sum.innerHTML=`<div class="act-summary"><span class="act-on">نشط اليوم: ${r.active_count}</span><span class="act-off">غير نشط: ${r.inactive_count}</span></div>`;
+    const list=filter==='inactive'?r.inactive:r.active;
+    if(!list||!list.length){ box.innerHTML=`<div class="empty">لا يوجد لاعبون في هذه القائمة</div>`; return; }
+    box.innerHTML=`<div class="acc-count">${list.length} لاعب</div>`+list.map(a=>{
+      let seen='—';
+      try{ seen=a.last_seen_at?new Date(a.last_seen_at).toLocaleString('ar-u-nu-latn',{day:'numeric',month:'short',hour:'2-digit',minute:'2-digit'}):'—'; }catch{}
+      return `<div class="acc-row" onclick="document.getElementById('searchId').value='${a.game_id}';Admin.go('search');setTimeout(()=>Admin.searchUser(),100)">
+        <div class="acc-main">
+          <div class="acc-name">${this.esc(a.name||'—')}</div>
+          <div class="acc-id">${a.game_id}</div>
+        </div>
+        <div class="acc-meta">
+          <span class="acc-bal">${(Number(a.balance_um)||0).toLocaleString()} UM</span>
+          <span class="acc-seen">آخر دخول: ${seen}</span>
+        </div>
+      </div>`;
+    }).join('');
   },
 
   // ─── CSV UPLOAD ───

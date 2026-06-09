@@ -91,6 +91,35 @@
       <div id="bcResult"></div>
     </section>
 
+    <!-- COUPON CODES -->
+    <section id="tab-coupon" class="tab hidden">
+      <h2>كود القسيمة</h2>
+      <p class="tab-sub">أنشئ القسيمة على 1xBet، انسخ كود الحجز، وأدخله هنا. الصيغة: الكود فقط، أو الكود|الأودز|عدد المباريات.</p>
+      <div class="card">
+        <label>كود قسيمة اليوم</label>
+        <input id="cpToday" placeholder="مثال: 4F2A9C|12.50|5">
+        <button class="btn btn-primary" onclick="Admin.saveCoupon('today')">حفظ كود اليوم</button>
+      </div>
+      <div class="card" style="margin-top:14px">
+        <label>كود قسيمة الغد (اختياري)</label>
+        <input id="cpTomorrow" placeholder="مثال: 8B1D3E|9.80|4">
+        <button class="btn btn-primary" onclick="Admin.saveCoupon('tomorrow')">حفظ كود الغد</button>
+      </div>
+      <div id="cpResult"></div>
+    </section>
+
+    <!-- ACTIVITY -->
+    <section id="tab-activity" class="tab hidden">
+      <h2>نشاط اللاعبين اليوم</h2>
+      <p class="tab-sub">اللاعب "نشط" إذا فتح التطبيق اليوم. "غير نشط" إذا لم يدخل اليوم.</p>
+      <div class="acc-filters" id="actFilters">
+        <button class="acc-filter on" data-f="active" onclick="Admin.loadActivity('active')">النشطون اليوم</button>
+        <button class="acc-filter" data-f="inactive" onclick="Admin.loadActivity('inactive')">غير النشطين</button>
+      </div>
+      <div id="actSummary"></div>
+      <div id="actList"></div>
+    </section>
+
     <!-- CONTESTS -->
     <section id="tab-contests" class="tab hidden">
       <h2>المسابقات</h2>
@@ -118,6 +147,8 @@
     <button class="anav" data-tab="search" onclick="Admin.go('search')"><span><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9"><circle cx="11" cy="11" r="7"/><path d="M21 21l-4-4"/></svg></span>بحث</button>
     <button class="anav" data-tab="withdrawals" onclick="Admin.go('withdrawals')"><span><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9"><rect x="2" y="5" width="20" height="14" rx="2"/><path d="M2 10h20"/></svg></span>السحوبات</button>
     <button class="anav" data-tab="contests" onclick="Admin.go('contests')"><span><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9"><path d="M8 21h8M12 17v4M7 4h10v4a5 5 0 01-10 0z"/><path d="M17 5h3v2a3 3 0 01-3 3M7 5H4v2a3 3 0 003 3"/></svg></span>مسابقات</button>
+    <button class="anav" data-tab="coupon" onclick="Admin.go('coupon')"><span><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9"><rect x="3" y="5" width="18" height="14" rx="2"/><path d="M7 9h2M7 13h6M15 9h2"/></svg></span>القسيمة</button>
+    <button class="anav" data-tab="activity" onclick="Admin.go('activity')"><span><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9"><path d="M22 12h-4l-3 9L9 3l-3 9H2"/></svg></span>النشاط</button>
   </nav>
 </div>
 
