@@ -485,6 +485,7 @@ module.exports = async (req, res) => {
     // ── التوقعات + قسيمة اليوم ──
     // ── قسائم 3 أيام (أمس/اليوم/غداً) مع النتائج ──
     if (view === 'slips') {
+      const now          = new Date();
       const todayStr     = ymd(now);
       const tomorrowStr  = ymd(new Date(+now + 864e5));
       const yesterdayStr = ymd(new Date(+now - 864e5));
@@ -554,6 +555,7 @@ module.exports = async (req, res) => {
 
     // ── نتائج التوقعات: تقاطع التوقعات مع نتائج المباريات الحقيقية ──
     if (view === 'results') {
+      const now          = new Date();
       const todayStr     = ymd(now);
       const yesterdayStr = ymd(new Date(+now - 864e5));
 
