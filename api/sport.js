@@ -483,36 +483,68 @@ module.exports = async (req, res) => {
     }
 
     // ── التوقعات + قسيمة اليوم ──
-    // ── نتائج التوقعات (اليوم + الأمس) ──
+    // ── نتائج التوقعات: تقاطع التوقعات مع نتائج المباريات الحقيقية ──
     if (view === 'results') {
       const todayStr     = ymd(now);
       const yesterdayStr = ymd(new Date(+now - 864e5));
-      const raw = await bsdSafe('/predictions/?status=past&limit=60');
+
+      // جلب كل شيء بالتوازي
+      const [yEvt, tEvt, pastPred, upPred] = await Promise.all([
+        bsdSafe(`/events/?date_from=${yesterdayStr}&date_to=${yesterdayStr}&limit=80`),
+        bsdSafe(`/events/?date_from=${todayStr}&date_to=${todayStr}&limit=80`),
+        bsdSafe('/predictions/?status=past&limit=60'),
+        bsdSafe('/predictions/?status=upcoming&limit=60'),
+      ]);
+
+      // بناء فهرس النتائج الحقيقية من المباريات المنتهية
+      const eventMap = {};
+      [...(yEvt?.results || []), ...(tEvt?.results || [])].forEach(ev => {
+        const hs  = ev.home_score ?? ev.ft_home ?? ev.home_goals ?? null;
+        const as_ = ev.away_score ?? ev.ft_away ?? ev.away_goals ?? null;
+        if (hs == null && as_ == null) return; // لم تنته بعد
+        const outcome = ev.result ?? ev.outcome ??
+          (hs > as_ ? 'H' : as_ > hs ? 'A' : 'D');
+        eventMap[String(ev.id)] = { home_score: hs, away_score: as_, outcome };
+      });
+
+      // دمج التوقعات (ماضية + قادمة) — قد تظهر في أي منهما
+      const rawPreds = dedupBy(
+        [...(pastPred?.results || []), ...(upPred?.results || [])],
+        p => String((p.event || {}).id || p.id || Math.random())
+      );
+
+      // تقاطع: توقع + نتيجة حقيقية
       const all = dedupBy(
-        (raw?.results || []).map(p => {
+        rawPreds.map(p => {
           const pred = simplifyPrediction(p);
-          if (!pred.home || !pred.away) return null;
+          if (!pred.home || !pred.away || !pred.event_id) return null;
+          if (!pred.date) return null;
+          // فقط اليوم والأمس
+          const day = pred.date.slice(0, 10);
+          if (day !== todayStr && day !== yesterdayStr) return null;
+          const actual = eventMap[String(pred.event_id)];
+          if (!actual) return null; // لا نتيجة بعد
           const best = bestSlipPick(pred);
           if (!best) return null;
-          const ev      = p.event || {};
-          const hs      = ev.home_score  ?? ev.ft_home  ?? ev.home_goals  ?? null;
-          const as_     = ev.away_score  ?? ev.ft_away  ?? ev.away_goals  ?? null;
-          const outcome = ev.result      ?? ev.outcome   ?? ev.final_result ?? null;
-          const won     = checkWin(best, outcome, hs, as_);
+          const won = checkWin(best, actual.outcome, actual.home_score, actual.away_score);
           return {
             ...pred,
             tip: best.pick, confidence: best.conf, _mk: best.mk,
-            home_score: hs, away_score: as_, won,
+            home_score: actual.home_score,
+            away_score: actual.away_score,
+            won,
           };
         }).filter(Boolean),
         'event_id'
       );
-      const todayRes     = all.filter(r => r.date && r.date.startsWith(todayStr));
-      const yesterdayRes = all.filter(r => r.date && r.date.startsWith(yesterdayStr));
+
+      const todayRes     = all.filter(r => r.date && r.date.slice(0,10) === todayStr);
+      const yesterdayRes = all.filter(r => r.date && r.date.slice(0,10) === yesterdayStr);
       const decided      = all.filter(r => r.won !== null);
       const wins         = decided.filter(r => r.won === true).length;
       const total        = decided.length;
       const rate         = total > 0 ? Math.round((wins / total) * 100) : null;
+
       return json(res, 200, {
         view: 'results',
         today_results: todayRes,
