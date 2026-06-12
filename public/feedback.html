@@ -4,7 +4,7 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no">
 <meta name="theme-color" content="#2563eb">
-<title>مركز ملاحظات OussoCash</title>
+<title>OussoCash · Feedback</title>
 <style>
   :root{
     --bg:#f4f6fb;--card:#ffffff;--card-2:#eef1f7;--line:rgba(15,28,52,.10);
@@ -16,29 +16,44 @@
     background:var(--bg);color:var(--txt);min-height:100vh;line-height:1.6}
   .wrap{max-width:480px;margin:0 auto;padding:0 18px 40px;min-height:100vh}
 
-  /* رأس */
-  .top{display:flex;flex-direction:column;align-items:center;text-align:center;padding:34px 0 24px}
-  .brand{display:flex;align-items:center;gap:9px;margin-bottom:18px}
+  /* شريط اللغة */
+  .langbar{display:flex;justify-content:flex-end;padding:14px 0 0;gap:7px}
+  .langbtn{padding:6px 14px;border-radius:100px;border:1.5px solid var(--line);background:var(--card);
+    color:var(--txt-2);font-size:13px;font-weight:800;cursor:pointer;font-family:inherit;transition:all .15s}
+  .langbtn.on{background:var(--accent);border-color:var(--accent);color:#fff}
+
+  .top{display:flex;flex-direction:column;align-items:center;text-align:center;padding:18px 0 22px}
+  .brand{display:flex;align-items:center;gap:9px;margin-bottom:16px}
   .brand img{width:38px;height:38px;border-radius:11px;object-fit:cover}
   .brand b{font-size:22px;font-weight:900;letter-spacing:-.4px}
   .brand b span{color:var(--accent)}
   .top h1{font-size:23px;font-weight:900;letter-spacing:-.5px;margin-bottom:8px}
-  .top p{font-size:13.5px;color:var(--txt-2);max-width:340px}
+  .top p{font-size:13.5px;color:var(--txt-2);max-width:350px}
 
-  /* بطاقات */
-  .card{background:var(--card);border:1px solid var(--line);border-radius:20px;padding:22px;margin-bottom:16px;box-shadow:0 4px 20px rgba(15,28,52,.06);
-    animation:rise .35s cubic-bezier(.2,.8,.3,1)}
+  .card{background:var(--card);border:1px solid var(--line);border-radius:20px;padding:22px;margin-bottom:16px;
+    box-shadow:0 4px 20px rgba(15,28,52,.06);animation:rise .35s cubic-bezier(.2,.8,.3,1)}
   @keyframes rise{from{opacity:0;transform:translateY(14px)}to{opacity:1;transform:translateY(0)}}
   .card h2{font-size:17px;font-weight:800;margin-bottom:6px}
   .card .hint{font-size:13px;color:var(--txt-2);margin-bottom:16px}
 
   label{display:block;font-size:13px;font-weight:700;color:var(--txt-2);margin-bottom:8px}
-  input[type=tel],input[type=text],textarea{width:100%;padding:14px 16px;border-radius:14px;
-    border:1.5px solid var(--line);background:var(--bg);color:var(--txt);font-size:15px;font-family:inherit;
-    outline:none;transition:border-color .15s}
-  input:focus,textarea:focus{border-color:var(--accent)}
-  input::placeholder,textarea::placeholder{color:#5a6b85}
-  textarea{resize:vertical;min-height:120px;line-height:1.7}
+  textarea{width:100%;padding:14px 16px;border-radius:14px;border:1.5px solid var(--line);
+    background:var(--bg);color:var(--txt);font-size:15px;font-family:inherit;outline:none;
+    resize:vertical;min-height:120px;line-height:1.7;transition:border-color .15s}
+  textarea:focus{border-color:var(--accent)}
+  textarea::placeholder{color:#8593a8}
+
+  /* حقل الهاتف الموريتاني */
+  .phone-field{display:flex;align-items:center;gap:10px;border:1.5px solid var(--line);border-radius:14px;
+    background:var(--bg);padding:0 14px;transition:border-color .15s;overflow:hidden}
+  .phone-field.focus{border-color:var(--accent)}
+  .phone-field.error{border-color:var(--red)}
+  .phone-prefix{display:flex;align-items:center;gap:6px;font-size:15px;font-weight:800;color:var(--txt);
+    white-space:nowrap;padding-inline-end:10px;border-inline-end:1.5px solid var(--line)}
+  .phone-prefix .flag{font-size:20px}
+  .phone-field input{flex:1;border:none;background:transparent;outline:none;padding:15px 0;
+    font-size:17px;font-weight:700;color:var(--txt);letter-spacing:1px;font-family:inherit;direction:ltr;text-align:left}
+  .phone-field input::placeholder{color:#8593a8;letter-spacing:1px;font-weight:600}
 
   .btn{width:100%;padding:15px;border:none;border-radius:15px;font-size:15.5px;font-weight:800;
     font-family:inherit;cursor:pointer;display:flex;align-items:center;justify-content:center;gap:8px;
@@ -49,7 +64,6 @@
   .btn-green{background:linear-gradient(135deg,#16a34a,#15803d);color:#fff;box-shadow:0 8px 24px rgba(22,163,74,.3)}
   .btn-ghost{background:var(--card-2);color:var(--txt);margin-top:10px}
 
-  /* خيارات التقييم */
   .rate{display:flex;flex-direction:column;gap:11px}
   .rate-opt{display:flex;align-items:center;gap:13px;padding:16px;border-radius:15px;cursor:pointer;
     background:var(--bg);border:1.5px solid var(--line);transition:all .15s}
@@ -62,13 +76,12 @@
   .rate-opt.mid{border-color:rgba(217,119,6,.4)}
   .rate-opt.bad{border-color:rgba(220,38,38,.4)}
 
-  /* أسباب الشكوى */
   .reasons{display:grid;grid-template-columns:1fr 1fr;gap:9px;margin-bottom:16px}
-  .reason{padding:12px;border-radius:13px;background:var(--bg);border:1.5px solid var(--line);
-    font-size:13px;font-weight:600;text-align:center;cursor:pointer;transition:all .15s}
+  .reason{padding:13px 10px;border-radius:13px;background:var(--bg);border:1.5px solid var(--line);
+    font-size:13px;font-weight:700;text-align:center;cursor:pointer;transition:all .15s}
+  .reason:active{transform:scale(.97)}
   .reason.on{background:var(--accent);border-color:var(--accent);color:#fff}
 
-  /* صور */
   .imgs{display:flex;gap:10px;margin:8px 0 16px}
   .img-slot{flex:1;aspect-ratio:1;border-radius:14px;border:1.5px dashed var(--line);background:var(--bg);
     display:flex;align-items:center;justify-content:center;cursor:pointer;overflow:hidden;position:relative}
@@ -78,7 +91,6 @@
     background:rgba(0,0,0,.6);color:#fff;display:none;align-items:center;justify-content:center;font-size:14px}
   .img-slot.has .rm{display:flex}
 
-  /* نجاح */
   .done{text-align:center;padding:30px 10px}
   .done-ic{width:80px;height:80px;margin:0 auto 20px;border-radius:50%;background:rgba(22,163,74,.14);
     display:flex;align-items:center;justify-content:center}
@@ -87,9 +99,9 @@
   .done p{font-size:14px;color:var(--txt-2);max-width:330px;margin:0 auto}
 
   .hidden{display:none!important}
-  .err{background:rgba(220,38,38,.12);color:#fca5a5;border-radius:12px;padding:11px 14px;font-size:13px;
-    font-weight:600;margin-top:12px;text-align:center}
-  .step-dots{display:flex;justify-content:center;gap:7px;margin:6px 0 22px}
+  .err{background:rgba(220,38,38,.10);color:var(--red);border-radius:12px;padding:11px 14px;font-size:13px;
+    font-weight:700;margin-top:12px;text-align:center}
+  .step-dots{display:flex;justify-content:center;gap:7px;margin:4px 0 22px}
   .dot{width:8px;height:8px;border-radius:50%;background:var(--line);transition:all .2s}
   .dot.on{background:var(--accent);width:22px;border-radius:100px}
   .footer{text-align:center;font-size:12px;color:var(--txt-2);margin-top:24px;opacity:.7}
@@ -98,81 +110,77 @@
 <body>
 <div class="wrap">
 
+  <div class="langbar">
+    <button class="langbtn on" id="lang-ar" onclick="App.setLang('ar')">AR</button>
+    <button class="langbtn" id="lang-fr" onclick="App.setLang('fr')">FR</button>
+  </div>
+
   <div class="top">
     <div class="brand">
       <img src="/logos/mascot_sm.png" onerror="this.style.display='none'" alt="">
       <b>Ousso<span>Cash</span></b>
     </div>
-    <h1>مركز الملاحظات</h1>
-    <p>نسعى دائماً لتطوير خدماتنا. جميع الملاحظات والتقييمات والشكاوى تُراجَع مباشرة من قبل الإدارة.</p>
+    <h1 data-t="title"></h1>
+    <p data-t="subtitle"></p>
   </div>
 
   <div class="step-dots">
-    <div class="dot on" id="d1"></div>
-    <div class="dot" id="d2"></div>
-    <div class="dot" id="d3"></div>
+    <div class="dot on" id="d1"></div><div class="dot" id="d2"></div><div class="dot" id="d3"></div>
   </div>
 
-  <!-- خطوة 1: رقم الواتساب -->
+  <!-- خطوة 1: الهاتف -->
   <div class="card" id="step1">
-    <h2>رقم الواتساب الخاص بك</h2>
-    <p class="hint">لنتمكن من التواصل معك بشأن ملاحظتك أو حل مشكلتك.</p>
-    <label>رقم الهاتف (واتساب)</label>
-    <input type="tel" id="phone" inputmode="tel" placeholder="مثال: 36652939" autocomplete="tel">
+    <h2 data-t="phone_title"></h2>
+    <p class="hint" data-t="phone_hint"></p>
+    <div class="phone-field" id="phoneWrap">
+      <span class="phone-prefix"><span class="flag">🇲🇷</span>+222</span>
+      <input type="tel" id="phone" inputmode="numeric" maxlength="8" placeholder="XX XX XX XX" autocomplete="off">
+    </div>
     <div id="e1"></div>
-    <button class="btn btn-primary" style="margin-top:16px" onclick="App.next1()">متابعة</button>
+    <button class="btn btn-primary" style="margin-top:16px" onclick="App.next1()" data-t="continue"></button>
   </div>
 
   <!-- خطوة 2: التقييم -->
   <div class="card hidden" id="step2">
-    <h2>ما تقييمك لوكالتنا اليوم؟</h2>
-    <p class="hint">رأيك يهمنا ويساعدنا على تقديم الأفضل.</p>
+    <h2 data-t="rate_title"></h2>
+    <p class="hint" data-t="rate_hint"></p>
     <div class="rate">
       <div class="rate-opt good" onclick="App.rate('excellent')">
-        <span class="em">⭐</span><div class="tx"><b>ممتازة</b><span>تجربة رائعة وراضٍ تماماً</span></div>
+        <span class="em">⭐</span><div class="tx"><b data-t="rate_exc"></b><span data-t="rate_exc_d"></span></div>
       </div>
       <div class="rate-opt mid" onclick="App.rate('good')">
-        <span class="em">👍</span><div class="tx"><b>جيدة</b><span>جيدة لكن يمكن تحسينها</span></div>
+        <span class="em">👍</span><div class="tx"><b data-t="rate_good"></b><span data-t="rate_good_d"></span></div>
       </div>
       <div class="rate-opt bad" onclick="App.rate('complaint')">
-        <span class="em">⚠️</span><div class="tx"><b>لدي ملاحظة أو شكوى</b><span>واجهت مشكلة أريد حلها</span></div>
+        <span class="em">⚠️</span><div class="tx"><b data-t="rate_comp"></b><span data-t="rate_comp_d"></span></div>
       </div>
     </div>
   </div>
 
   <!-- ممتازة -->
   <div class="card hidden" id="stepExcellent">
-    <h2>شكراً لثقتك بنا 🙏</h2>
-    <p class="hint">يسعدنا أنك راضٍ عن خدماتنا. شارك رقم الوكالة مع أصدقائك وساعدنا على الوصول للمزيد.</p>
-    <button class="btn btn-green" onclick="App.share()">📤 مشاركة الوكالة</button>
-    <button class="btn btn-ghost" onclick="App.submit('excellent')">إنهاء</button>
+    <h2 data-t="exc_title"></h2>
+    <p class="hint" data-t="exc_hint"></p>
+    <button class="btn btn-green" onclick="App.share()" data-t="share_btn"></button>
+    <button class="btn btn-ghost" onclick="App.submit('excellent')" data-t="finish"></button>
   </div>
 
   <!-- جيدة -->
   <div class="card hidden" id="stepGood">
-    <h2>شكراً لتقييمك</h2>
-    <p class="hint">ما الذي يمكننا تحسينه لنقدم لك تجربة أفضل؟</p>
-    <textarea id="goodText" placeholder="اكتب اقتراحك هنا..."></textarea>
+    <h2 data-t="good_title"></h2>
+    <p class="hint" data-t="good_hint"></p>
+    <textarea id="goodText" data-tp="good_ph"></textarea>
     <div id="eGood"></div>
-    <button class="btn btn-primary" style="margin-top:14px" onclick="App.submit('good')">إرسال</button>
+    <button class="btn btn-primary" style="margin-top:14px" onclick="App.submit('good')" data-t="send"></button>
   </div>
 
   <!-- شكوى -->
   <div class="card hidden" id="stepComplaint">
-    <h2>ما سبب الشكوى؟</h2>
-    <div class="reasons" id="reasons">
-      <div class="reason" onclick="App.pickReason(this,'سوء معاملة')">سوء معاملة</div>
-      <div class="reason" onclick="App.pickReason(this,'تأخر الرد')">تأخر الرد</div>
-      <div class="reason" onclick="App.pickReason(this,'تجاهل الطلب')">تجاهل الطلب</div>
-      <div class="reason" onclick="App.pickReason(this,'خصم من السحب')">خصم من السحب</div>
-      <div class="reason" onclick="App.pickReason(this,'لم أستلم الإيداع')">لم أستلم الإيداع</div>
-      <div class="reason" onclick="App.pickReason(this,'لم أستلم السحب')">لم أستلم السحب</div>
-      <div class="reason" onclick="App.pickReason(this,'خطأ في العملية')">خطأ في العملية</div>
-      <div class="reason" onclick="App.pickReason(this,'مشكلة أخرى')">مشكلة أخرى</div>
-    </div>
-    <label>يرجى شرح المشكلة بالتفصيل</label>
-    <textarea id="complaintText" placeholder="اشرح ما حدث بالتفصيل..."></textarea>
-    <label style="margin-top:16px">إرفاق صور (اختياري — حتى 3)</label>
+    <h2 data-t="comp_title"></h2>
+    <div class="reasons" id="reasons"></div>
+    <label data-t="comp_explain"></label>
+    <textarea id="complaintText" data-tp="comp_ph"></textarea>
+    <label style="margin-top:16px" data-t="attach"></label>
     <div class="imgs">
       <div class="img-slot" id="slot0" onclick="App.pickImg(0)"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 5v14M5 12h14"/></svg><span class="rm" onclick="App.rmImg(event,0)">×</span></div>
       <div class="img-slot" id="slot1" onclick="App.pickImg(1)"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 5v14M5 12h14"/></svg><span class="rm" onclick="App.rmImg(event,1)">×</span></div>
@@ -180,45 +188,117 @@
     </div>
     <input type="file" id="fileInput" accept="image/*" class="hidden">
     <div id="eComplaint"></div>
-    <button class="btn btn-primary" onclick="App.submit('complaint')">إرسال الشكوى</button>
+    <button class="btn btn-primary" onclick="App.submit('complaint')" data-t="send_comp"></button>
   </div>
 
   <!-- نجاح -->
   <div class="card hidden" id="stepDone">
     <div class="done">
       <div class="done-ic"><svg viewBox="0 0 24 24" fill="none" stroke-width="2.5"><path d="M20 6L9 17l-5-5"/></svg></div>
-      <h2>تم استلام طلبكم بنجاح</h2>
-      <p>سيتم مراجعة طلبكم من قبل قسم الدعم والإدارة، وسيتم التواصل معكم عبر الواتساب في أقرب وقت ممكن. نشكر لكم وقتكم وثقتكم بخدمات OussoCash.</p>
+      <h2 data-t="done_title"></h2>
+      <p data-t="done_text"></p>
     </div>
   </div>
 
-  <div class="footer">© OussoCash · وكالة 1xBet المعتمدة</div>
+  <div class="footer" data-t="footer"></div>
 </div>
 
 <script>
+const AGENCY_PHONE = '+22247343267';
+const T = {
+  ar:{
+    title:'مركز الملاحظات', subtitle:'نسعى دائماً لتطوير خدماتنا. جميع الملاحظات والتقييمات والشكاوى تُراجَع مباشرة من قبل الإدارة.',
+    phone_title:'رقم الواتساب الخاص بك', phone_hint:'الرقم الذي تتواصل معنا عليه عبر الوكالة — لنتمكن من الرد عليك.',
+    continue:'متابعة',
+    rate_title:'ما تقييمك لوكالتنا اليوم؟', rate_hint:'رأيك يهمنا ويساعدنا على تقديم الأفضل.',
+    rate_exc:'ممتازة', rate_exc_d:'تجربة رائعة وراضٍ تماماً',
+    rate_good:'جيدة', rate_good_d:'جيدة لكن يمكن تحسينها',
+    rate_comp:'لدي ملاحظة أو شكوى', rate_comp_d:'واجهت مشكلة أريد حلها',
+    exc_title:'شكراً لثقتك بنا 🙏', exc_hint:'يسعدنا جداً رضاك عن خدماتنا، وتقييمك الجميل يحفّزنا لنقدّم لك الأفضل دائماً. ساعدنا على الوصول لأصدقائك بمشاركة حسابنا معهم.',
+    share_btn:'📤 مشاركة الوكالة', finish:'إنهاء',
+    good_title:'شكراً لتقييمك', good_hint:'ما الذي يمكننا تحسينه لنقدم لك تجربة أفضل؟',
+    good_ph:'اكتب اقتراحك هنا...', send:'إرسال',
+    comp_title:'ما سبب الشكوى؟', comp_explain:'يرجى شرح المشكلة بالتفصيل', comp_ph:'اشرح ما حدث بالتفصيل...',
+    attach:'إرفاق صور (اختياري — حتى 3)', send_comp:'إرسال الشكوى',
+    done_title:'تم استلام طلبكم بنجاح', done_text:'سيتم مراجعة طلبكم من قبل قسم الدعم والإدارة، وسيتم التواصل معكم عبر الواتساب في أقرب وقت ممكن. نشكر لكم وقتكم وثقتكم بخدمات OussoCash.',
+    footer:'© OussoCash · وكالة 1xBet المعتمدة',
+    err_phone:'رقم الهاتف غير صحيح',
+    reasons:['سوء معاملة','تأخر الرد','تجاهل الطلب','خصم من السحب','لم أستلم الإيداع','لم أستلم السحب','مشكلة أخرى'],
+    err_good:'يرجى كتابة اقتراحك', err_reason:'يرجى اختيار سبب الشكوى', err_details:'يرجى شرح المشكلة بالتفصيل',
+    share_copied:'تم نسخ رسالة المشاركة ✅',
+    share_text:'💰 OussoCash — وكالة 1xBet المعتمدة\nإيداع وسحب سريع وآمن عبر بنكيلي، سداد، مصرفي.\nتواصل معنا واتساب: '+AGENCY_PHONE,
+  },
+  fr:{
+    title:'Centre de Feedback', subtitle:'Nous cherchons toujours à améliorer nos services. Tous les avis et réclamations sont examinés directement par l\'administration.',
+    phone_title:'Votre numéro WhatsApp', phone_hint:'Le numéro avec lequel vous nous contactez — pour pouvoir vous répondre.',
+    continue:'Continuer',
+    rate_title:'Comment évaluez-vous notre agence aujourd\'hui ?', rate_hint:'Votre avis compte et nous aide à nous améliorer.',
+    rate_exc:'Excellente', rate_exc_d:'Expérience parfaite, totalement satisfait',
+    rate_good:'Bonne', rate_good_d:'Bonne mais peut être améliorée',
+    rate_comp:'J\'ai une remarque ou réclamation', rate_comp_d:'J\'ai rencontré un problème à résoudre',
+    exc_title:'Merci de votre confiance 🙏', exc_hint:'Nous sommes ravis de votre satisfaction, et votre belle évaluation nous motive à toujours offrir le meilleur. Aidez-nous en partageant notre compte avec vos amis.',
+    share_btn:'📤 Partager l\'agence', finish:'Terminer',
+    good_title:'Merci pour votre évaluation', good_hint:'Que pouvons-nous améliorer pour une meilleure expérience ?',
+    good_ph:'Écrivez votre suggestion ici...', send:'Envoyer',
+    comp_title:'Quelle est la raison de la réclamation ?', comp_explain:'Veuillez expliquer le problème en détail', comp_ph:'Expliquez ce qui s\'est passé...',
+    attach:'Joindre des images (optionnel — jusqu\'à 3)', send_comp:'Envoyer la réclamation',
+    done_title:'Votre demande a été reçue', done_text:'Votre demande sera examinée par le support et l\'administration, et nous vous contacterons via WhatsApp dans les plus brefs délais. Merci de votre temps et de votre confiance en OussoCash.',
+    footer:'© OussoCash · Agent 1xBet agréé',
+    err_phone:'Numéro de téléphone invalide',
+    reasons:['Mauvais traitement','Réponse tardive','Demande ignorée','Déduction du retrait','Dépôt non reçu','Retrait non reçu','Autre problème'],
+    err_good:'Veuillez écrire votre suggestion', err_reason:'Veuillez choisir une raison', err_details:'Veuillez expliquer le problème en détail',
+    share_copied:'Message de partage copié ✅',
+    share_text:'💰 OussoCash — Agent 1xBet agréé\nDépôt et retrait rapides et sécurisés via Bankily, Sedad, Masrivi.\nContactez-nous WhatsApp : '+AGENCY_PHONE,
+  }
+};
+
 const App = {
+  lang:'ar',
   data:{ phone:'', rating:'', reason:'', images:[] },
-  _slot:0,
+
+  setLang(l){
+    this.lang=l;
+    document.documentElement.lang=l;
+    document.documentElement.dir = l==='ar'?'rtl':'ltr';
+    document.getElementById('lang-ar').classList.toggle('on', l==='ar');
+    document.getElementById('lang-fr').classList.toggle('on', l==='fr');
+    this.apply();
+  },
+  apply(){
+    const t=T[this.lang];
+    document.querySelectorAll('[data-t]').forEach(el=>{ const k=el.getAttribute('data-t'); if(t[k]!=null) el.textContent=t[k]; });
+    document.querySelectorAll('[data-tp]').forEach(el=>{ const k=el.getAttribute('data-tp'); if(t[k]!=null) el.placeholder=t[k]; });
+    // أزرار الأسباب
+    const box=document.getElementById('reasons');
+    box.innerHTML=t.reasons.map((r,i)=>`<div class="reason" data-i="${i}" onclick="App.pickReason(this,'${r.replace(/'/g,"\\'")}')">${r}</div>`).join('');
+    if(this.data.reason){ /* أعد التحديد إن وُجد */ }
+  },
 
   show(id){
-    ['step1','step2','stepExcellent','stepGood','stepComplaint','stepDone'].forEach(s=>{
-      document.getElementById(s).classList.add('hidden');
-    });
+    ['step1','step2','stepExcellent','stepGood','stepComplaint','stepDone'].forEach(s=>document.getElementById(s).classList.add('hidden'));
     document.getElementById(id).classList.remove('hidden');
     window.scrollTo({top:0,behavior:'smooth'});
   },
   dots(n){ ['d1','d2','d3'].forEach((d,i)=>document.getElementById(d).classList.toggle('on', i<n)); },
 
+  // التحقق من الهاتف الموريتاني: 8 أرقام، يبدأ بـ 2/3/4
+  validPhone(p){ return /^[234]\d{7}$/.test(p); },
+
   next1(){
-    const p=document.getElementById('phone').value.replace(/[^\d+]/g,'').trim();
-    if(p.length<8){ document.getElementById('e1').innerHTML='<div class="err">يرجى إدخال رقم هاتف صحيح</div>'; return; }
-    this.data.phone=p;
+    const t=T[this.lang];
+    const p=document.getElementById('phone').value.replace(/\D/g,'');
+    if(!this.validPhone(p)){
+      document.getElementById('phoneWrap').classList.add('error');
+      document.getElementById('e1').innerHTML=`<div class="err">${t.err_phone}</div>`;
+      return;
+    }
+    this.data.phone='+222'+p;
+    document.getElementById('phoneWrap').classList.remove('error');
     document.getElementById('e1').innerHTML='';
     this.dots(2); this.show('step2');
   },
   rate(r){
-    this.data.rating=r;
-    this.dots(3);
+    this.data.rating=r; this.dots(3);
     if(r==='excellent') this.show('stepExcellent');
     else if(r==='good') this.show('stepGood');
     else this.show('stepComplaint');
@@ -228,12 +308,11 @@ const App = {
     el.classList.add('on'); this.data.reason=txt;
   },
   share(){
-    const txt='💰 OussoCash — وكالة 1xBet المعتمدة\nإيداع وسحب سريع وآمن عبر بنكيلي، سداد، مصرفي.\nتواصل معنا: https://oussocash.xyz';
-    if(navigator.share){ navigator.share({text:txt}).catch(()=>{}); }
-    else { try{ navigator.clipboard.writeText(txt); alert('تم نسخ رسالة المشاركة ✅'); }catch{} }
+    const t=T[this.lang];
+    if(navigator.share){ navigator.share({text:t.share_text}).catch(()=>{}); }
+    else { try{ navigator.clipboard.writeText(t.share_text); alert(t.share_copied); }catch{} }
   },
 
-  // صور
   pickImg(i){
     this._slot=i;
     const inp=document.getElementById('fileInput');
@@ -242,63 +321,59 @@ const App = {
       const b64=await this.compress(f);
       this.data.images[i]=b64;
       const slot=document.getElementById('slot'+i);
-      slot.classList.add('has');
-      slot.querySelector('svg').style.display='none';
+      slot.classList.add('has'); slot.querySelector('svg').style.display='none';
       let img=slot.querySelector('img'); if(!img){ img=document.createElement('img'); slot.insertBefore(img,slot.querySelector('.rm')); }
-      img.src=b64;
-      inp.value='';
+      img.src=b64; inp.value='';
     };
     inp.click();
   },
   rmImg(ev,i){
-    ev.stopPropagation();
-    this.data.images[i]=null;
+    ev.stopPropagation(); this.data.images[i]=null;
     const slot=document.getElementById('slot'+i);
-    slot.classList.remove('has');
-    slot.querySelector('svg').style.display='';
+    slot.classList.remove('has'); slot.querySelector('svg').style.display='';
     const img=slot.querySelector('img'); if(img) img.remove();
   },
   compress(file){
     return new Promise(res=>{
       const r=new FileReader();
-      r.onload=()=>{
-        const im=new Image();
-        im.onload=()=>{
-          const max=1280; let{width:w,height:h}=im;
+      r.onload=()=>{ const im=new Image();
+        im.onload=()=>{ const max=1280; let{width:w,height:h}=im;
           if(w>max||h>max){ const s=max/Math.max(w,h); w=Math.round(w*s); h=Math.round(h*s); }
           const c=document.createElement('canvas'); c.width=w; c.height=h;
-          c.getContext('2d').drawImage(im,0,0,w,h);
-          res(c.toDataURL('image/jpeg',0.72));
-        };
-        im.src=r.result;
-      };
-      r.readAsDataURL(file);
+          c.getContext('2d').drawImage(im,0,0,w,h); res(c.toDataURL('image/jpeg',0.72));
+        }; im.src=r.result;
+      }; r.readAsDataURL(file);
     });
   },
 
   async submit(type){
-    let payload={ phone:this.data.phone, rating:type };
+    const t=T[this.lang];
+    let payload={ phone:this.data.phone, rating:type, lang:this.lang };
     if(type==='good'){
-      const t=document.getElementById('goodText').value.trim();
-      if(t.length<3){ document.getElementById('eGood').innerHTML='<div class="err">يرجى كتابة اقتراحك</div>'; return; }
-      payload.text=t;
+      const v=document.getElementById('goodText').value.trim();
+      if(v.length<3){ document.getElementById('eGood').innerHTML=`<div class="err">${t.err_good}</div>`; return; }
+      payload.text=v;
     }
     if(type==='complaint'){
-      if(!this.data.reason){ document.getElementById('eComplaint').innerHTML='<div class="err">يرجى اختيار سبب الشكوى</div>'; return; }
-      const t=document.getElementById('complaintText').value.trim();
-      if(t.length<5){ document.getElementById('eComplaint').innerHTML='<div class="err">يرجى شرح المشكلة بالتفصيل</div>'; return; }
-      payload.reason=this.data.reason;
-      payload.text=t;
+      if(!this.data.reason){ document.getElementById('eComplaint').innerHTML=`<div class="err">${t.err_reason}</div>`; return; }
+      const v=document.getElementById('complaintText').value.trim();
+      if(v.length<5){ document.getElementById('eComplaint').innerHTML=`<div class="err">${t.err_details}</div>`; return; }
+      payload.reason=this.data.reason; payload.text=v;
       payload.images=this.data.images.filter(Boolean);
     }
-    // تعطيل الأزرار
     document.querySelectorAll('.btn').forEach(b=>b.disabled=true);
-    try{
-      await fetch('/api/feedback',{ method:'POST', headers:{'Content-Type':'application/json'}, body:JSON.stringify(payload) });
-    }catch{}
+    try{ await fetch('/api/feedback',{ method:'POST', headers:{'Content-Type':'application/json'}, body:JSON.stringify(payload) }); }catch{}
     this.dots(3); this.show('stepDone');
   },
 };
+
+// منع إدخال غير الأرقام + الحد 8
+const ph=document.getElementById('phone');
+ph.addEventListener('input',()=>{ ph.value=ph.value.replace(/\D/g,'').slice(0,8); document.getElementById('phoneWrap').classList.remove('error'); document.getElementById('e1').innerHTML=''; });
+ph.addEventListener('focus',()=>document.getElementById('phoneWrap').classList.add('focus'));
+ph.addEventListener('blur',()=>document.getElementById('phoneWrap').classList.remove('focus'));
+
+App.apply();
 </script>
 </body>
 </html>
