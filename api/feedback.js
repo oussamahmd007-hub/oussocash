@@ -58,13 +58,17 @@ async function sendPhoto(chat, base64, replyTo) {
 
 module.exports = async (req, res) => {
   if (req.method === 'GET') {
+    const isSetup = (req.url || '').includes('setup=1') || (req.query && req.query.setup);
+    if (!isSetup) {
+      return json(res, 200, { ok: true, service: 'feedback', hint: 'POST to submit · GET ?setup=1 to register webhook' });
+    }
     const host = req.headers['x-forwarded-host'] || req.headers.host;
     const url = `https://${host}/api/feedback`;
     const d = await tgCall('setWebhook', { url, allowed_updates: ['callback_query'] });
     return json(res, 200, { webhook_url: url, telegram_ok: d.ok, detail: d.detail || '' });
   }
 
-  if (req.method !== 'POST') return json(res, 405, { error: 'method' });
+  if (req.method !== 'POST') return json(res, 200, { ok: true });
 
   try {
     const body = await readBody(req);
