@@ -49,9 +49,9 @@
   .phone-field.focus{border-color:var(--accent)}
   .phone-field.error{border-color:var(--red)}
   .phone-prefix{display:flex;align-items:center;gap:6px;font-size:15px;font-weight:800;color:var(--txt);
-    white-space:nowrap;padding-inline-end:10px;border-inline-end:1.5px solid var(--line)}
+    white-space:nowrap;padding-inline-end:10px;border-inline-end:1.5px solid var(--line);flex-shrink:0}
   .phone-prefix .flag{font-size:20px}
-  .phone-field input{flex:1;border:none;background:transparent;outline:none;padding:15px 0;
+  .phone-field input{flex:1;min-width:0;border:none;background:transparent;outline:none;padding:15px 0;
     font-size:17px;font-weight:700;color:var(--txt);letter-spacing:1px;font-family:inherit;direction:ltr;text-align:left}
   .phone-field input::placeholder{color:#8593a8;letter-spacing:1px;font-weight:600}
 
@@ -221,12 +221,14 @@ const T = {
     comp_title:'ما سبب الشكوى؟', comp_explain:'يرجى شرح المشكلة بالتفصيل', comp_ph:'اشرح ما حدث بالتفصيل...',
     attach:'إرفاق صور (اختياري — حتى 3)', send_comp:'إرسال الشكوى',
     done_title:'تم استلام طلبكم بنجاح', done_text:'سيتم مراجعة طلبكم من قبل قسم الدعم والإدارة، وسيتم التواصل معكم عبر الواتساب في أقرب وقت ممكن. نشكر لكم وقتكم وثقتكم بخدمات OussoCash.',
-    footer:'© OussoCash · وكالة 1xBet المعتمدة',
+    done_title_exc:'شكراً لتقديرك 🙏', done_text_exc:'سعداء جداً بثقتك بنا، وتقييمك الجميل يعني لنا الكثير. سنبقى دائماً نسعى لتقديم الأفضل لك. شكراً لكونك جزءاً من عائلة OussoCash.',
+    done_title_other:'تم استلام طلبكم بنجاح', done_text_other:'شكراً لمساهمتك في تطوير خدماتنا. سيتم معالجة طلبك من قبل قسم الدعم والإدارة، وسنتواصل معك عبر الواتساب في أقرب وقت ممكن. نقدّر ثقتك بخدمات OussoCash.',
+    footer:'© OussoCash · شحن وسحب سريع وآمن',
     err_phone:'رقم الهاتف غير صحيح',
     reasons:['سوء معاملة','تأخر الرد','تجاهل الطلب','خصم من السحب','لم أستلم الإيداع','لم أستلم السحب','مشكلة أخرى'],
     err_good:'يرجى كتابة اقتراحك', err_reason:'يرجى اختيار سبب الشكوى', err_details:'يرجى شرح المشكلة بالتفصيل',
     share_copied:'تم نسخ رسالة المشاركة ✅',
-    share_text:'💰 OussoCash — وكالة 1xBet المعتمدة\nإيداع وسحب سريع وآمن عبر بنكيلي، سداد، مصرفي.\nتواصل معنا واتساب: '+AGENCY_PHONE,
+    share_text:'💰 وكالة OussoCash — شحن وسحب سريع وآمن\nإيداع وسحب فوري عبر بنكيلي، سداد، مصرفي.\nتواصل معنا عبر واتساب: '+AGENCY_PHONE,
   },
   fr:{
     title:'Centre de Feedback', subtitle:'Nous cherchons toujours à améliorer nos services. Tous les avis et réclamations sont examinés directement par l\'administration.',
@@ -243,12 +245,14 @@ const T = {
     comp_title:'Quelle est la raison de la réclamation ?', comp_explain:'Veuillez expliquer le problème en détail', comp_ph:'Expliquez ce qui s\'est passé...',
     attach:'Joindre des images (optionnel — jusqu\'à 3)', send_comp:'Envoyer la réclamation',
     done_title:'Votre demande a été reçue', done_text:'Votre demande sera examinée par le support et l\'administration, et nous vous contacterons via WhatsApp dans les plus brefs délais. Merci de votre temps et de votre confiance en OussoCash.',
-    footer:'© OussoCash · Agent 1xBet agréé',
+    done_title_exc:'Merci de votre appréciation 🙏', done_text_exc:'Nous sommes très heureux de votre confiance, et votre belle évaluation compte beaucoup pour nous. Nous continuerons toujours à vous offrir le meilleur. Merci de faire partie de la famille OussoCash.',
+    done_title_other:'Votre demande a été reçue', done_text_other:'Merci de contribuer à l\'amélioration de nos services. Votre demande sera traitée par le support et l\'administration, et nous vous contacterons via WhatsApp dans les plus brefs délais. Nous apprécions votre confiance en OussoCash.',
+    footer:'© OussoCash · Dépôt et retrait rapides et sécurisés',
     err_phone:'Numéro de téléphone invalide',
     reasons:['Mauvais traitement','Réponse tardive','Demande ignorée','Déduction du retrait','Dépôt non reçu','Retrait non reçu','Autre problème'],
     err_good:'Veuillez écrire votre suggestion', err_reason:'Veuillez choisir une raison', err_details:'Veuillez expliquer le problème en détail',
     share_copied:'Message de partage copié ✅',
-    share_text:'💰 OussoCash — Agent 1xBet agréé\nDépôt et retrait rapides et sécurisés via Bankily, Sedad, Masrivi.\nContactez-nous WhatsApp : '+AGENCY_PHONE,
+    share_text:'💰 Agence OussoCash — Dépôt et retrait rapides et sécurisés\nDépôt et retrait instantanés via Bankily, Sedad, Masrivi.\nContactez-nous via WhatsApp : '+AGENCY_PHONE,
   }
 };
 
@@ -363,6 +367,12 @@ const App = {
     }
     document.querySelectorAll('.btn').forEach(b=>b.disabled=true);
     try{ await fetch('/api/feedback',{ method:'POST', headers:{'Content-Type':'application/json'}, body:JSON.stringify(payload) }); }catch{}
+    // رسالة نجاح حسب التقييم: راضٍ → شكر وتقدير · غير راضٍ → سيتم المعالجة
+    const tt=T[this.lang];
+    const titleEl=document.querySelector('#stepDone [data-t="done_title"]');
+    const textEl=document.querySelector('#stepDone [data-t="done_text"]');
+    if(type==='excellent'){ titleEl.textContent=tt.done_title_exc; textEl.textContent=tt.done_text_exc; }
+    else { titleEl.textContent=tt.done_title_other; textEl.textContent=tt.done_text_other; }
     this.dots(3); this.show('stepDone');
   },
 };
